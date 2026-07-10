@@ -108,16 +108,19 @@ class BookingViewSet(viewsets.ModelViewSet):
         # Broadcast the new available booking request to all workers in this category
         channel_layer = get_channel_layer()
         if channel_layer:
-            async_to_sync(channel_layer.group_send)(
-                f"category_{booking.service_category.id}",
-                {
-                    "type": "send_notification",
-                    "data": {
-                        "type": "booking_available",
-                        "booking": BookingSerializer(booking).data
+            category_id_group = f"category_{booking.service_category.id}"
+            category_slug_group = booking.service_category.name.lower().replace(' ', '_')
+            for group in [category_id_group, category_slug_group]:
+                async_to_sync(channel_layer.group_send)(
+                    group,
+                    {
+                        "type": "send_notification",
+                        "data": {
+                            "type": "booking_available",
+                            "booking": BookingSerializer(booking).data
+                        }
                     }
-                }
-            )
+                )
 
         # Create notification for self
         create_and_send_notification(
@@ -223,16 +226,19 @@ class BookingViewSet(viewsets.ModelViewSet):
         # Broadcast to all workers in this category that booking is taken (remove from their dashboard)
         channel_layer = get_channel_layer()
         if channel_layer:
-            async_to_sync(channel_layer.group_send)(
-                f"category_{booking.service_category.id}",
-                {
-                    "type": "send_notification",
-                    "data": {
-                        "type": "booking_taken",
-                        "booking_id": booking.id
+            category_id_group = f"category_{booking.service_category.id}"
+            category_slug_group = booking.service_category.name.lower().replace(' ', '_')
+            for group in [category_id_group, category_slug_group]:
+                async_to_sync(channel_layer.group_send)(
+                    group,
+                    {
+                        "type": "send_notification",
+                        "data": {
+                            "type": "booking_taken",
+                            "booking_id": booking.id
+                        }
                     }
-                }
-            )
+                )
 
         # Notify Customer
         create_and_send_notification(
@@ -281,8 +287,10 @@ class BookingViewSet(viewsets.ModelViewSet):
             'verified': ['inspection', 'repair_started'],
             'inspection': ['repair_started'],
             'repair_started': ['repair_completed'],
-            'repair_completed': ['waiting_approval', 'completed'],
-            'waiting_approval': ['completed'],
+            'repair_completed': ['waiting_approval'],
+            'waiting_approval': [],
+            'WAITING_FOR_CASH_CONFIRMATION': [],
+            'ready_to_complete': ['completed'],
             'completed': [],
             'cancelled': []
         }
@@ -303,9 +311,9 @@ class BookingViewSet(viewsets.ModelViewSet):
             if booking.worker != user:
                 return Response({"detail": "You are not assigned to this job."}, status=status.HTTP_403_FORBIDDEN)
             
-            # Workers cannot manually force completed or verified status (must happen via verify-qr / payment process)
-            if new_status in ['verified', 'completed']:
-                return Response({"detail": f"Status '{new_status}' cannot be set manually."}, status=status.HTTP_400_BAD_REQUEST)
+            # Workers cannot manually force verified status (must happen via verify-qr)
+            if new_status == 'verified':
+                return Response({"detail": "Status 'verified' cannot be set manually."}, status=status.HTTP_400_BAD_REQUEST)
                 
             allowed = allowed_transitions.get(current_status, [])
             if new_status not in allowed:
@@ -315,6 +323,66 @@ class BookingViewSet(viewsets.ModelViewSet):
             pass
         else:
             return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Enforce that no booking can reach COMPLETED status until payment is PAID
+        if new_status == 'completed':
+            payment = getattr(booking, 'payment', None)
+            if not payment or payment.status != 'PAID':
+                return Response({"detail": "Cannot complete job before payment has been verified."}, status=status.HTTP_400_BAD_REQUEST)
+
+            from decimal import Decimal
+            from workers.models import Wallet, WalletTransaction
+            from billing.views import compile_receipt_pdf
+            from django.db import transaction
+            from notifications.email_service import EmailNotificationService
+
+            with transaction.atomic():
+                # Payout Wallet Credit (90% payout)
+                worker_payout = (payment.amount * Decimal('0.90')).quantize(Decimal('0.01'))
+                wallet, _ = Wallet.objects.get_or_create(worker=booking.worker)
+                wallet.current_balance += worker_payout
+                wallet.save()
+
+                # Payout transaction logging
+                WalletTransaction.objects.create(
+                    wallet=wallet,
+                    amount=worker_payout,
+                    transaction_type='credit',
+                    description=f"Earnings for Booking #{booking.id} ({booking.service_category.name})"
+                )
+
+                # Compile Receipt PDF
+                compile_receipt_pdf(payment)
+
+            # Send completion emails
+            try:
+                EmailNotificationService.send_payment_receipt_email(booking, payment)
+                EmailNotificationService.send_captain_payment_confirmation_email(booking, payment)
+            except Exception as e:
+                print(f"Error sending emails on completion: {e}")
+
+            # Notify worker of payment deposit
+            create_and_send_notification(
+                user=booking.worker,
+                title="Earnings Deposited",
+                message=f"₹{worker_payout} deposited to wallet for booking #{booking.id}.",
+                notification_type="payment"
+            )
+
+            # Notify admin
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                from billing.serializers import PaymentSerializer
+                async_to_sync(channel_layer.group_send)(
+                    "admin_updates",
+                    {
+                        "type": "send_notification",
+                        "data": {
+                            "type": "payment_update",
+                            "payment": PaymentSerializer(payment).data
+                        }
+                    }
+                )
 
         booking.status = new_status
         

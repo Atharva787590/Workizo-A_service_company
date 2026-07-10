@@ -33,8 +33,26 @@ const JOB_TIMELINE = [
   { key: 'repair_started', label: 'Repair Started' },
   { key: 'repair_completed', label: 'Repair Completed' },
   { key: 'waiting_approval', label: 'Waiting Approval' },
+  { key: 'ready_to_complete', label: 'Payment Paid' },
   { key: 'completed', label: 'Completed' }
 ];
+
+const getActiveStepIndex = (status) => {
+  switch (status) {
+    case 'accepted': return 0;
+    case 'on_the_way': return 1;
+    case 'arrived': return 2;
+    case 'verified': return 3;
+    case 'inspection': return 4;
+    case 'repair_started': return 5;
+    case 'repair_completed': return 6;
+    case 'waiting_approval': return 7;
+    case 'WAITING_FOR_CASH_CONFIRMATION':
+    case 'ready_to_complete': return 8;
+    case 'completed': return 9;
+    default: return 0;
+  }
+};
 
 function WorkerJobDetails() {
   const { id } = useParams();
@@ -74,6 +92,8 @@ function WorkerJobDetails() {
   const [supplierInvoice, setSupplierInvoice] = useState(null);
   const [generatingBill, setGeneratingBill] = useState(false);
   const [existingBill, setExistingBill] = useState(null);
+  const [confirmCashDialogOpen, setConfirmCashDialogOpen] = useState(false);
+  const [confirmingCash, setConfirmingCash] = useState(false);
 
   const ws = useRef(null);
 
@@ -82,7 +102,7 @@ function WorkerJobDetails() {
       const res = await api.get(`/api/bookings/bookings/${id}/`);
       setBooking(res.data);
 
-      if (['completed', 'waiting_approval', 'repair_completed'].includes(res.data.status)) {
+      if (['completed', 'waiting_approval', 'repair_completed', 'WAITING_FOR_CASH_CONFIRMATION'].includes(res.data.status)) {
         try {
           const billRes = await api.get(`/api/billing/${id}/get-bill/`);
           setExistingBill(billRes.data);
@@ -119,9 +139,9 @@ function WorkerJobDetails() {
         if (!isActive) return;
         try {
           const payload = JSON.parse(event.data);
-          if (payload.type === 'booking_status') {
+          if (payload.booking) {
             setBooking(payload.booking);
-            if (['completed', 'waiting_approval', 'repair_completed'].includes(payload.booking.status)) {
+            if (['completed', 'waiting_approval', 'repair_completed', 'WAITING_FOR_CASH_CONFIRMATION'].includes(payload.booking.status)) {
               api.get(`/api/billing/${id}/get-bill/`)
                 .then(res => setExistingBill(res.data))
                 .catch(() => setExistingBill(null));
@@ -307,6 +327,21 @@ function WorkerJobDetails() {
     }
   };
 
+  const handleConfirmCashReceived = async () => {
+    setConfirmingCash(true);
+    try {
+      await api.post(`/api/billing/${id}/confirm-cash-payment/`);
+      toast.success('Cash payment confirmed successfully.');
+      setConfirmCashDialogOpen(false);
+      fetchJobDetails();
+    } catch (err) {
+      toast.error('Failed to confirm cash payment.');
+    } finally {
+      setConfirmingCash(false);
+    }
+  };
+
+
   const handleDownloadInvoice = async () => {
     try {
       const response = await api.get(`/api/billing/${id}/download-invoice/`, {
@@ -332,7 +367,7 @@ function WorkerJobDetails() {
     );
   }
 
-  const activeStepIdx = JOB_TIMELINE.findIndex(step => step.key === booking.status);
+  const activeStepIdx = getActiveStepIndex(booking.status);
 
   const summary = (
     <SummaryGrid columns={4}>
@@ -535,6 +570,40 @@ function WorkerJobDetails() {
                   <Typography variant="body2" color="info.main" fontWeight="700" sx={{ display: 'flex', alignItems: 'center' }}>
                     <CheckCircleIcon sx={{ mr: 1 }} /> Invoice generated. Awaiting customer confirmation/payout.
                   </Typography>
+                )}
+
+                {booking.status === 'WAITING_FOR_CASH_CONFIRMATION' && (
+                  <Box display="flex" flexDirection="column" gap={2} sx={{ width: '100%' }}>
+                    <Typography variant="body2" color="warning.main" fontWeight="700" sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CheckCircleIcon sx={{ mr: 1 }} /> Cash Payment Pending from Customer (₹{existingBill?.grand_total || 'N/A'}).
+                    </Typography>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => setConfirmCashDialogOpen(true)}
+                      disabled={confirmingCash}
+                      sx={{ bgcolor: tokens.colors.success || '#16A34A', color: '#ffffff', py: 1.5, borderRadius: `${tokens.borderRadiusSm}px`, fontWeight: 700, '&:hover': { bgcolor: '#15803d' } }}
+                    >
+                      Confirm Cash Received
+                    </Button>
+                  </Box>
+                )}
+
+                {booking.status === 'ready_to_complete' && (
+                  <Box display="flex" flexDirection="column" gap={2} sx={{ width: '100%' }}>
+                    <Typography variant="body2" color="success.main" fontWeight="700" sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CheckCircleIcon sx={{ mr: 1 }} /> Payment received! Ready to complete job.
+                    </Typography>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => updateJobStatus('completed')}
+                      disabled={submitting}
+                      sx={{ bgcolor: tokens.colors.accent, color: '#ffffff', py: 1.5, borderRadius: `${tokens.borderRadiusSm}px`, fontWeight: 700 }}
+                    >
+                      Complete Job
+                    </Button>
+                  </Box>
                 )}
 
                 {booking.status === 'completed' && (
@@ -894,6 +963,36 @@ function WorkerJobDetails() {
           </Button>
           <Button onClick={handleCancelBooking} color="error" variant="contained" sx={{ borderRadius: `${tokens.borderRadiusSm}px` }}>
             Cancel Booking
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirm Cash Received Dialog */}
+      <Dialog
+        open={confirmCashDialogOpen}
+        onClose={() => !confirmingCash && setConfirmCashDialogOpen(false)}
+        PaperProps={{ style: { borderRadius: `${tokens.borderRadius}px`, padding: '8px' } }}
+      >
+        <DialogTitle sx={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>
+          Confirm Cash Payment
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Have you received the complete payment from the customer?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmCashDialogOpen(false)} disabled={confirmingCash} sx={{ color: tokens.colors.primary, textTransform: 'none', fontWeight: 600 }}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmCashReceived} 
+            color="success" 
+            variant="contained" 
+            disabled={confirmingCash}
+            sx={{ borderRadius: `${tokens.borderRadiusSm}px`, textTransform: 'none', fontWeight: 700 }}
+          >
+            {confirmingCash ? <CircularProgress size={20} color="inherit" /> : 'Yes, Received'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -107,8 +107,9 @@ function WorkerDashboard() {
     let isActive = true;
     let socket = null;
     let reconnectTimer = null;
+    const approvalStatus = user?.profile?.approval_status;
 
-    if (online && user?.profile?.approval_status === 'approved') {
+    if (online && approvalStatus === 'approved') {
       fetchAvailableBookings();
 
       // Start periodic 5s polling as backup
@@ -119,15 +120,18 @@ function WorkerDashboard() {
       const connect = () => {
         if (!isActive) return;
         const token = localStorage.getItem('access_token');
-        socket = new WebSocket(buildWsUrl('/ws/notifications/', `?token=${token}`));
+        const wsUrl = buildWsUrl('/ws/notifications/', `?token=${token}`);
+        console.log('[WS] Notification socket creating connection to:', wsUrl);
+        socket = new WebSocket(wsUrl);
         notiWs.current = socket;
 
         socket.onopen = () => {
-          console.log('[WS] Notification socket connected');
+          console.log('[WS] Notification socket connected successfully');
         };
 
         socket.onmessage = (event) => {
           if (!isActive) return;
+          console.log('[WS] Received Event:', event.data);
           try {
             const payload = JSON.parse(event.data);
             if (payload.type === 'booking_available') {
@@ -147,14 +151,20 @@ function WorkerDashboard() {
           }
         };
 
-        socket.onerror = () => {
+        socket.onerror = (error) => {
+          console.error('[WS] Socket Error:', error);
           socket.close();
         };
 
-        socket.onclose = () => {
+        socket.onclose = (event) => {
+          console.log(`[WS] Socket Closed. Code: ${event.code}, Reason: ${event.reason || 'None'}`);
           notiWs.current = null;
+          if (event.code === 4003) {
+            console.warn('[WS] Connection rejected due to authentication failure (4003). Reconnection aborted.');
+            return;
+          }
           if (isActive) {
-            console.log('[WS] Notification WS disconnected. Reconnecting in 3s…');
+            console.log('[WS] Reconnecting in 3s…');
             reconnectTimer = setTimeout(connect, 3000);
           }
         };
@@ -168,6 +178,7 @@ function WorkerDashboard() {
         pollingInterval.current = null;
       }
       if (notiWs.current) {
+        console.log('[WS] Closing connection because online status is false or user is not approved');
         notiWs.current.close();
         notiWs.current = null;
       }
@@ -176,9 +187,12 @@ function WorkerDashboard() {
     return () => {
       isActive = false;
       clearTimeout(reconnectTimer);
-      if (socket) socket.close();
+      if (socket) {
+        console.log('[WS] Cleaning up socket connection');
+        socket.close();
+      }
     };
-  }, [user]);
+  }, [online, user?.profile?.approval_status, user?.id]);
 
   const handleOnlineToggle = async (event) => {
     setTogglingOnline(true);

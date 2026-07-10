@@ -22,7 +22,17 @@ class BillSerializer(serializers.ModelSerializer):
 
 
 class PaymentSerializer(serializers.ModelSerializer):
+    payment_method = serializers.ReadOnlyField()
+    payment_status = serializers.ReadOnlyField()
+
     class Meta:
         model = Payment
-        fields = ('id', 'booking', 'amount', 'method', 'status', 'transaction_id', 'created_at')
-        read_only_fields = ('id', 'created_at')
+        fields = (
+            'id', 'booking', 'customer', 'captain', 'amount', 'currency',
+            'receipt_number', 'method', 'status', 'payment_method', 'payment_status',
+            'razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature',
+            'transaction_id', 'cash_confirmation_timestamp', 'payment_time',
+            'created_at'
+        )
+        read_only_fields = ('id', 'created_at', 'payment_method', 'payment_status')
+

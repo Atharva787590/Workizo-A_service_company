@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import api from '../services/api';
+import api, { buildWsUrl } from '../services/api';
 import {
   Container, Typography, Box, Grid, Paper, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Button, Chip,
@@ -1540,6 +1540,8 @@ const PaymentsView = ({ hideHeader }) => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [methodFilter, setMethodFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const fetchPayments = async () => {
     try {
@@ -1556,6 +1558,82 @@ const PaymentsView = ({ hideHeader }) => {
 
   useEffect(() => {
     fetchPayments();
+
+    // WebSocket real-time synchronization
+    let isActive = true;
+    let socket = null;
+    let reconnectTimer = null;
+
+    const connect = () => {
+      if (!isActive) return;
+      const token = localStorage.getItem('access_token');
+      const wsUrl = buildWsUrl('/ws/notifications/', `?token=${token}`);
+      console.log('[WS] Admin socket creating connection to:', wsUrl);
+      socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log('[WS] Admin Payments View connected successfully');
+      };
+
+      socket.onmessage = (event) => {
+        if (!isActive) return;
+        console.log('[WS] Admin received message:', event.data);
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'payment_update') {
+            const updatedPayment = payload.payment;
+            setPayments(prev => {
+              const index = prev.findIndex(p => p.id === updatedPayment.id);
+              if (index !== -1) {
+                const updated = [...prev];
+                updated[index] = {
+                  ...updated[index],
+                  ...updatedPayment,
+                  // fallback to old nested details if missing
+                  customer_name: updatedPayment.customer_name || updated[index].customer_name,
+                  worker_name: updatedPayment.worker_name || updated[index].worker_name,
+                  tracking_id: updatedPayment.tracking_id || updated[index].tracking_id
+                };
+                return updated;
+              } else {
+                return [updatedPayment, ...prev];
+              }
+            });
+            toast.success(`Payment updated: Receipt ${updatedPayment.receipt_number || 'N/A'}`);
+          }
+        } catch (err) {
+          console.error('[WS] Payment update error:', err);
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error('[WS] Admin Socket Error:', error);
+        socket.close();
+      };
+
+      socket.onclose = (event) => {
+        console.log(`[WS] Admin Socket Closed. Code: ${event.code}, Reason: ${event.reason || 'None'}`);
+        if (event.code === 4003) {
+          console.warn('[WS] Admin connection rejected due to authentication failure (4003). Reconnection aborted.');
+          return;
+        }
+        if (isActive) {
+          console.log('[WS] Reconnecting Admin WS in 3s…');
+          reconnectTimer = setTimeout(connect, 3000);
+        }
+      };
+    };
+
+    connect();
+
+    return () => {
+      isActive = false;
+      clearTimeout(reconnectTimer);
+      if (socket) {
+        console.log('[WS] Cleaning up Admin socket connection');
+        socket.close();
+      }
+    };
   }, []);
 
   const handleKeyPress = (e) => {
@@ -1563,6 +1641,52 @@ const PaymentsView = ({ hideHeader }) => {
       setLoading(true);
       fetchPayments();
     }
+  };
+
+  // Client-side filtering
+  const filteredPayments = payments.filter((p) => {
+    const matchesMethod = methodFilter === 'ALL' || (p.method && p.method.toUpperCase() === methodFilter);
+    
+    // Normalize status filters
+    let normalizedStatus = p.status ? p.status.toUpperCase() : 'PENDING';
+    if (normalizedStatus === 'SUCCESS') normalizedStatus = 'PAID';
+    
+    let targetStatus = statusFilter;
+    if (targetStatus === 'SUCCESS') targetStatus = 'PAID';
+
+    const matchesStatus = statusFilter === 'ALL' || normalizedStatus === targetStatus;
+    return matchesMethod && matchesStatus;
+  });
+
+  const handleExportCSV = () => {
+    if (filteredPayments.length === 0) {
+      toast.error('No transaction records to export.');
+      return;
+    }
+    const headers = ['Receipt Number', 'Booking ID', 'Customer', 'Captain', 'Amount', 'Payment Method', 'Payment Status', 'Payment Date', 'Transaction ID'];
+    const rows = filteredPayments.map(p => [
+      p.receipt_number || 'N/A',
+      p.tracking_id || p.booking,
+      p.customer_name || 'N/A',
+      p.worker_name || 'N/A',
+      `₹${p.amount}`,
+      p.method ? p.method.toUpperCase() : 'N/A',
+      p.status ? p.status.toUpperCase() : 'N/A',
+      new Date(p.created_at).toLocaleDateString(),
+      p.transaction_id || 'N/A'
+    ]);
+    
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `payments_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Payments report exported successfully.');
   };
 
   return (
@@ -1578,40 +1702,89 @@ const PaymentsView = ({ hideHeader }) => {
         </Box>
       )}
 
-      {/* Search Header */}
+      {/* Search & Filter Header */}
       <DashboardCard>
-        <Box display="flex" gap={2}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Search by Transaction ID, Tracking ID, Customer or Captain... (Press Enter)"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyPress={handleKeyPress}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            variant="contained"
-            onClick={fetchPayments}
-            sx={{
-              bgcolor: tokens.colors.primary,
-              color: '#ffffff',
-              borderRadius: `${tokens.borderRadiusSm}px`,
-              textTransform: 'none',
-              fontWeight: 700,
-              px: 3,
-              '&:hover': { bgcolor: '#222222' }
-            }}
-          >
-            Search
-          </Button>
-        </Box>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search by Transaction ID, Tracking ID... (Enter)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyPress={handleKeyPress}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          <Grid item xs={6} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Method</InputLabel>
+              <Select
+                value={methodFilter}
+                label="Method"
+                onChange={(e) => setMethodFilter(e.target.value)}
+              >
+                <MenuItem value="ALL">All Methods</MenuItem>
+                <MenuItem value="ONLINE">Online Payment</MenuItem>
+                <MenuItem value="CASH">Cash Payment</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={6} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="ALL">All Statuses</MenuItem>
+                <MenuItem value="PAID">PAID</MenuItem>
+                <MenuItem value="PENDING">PENDING</MenuItem>
+                <MenuItem value="WAITING_FOR_CASH_CONFIRMATION">CASH PENDING</MenuItem>
+                <MenuItem value="FAILED">FAILED</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={4} display="flex" gap={1.5}>
+            <Button
+              variant="contained"
+              onClick={fetchPayments}
+              sx={{
+                bgcolor: tokens.colors.primary,
+                color: '#ffffff',
+                borderRadius: `${tokens.borderRadiusSm}px`,
+                textTransform: 'none',
+                fontWeight: 700,
+                flex: 1,
+                '&:hover': { bgcolor: '#222222' }
+              }}
+            >
+              Search
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleExportCSV}
+              sx={{
+                borderColor: tokens.colors.primary,
+                color: tokens.colors.primary,
+                borderRadius: `${tokens.borderRadiusSm}px`,
+                textTransform: 'none',
+                fontWeight: 700,
+                flex: 1,
+                '&:hover': { borderColor: tokens.colors.primary, bgcolor: tokens.colors.bg }
+              }}
+            >
+              Export CSV
+            </Button>
+          </Grid>
+        </Grid>
       </DashboardCard>
 
       {loading ? (
@@ -1622,43 +1795,49 @@ const PaymentsView = ({ hideHeader }) => {
             <Table>
               <TableHead>
                 <TableRow sx={{ bgcolor: tokens.colors.bg }}>
-                  <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Payment ID</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Receipt Number</TableCell>
                   <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Booking ID</TableCell>
                   <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Customer</TableCell>
                   <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Captain</TableCell>
-                  <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Payment Method</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Method</TableCell>
                   <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Amount</TableCell>
                   <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Transaction ID</TableCell>
                   <TableCell sx={{ fontWeight: 600, fontFamily: 'Outfit', color: tokens.colors.primary }}>Payment Date</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {payments.map((p) => (
-                  <TableRow key={p.id} hover>
-                    <TableCell>{p.transaction_id || <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600 }}>PENDING</Typography>}</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>{p.tracking_id}</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>{p.customer_name}</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>{p.worker_name}</TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>{p.method.toUpperCase()}</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>₹{p.amount}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={p.status.toUpperCase()}
-                        color={p.status === 'success' ? 'success' : p.status === 'failed' ? 'error' : 'warning'}
-                        size="small"
-                        sx={{ fontWeight: 700 }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ color: tokens.colors.textSecondary }}>{new Date(p.created_at).toLocaleDateString()}</TableCell>
-                  </TableRow>
-                ))}
-                {payments.length === 0 && (
+                {filteredPayments.map((p) => {
+                  let badgeStatus = p.status ? p.status.toUpperCase() : 'PENDING';
+                  if (badgeStatus === 'SUCCESS') badgeStatus = 'PAID';
+                  return (
+                    <TableRow key={p.id} hover>
+                      <TableCell sx={{ fontWeight: 600 }}>{p.receipt_number || 'N/A'}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>{p.tracking_id || p.booking}</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>{p.customer_name || 'N/A'}</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>{p.worker_name || 'N/A'}</TableCell>
+                      <TableCell sx={{ fontWeight: 500 }}>{p.method ? p.method.toUpperCase() : 'N/A'}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>₹{p.amount}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={badgeStatus}
+                          color={badgeStatus === 'PAID' ? 'success' : badgeStatus === 'FAILED' ? 'error' : 'warning'}
+                          size="small"
+                          sx={{ fontWeight: 700 }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{p.transaction_id || 'N/A'}</TableCell>
+                      <TableCell sx={{ color: tokens.colors.textSecondary }}>{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                    </TableRow>
+                  );
+                })}
+                {filteredPayments.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} sx={{ p: 0 }}>
+                    <TableCell colSpan={9} sx={{ p: 0 }}>
                       <EmptyState
                         icon={<PaymentIcon />}
                         title="No Payouts Logged"
-                        description="There are no payment history entries registered on the system ledger."
+                        description="There are no payment history entries registered on the system ledger matching filters."
                       />
                     </TableCell>
                   </TableRow>

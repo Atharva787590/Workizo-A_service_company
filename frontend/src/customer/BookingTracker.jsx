@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Box, Button, Typography, Divider, List, ListItem, ListItemText, 
   Dialog, DialogTitle, DialogContent, DialogActions, Rating, TextField, 
   LinearProgress, CircularProgress, Grid, ListItemIcon,
-  IconButton, Avatar, Paper, Breadcrumbs
+  IconButton, Avatar, Paper, Breadcrumbs, Chip
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import api, { buildWsUrl, buildApiUrl } from '../services/api';
@@ -34,18 +34,14 @@ import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import RoomIcon from '@mui/icons-material/Room';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import StarIcon from '@mui/icons-material/Star';
+import PrintIcon from '@mui/icons-material/Print';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import LocalAtmIcon from '@mui/icons-material/LocalAtm';
 
 import { tokens } from '../design/tokens';
 import { DashboardPage, DashboardGrid, DashboardCard } from '../components/dashboard';
 
-const STEPPER_STEPS = [
-  { key: 'searching', label: 'Searching' },
-  { key: 'accepted', label: 'Accepted' },
-  { key: 'on_the_way', label: 'On The Way' },
-  { key: 'arrived', label: 'Arrived' },
-  { key: 'repair_started', label: 'Work Started' },
-  { key: 'completed', label: 'Completed' }
-];
+
 
 const CATEGORY_STYLES = {
   'Electrician': {
@@ -80,14 +76,23 @@ const CATEGORY_STYLES = {
   }
 };
 
+const STEPPER_STEPS = [
+  { key: 'searching', label: 'Searching' },
+  { key: 'accepted', label: 'Accepted' },
+  { key: 'on_the_way', label: 'On The Way' },
+  { key: 'arrived', label: 'Arrived' },
+  { key: 'repair_started', label: 'Work Started' },
+  { key: 'ready_to_complete', label: 'Payment Confirmed' },
+  { key: 'completed', label: 'Completed' }
+];
+
 const getStatusBadgeStyle = (status) => {
   switch (status) {
     case 'searching':
       return { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.08)' };
     case 'accepted':
-      return { color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.08)' };
     case 'on_the_way':
-      return { color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.08)' };
+      return { color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.08)' };
     case 'arrived':
     case 'verified':
       return { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.08)' };
@@ -96,7 +101,11 @@ const getStatusBadgeStyle = (status) => {
       return { color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.08)' };
     case 'repair_completed':
     case 'waiting_approval':
-      return { color: '#e11d48', bg: 'rgba(225, 29, 72, 0.08)' };
+      return { color: '#d97706', bg: 'rgba(217, 119, 6, 0.08)' };
+    case 'WAITING_FOR_CASH_CONFIRMATION':
+      return { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.08)' };
+    case 'ready_to_complete':
+      return { color: '#10b981', bg: 'rgba(16, 185, 129, 0.08)' };
     case 'completed':
       return { color: '#10b981', bg: 'rgba(16, 185, 129, 0.08)' };
     default:
@@ -104,20 +113,45 @@ const getStatusBadgeStyle = (status) => {
   }
 };
 
-const getStatusIndex = (status) => {
+const getStatusIndex = (booking) => {
+  if (!booking) return -1;
+  const status = booking.status;
+
   switch (status) {
-    case 'searching': return 0;
-    case 'accepted': return 1;
-    case 'on_the_way': return 2;
+    case 'searching':
+      return 0;
+    case 'accepted':
+      return 1;
+    case 'on_the_way':
+      return 2;
     case 'arrived':
-    case 'verified': return 3;
+    case 'verified':
+      return 3;
     case 'inspection':
     case 'repair_started':
     case 'repair_completed':
-    case 'waiting_approval': return 4;
-    case 'completed': return 5;
-    default: return -1;
+    case 'waiting_approval':
+    case 'WAITING_FOR_CASH_CONFIRMATION':
+      return 4;
+    case 'ready_to_complete':
+      return 5;
+    case 'completed':
+      return 6;
+    default:
+      return -1;
   }
+};
+
+const STATUS_MILITARY_HIERARCHY = [
+  'searching', 'accepted', 'on_the_way', 'arrived', 'verified', 
+  'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 
+  'WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'completed'
+];
+
+const isStatusAtLeast = (currentStatus, targetStatus) => {
+  const currentIdx = STATUS_MILITARY_HIERARCHY.indexOf(currentStatus);
+  const targetIdx = STATUS_MILITARY_HIERARCHY.indexOf(targetStatus);
+  return currentIdx >= targetIdx;
 };
 
 function BookingTracker() {
@@ -135,17 +169,20 @@ function BookingTracker() {
   const [paying, setPaying] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('upi');
+  const [onlinePaymentFailed, setOnlinePaymentFailed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
 
   const ws = useRef(null);
 
-  // Fetch initial details
-  const fetchDetails = async () => {
+  // Fetch initial details wrapped in useCallback to prevent infinite render loops
+  const fetchDetails = useCallback(async () => {
     try {
       const res = await api.get(`/api/bookings/bookings/${id}/`);
       setBooking(res.data);
       
       // Fetch bill if status matches
-      if (['repair_completed', 'waiting_approval', 'completed'].includes(res.data.status)) {
+      if (['repair_completed', 'waiting_approval', 'completed', 'WAITING_FOR_CASH_CONFIRMATION'].includes(res.data.status)) {
         try {
           const billRes = await api.get(`/api/billing/${id}/get-bill/`);
           setBill(billRes.data);
@@ -159,7 +196,7 @@ function BookingTracker() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -253,25 +290,118 @@ function BookingTracker() {
     }
   };
 
-  const handleProcessPayment = async () => {
-    setPaying(true);
-    setTimeout(async () => {
-      try {
-        await api.post(`/api/billing/${id}/process-payment/`, {
-          method: selectedPaymentMethod
-        });
-        setPaymentSuccess(true);
-        setTimeout(() => {
-          setPaymentModalOpen(false);
-          setPaymentSuccess(false);
-          fetchDetails();
-        }, 2000);
-      } catch (err) {
-        toast.error('Payment processing failed');
-      } finally {
-        setPaying(false);
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
       }
-    }, 1500);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayOnline = async () => {
+    setPaying(true);
+    setOnlinePaymentFailed(false);
+    setErrorMessage('');
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast.error('Razorpay SDK failed to load. Are you online?');
+        setPaying(false);
+        return;
+      }
+
+      const res = await api.post(`/api/billing/${id}/initiate-online-payment/`);
+      const { order_id, amount, currency, key_id } = res.data;
+
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: currency,
+        name: "WORKIZO",
+        description: `Payment for Booking #${id}`,
+        order_id: order_id,
+        handler: async function (response) {
+          setPaying(true);
+          try {
+            await api.post(`/api/billing/${id}/verify-online-payment/`, {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            toast.success('Payment completed successfully!');
+            setPaymentSuccess(true);
+            fetchDetails();
+          } catch (err) {
+            const errDetail = err.response?.data?.detail || 'Signature verification failed.';
+            toast.error(errDetail);
+            setOnlinePaymentFailed(true);
+            setErrorMessage(errDetail);
+          } finally {
+            setPaying(false);
+          }
+        },
+        prefill: {
+          name: booking?.customer?.full_name || '',
+          email: booking?.customer?.email || '',
+          contact: booking?.customer?.phone || ''
+        },
+        theme: {
+          color: "#0F0F14"
+        },
+        modal: {
+          ondismiss: function () {
+            setPaying(false);
+            toast.error('Payment cancelled.');
+          }
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      console.error(err);
+      const errDetail = err.response?.data?.detail || 'Initiating payment failed.';
+      toast.error(errDetail);
+      setOnlinePaymentFailed(true);
+      setErrorMessage(errDetail);
+      setPaying(false);
+    }
+  };
+
+  const handlePayByCash = async () => {
+    setPaying(true);
+    try {
+      await api.post(`/api/billing/${id}/select-cash-payment/`);
+      toast.success('Cash payment option selected.');
+      fetchDetails();
+    } catch (err) {
+      toast.error('Failed to select cash payment.');
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleDownloadReceipt = async () => {
+    try {
+      const response = await api.get(`/api/billing/${id}/download-receipt/`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (err) {
+      toast.error('Failed to download receipt');
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    window.print();
   };
 
   const handleDownloadInvoice = async () => {
@@ -286,6 +416,7 @@ function BookingTracker() {
       toast.error('Failed to download invoice');
     }
   };
+
 
   const handleSubmitRating = async () => {
     setSubmittingRating(true);
@@ -335,7 +466,7 @@ function BookingTracker() {
     borderColor: tokens.borderColor,
   };
 
-  const currentStepIdx = getStatusIndex(booking.status);
+  const currentStepIdx = getStatusIndex(booking);
   const statusBadge = getStatusBadgeStyle(booking.status);
 
   // Generate dynamic event logs based on state
@@ -355,38 +486,38 @@ function BookingTracker() {
         time: "Just now",
         title: "Captain Assigned",
         desc: `Captain ${booking.worker.full_name} is assigned to resolve your request.`,
-        active: ['accepted', 'on_the_way', 'arrived', 'verified', 'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 'completed'].includes(booking.status)
+        active: isStatusAtLeast(booking.status, 'accepted')
       });
     }
 
-    if (['on_the_way', 'arrived', 'verified', 'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 'completed'].includes(booking.status)) {
+    if (isStatusAtLeast(booking.status, 'on_the_way')) {
       events.push({
         time: "Updated",
         title: "Captain Traveling",
         desc: "Captain has initiated the journey to your service address.",
-        active: ['on_the_way', 'arrived', 'verified', 'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 'completed'].includes(booking.status)
+        active: isStatusAtLeast(booking.status, 'on_the_way')
       });
     }
 
-    if (['arrived', 'verified', 'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 'completed'].includes(booking.status)) {
+    if (isStatusAtLeast(booking.status, 'arrived')) {
       events.push({
         time: "Arrived",
         title: "Captain Arrived",
         desc: "Captain reached your destination. Pending secure check-in verification code.",
-        active: ['arrived', 'verified', 'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 'completed'].includes(booking.status)
+        active: isStatusAtLeast(booking.status, 'arrived')
       });
     }
 
-    if (['verified', 'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 'completed'].includes(booking.status)) {
+    if (isStatusAtLeast(booking.status, 'verified')) {
       events.push({
         time: "Started",
         title: "Work Started",
         desc: "Secure check-in code verified. Diagnosis and repair works are underway.",
-        active: ['verified', 'inspection', 'repair_started', 'repair_completed', 'waiting_approval', 'completed'].includes(booking.status)
+        active: isStatusAtLeast(booking.status, 'verified')
       });
     }
 
-    if (booking.status === 'completed') {
+    if (isStatusAtLeast(booking.status, 'completed')) {
       events.push({
         time: "Completed",
         title: "Service Completed",
@@ -467,8 +598,8 @@ function BookingTracker() {
               {[
                 { label: 'Booking Date', value: new Date(booking.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
                 { label: 'Booking ID', value: `#${booking.id}` },
-                { label: 'Payment Status', value: booking.status === 'completed' ? 'Paid' : 'Pending', color: booking.status === 'completed' ? '#10b981' : '#e11d48' },
-                { label: 'Payment Method', value: bill?.payment?.method ? bill.payment.method.toUpperCase() : 'N/A' },
+                { label: 'Payment Status', value: (booking.payment?.status === 'PAID' || ['ready_to_complete', 'completed'].includes(booking.status)) ? 'Paid' : 'Pending', color: (booking.payment?.status === 'PAID' || ['ready_to_complete', 'completed'].includes(booking.status)) ? '#10b981' : '#e11d48' },
+                { label: 'Payment Method', value: booking.payment?.method ? booking.payment.method.toUpperCase() : 'N/A' },
                 { label: 'Requested Time', value: new Date(booking.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) }
               ].map((item, idx) => (
                 <Box key={idx} display="flex" justifyContent="space-between" alignItems="center">
@@ -516,96 +647,114 @@ function BookingTracker() {
         <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 4, color: tokens.colors.primary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Service Tracking
         </Typography>
-        <Box sx={{ width: '100%', position: 'relative', px: { xs: 1, md: 3 } }}>
-          {/* Progress Connector Line */}
-          <Box sx={{ 
-            position: 'absolute', top: '22px', left: '6%', right: '6%', height: '4px', 
-            bgcolor: '#E5E7EB', zIndex: 1 
-          }}>
+        <Box sx={{ width: '100%', position: 'relative', px: { xs: 1, md: 3 }, overflowX: { xs: 'auto', md: 'visible' } }}>
+          <Box sx={{ minWidth: { xs: '840px', md: 'auto' }, position: 'relative', py: 1 }}>
+            {/* Progress Connector Line */}
             <Box sx={{ 
-              width: `${currentStepIdx >= 0 ? (currentStepIdx / 5) * 100 : 0}%`, 
-              height: '100%', bgcolor: '#1E3A8A', transition: 'width 0.4s ease' 
-            }} />
+              position: 'absolute', top: '22px', left: '6%', right: '6%', height: '4px', 
+              bgcolor: '#E5E7EB', zIndex: 1 
+            }}>
+              <Box sx={{ 
+                width: `${currentStepIdx >= 0 ? (currentStepIdx / 6) * 100 : 0}%`, 
+                height: '100%', bgcolor: '#1E3A8A', transition: 'width 0.4s ease' 
+              }} />
+            </Box>
+
+            <Grid container justifyContent="space-between">
+              {[
+                { key: 'searching', label: 'Searching', desc: 'Finding nearby captain' },
+                { key: 'accepted', label: 'Accepted', desc: 'Captain assigned' },
+                { key: 'on_the_way', label: 'On The Way', desc: 'Traveling to location' },
+                { key: 'arrived', label: 'Arrived', desc: 'Captain at site' },
+                { key: 'repair_started', label: 'Work Started', desc: 'Repairs in progress' },
+                { key: 'ready_to_complete', label: 'Payment Confirmed', desc: 'Payment received successfully' },
+                { key: 'completed', label: 'Completed', desc: 'Service finished' }
+              ].map((step, idx) => {
+                const isActive = currentStepIdx === idx;
+                const isCompleted = currentStepIdx > idx;
+
+                let circleBg = '#ffffff';
+                let circleBorder = '#D1D5DB';
+                let circleColor = '#9CA3AF';
+                let labelColor = tokens.colors.textSecondary;
+
+                if (isActive) {
+                  circleBg = '#1A73E8';
+                  circleBorder = '#1A73E8';
+                  circleColor = '#ffffff';
+                  labelColor = '#1A73E8';
+                } else if (isCompleted) {
+                  circleBg = '#1E3A8A';
+                  circleBorder = '#1E3A8A';
+                  circleColor = '#ffffff';
+                  labelColor = '#1E3A8A';
+                }
+
+                return (
+                  <Grid item key={idx} sx={{ zIndex: 2, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '12%' }}>
+                    <motion.div
+                      animate={isActive ? { scale: [1, 1.12, 1] } : {}}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                      <Box sx={{
+                        width: '44px', height: '44px', borderRadius: '50%',
+                        bgcolor: circleBg,
+                        border: `2px solid ${circleBorder}`,
+                        color: circleColor,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 800, fontSize: '1rem', mb: 1.5,
+                        boxShadow: isActive ? '0 0 12px rgba(26, 115, 232, 0.4)' : 'none'
+                      }}>
+                        {isCompleted ? '✓' : idx + 1}
+                      </Box>
+                    </motion.div>
+                    <Typography 
+                      variant="body2" 
+                      fontWeight={800} 
+                      sx={{ color: labelColor, display: 'block', mb: 0.5, fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                    >
+                      {step.label}
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ color: '#9CA3AF', display: 'block', fontSize: '0.72rem', maxWidth: '100px', lineHeight: 1.3, mx: 'auto' }}
+                    >
+                      {step.desc}
+                    </Typography>
+                  </Grid>
+                );
+              })}
+            </Grid>
           </Box>
-
-          <Grid container justifyContent="space-between">
-            {[
-              { key: 'searching', label: 'Searching', desc: 'Finding nearby captain' },
-              { key: 'accepted', label: 'Accepted', desc: 'Captain assigned' },
-              { key: 'on_the_way', label: 'On The Way', desc: 'Traveling to location' },
-              { key: 'arrived', label: 'Arrived', desc: 'Captain at site' },
-              { key: 'repair_started', label: 'Work Started', desc: 'Repairs in progress' },
-              { key: 'completed', label: 'Completed', desc: 'Service finished' }
-            ].map((step, idx) => {
-              const isActive = currentStepIdx === idx;
-              const isCompleted = currentStepIdx > idx;
-
-              let circleBg = '#ffffff';
-              let circleBorder = '#D1D5DB';
-              let circleColor = '#9CA3AF';
-              let labelColor = tokens.colors.textSecondary;
-
-              if (isActive) {
-                circleBg = '#1A73E8';
-                circleBorder = '#1A73E8';
-                circleColor = '#ffffff';
-                labelColor = '#1A73E8';
-              } else if (isCompleted) {
-                circleBg = '#1E3A8A';
-                circleBorder = '#1E3A8A';
-                circleColor = '#ffffff';
-                labelColor = '#1E3A8A';
-              }
-
-              return (
-                <Grid item key={idx} sx={{ zIndex: 2, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '15%' }}>
-                  <motion.div
-                    animate={isActive ? { scale: [1, 1.12, 1] } : {}}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                  >
-                    <Box sx={{
-                      width: '44px', height: '44px', borderRadius: '50%',
-                      bgcolor: circleBg,
-                      border: `2px solid ${circleBorder}`,
-                      color: circleColor,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 800, fontSize: '1rem', mb: 1.5,
-                      boxShadow: isActive ? '0 0 12px rgba(26, 115, 232, 0.4)' : 'none'
-                    }}>
-                      {isCompleted ? '✓' : idx + 1}
-                    </Box>
-                  </motion.div>
-                  <Typography 
-                    variant="body2" 
-                    fontWeight={800} 
-                    sx={{ color: labelColor, display: 'block', mb: 0.5, fontSize: '0.85rem', whiteSpace: 'nowrap' }}
-                  >
-                    {step.label}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ color: '#9CA3AF', display: 'block', fontSize: '0.72rem', maxWidth: '100px', lineHeight: 1.3, mx: 'auto' }}
-                  >
-                    {step.desc}
-                  </Typography>
-                </Grid>
-              );
-            })}
-          </Grid>
         </Box>
       </Paper>
 
       {/* SECTION 4: Two Column Layout */}
-      <Grid container spacing={4}>
-        {/* LEFT COLUMN 65% */}
-        <Grid item xs={12} lg={8}>
-          <Box display="flex" flexDirection="column" gap={3}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: '1fr 1fr',
+            lg: '42% 1fr'
+          },
+          gap: 3,
+          alignItems: 'start'
+        }}
+      >
+        {/* RIGHT COLUMN - Activity, Progress & Payment */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, order: 2 }}>
             
             {/* Service Progress Card */}
             <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
               <Box display="flex" gap={2.5} alignItems="flex-start">
-                <Box sx={{ p: 2, borderRadius: '16px', bgcolor: catStyle.bgColor, border: `1px solid ${catStyle.borderColor}` }}>
-                  {catStyle.icon}
+                <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                  <Box sx={{ p: 2, borderRadius: '16px', bgcolor: catStyle.bgColor, border: `1px solid ${catStyle.borderColor}`, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    {catStyle.icon}
+                  </Box>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: catStyle.borderColor, fontSize: '0.72rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    {categoryName}
+                  </Typography>
                 </Box>
                 <Box flex={1}>
                   <Typography variant="h6" fontWeight={800} color={tokens.colors.primary}>
@@ -701,72 +850,355 @@ function BookingTracker() {
               </Box>
             )}
 
-            {/* SECTION 8: PAYMENT CARD */}
+            {/* SECTION 8: PAYMENT CARD & WORKFLOW */}
             {bill && (
-              <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>
-                  Bill Invoice Summary
-                </Typography>
-                <List disablePadding>
-                  <ListItem sx={{ py: 1, px: 0 }}>
-                    <ListItemText primary="Service/Labour base charge" />
-                    <Typography variant="body2" fontWeight={700}>₹{bill.labour_charges}</Typography>
-                  </ListItem>
-                  <ListItem sx={{ py: 1, px: 0 }}>
-                    <ListItemText primary="Spare parts & materials charges" />
-                    <Typography variant="body2" fontWeight={700}>₹{bill.parts_charges}</Typography>
-                  </ListItem>
-                  <ListItem sx={{ py: 1, px: 0 }}>
-                    <ListItemText primary="GST (18% inclusive)" />
-                    <Typography variant="body2" fontWeight={700}>₹{bill.gst}</Typography>
-                  </ListItem>
-                  {parseFloat(bill.discount) > 0 && (
-                    <ListItem sx={{ py: 1, px: 0 }}>
-                      <ListItemText primary="Promo Discount" sx={{ color: tokens.colors.success }} />
-                      <Typography variant="body2" color="success.main" fontWeight={700}>-₹{bill.discount}</Typography>
-                    </ListItem>
-                  )}
-                  <Divider sx={{ my: 1.5 }} />
-                  <ListItem sx={{ py: 1, px: 0 }}>
-                    <ListItemText primary="Grand Total Payable" primaryTypographyProps={{ fontWeight: 800 }} />
-                    <Typography variant="h6" fontWeight={800} color="primary" sx={{ fontFamily: 'Outfit' }}>
-                      ₹{bill.grand_total}
+              <Box sx={{ width: '100%', order: -1 }}>
+                {booking.status === 'completed' ? (
+                  /* PROFESSIONAL RECEIPT DISPLAY */
+                  <Paper id="printable-receipt" elevation={0} sx={{ p: 4, border: `1.5px solid ${tokens.borderColor}`, borderRadius: '20px', bgcolor: tokens.colors.paper, boxShadow: '0 8px 30px rgba(0,0,0,0.04)', position: 'relative' }}>
+                    <style dangerouslySetInnerHTML={{__html: `
+                      @media print {
+                        body * {
+                          visibility: hidden;
+                        }
+                        #printable-receipt, #printable-receipt * {
+                          visibility: visible;
+                        }
+                        #printable-receipt {
+                          position: absolute;
+                          left: 0;
+                          top: 0;
+                          width: 100%;
+                          border: none !important;
+                          box-shadow: none !important;
+                          padding: 0 !important;
+                        }
+                        .no-print {
+                          display: none !important;
+                        }
+                      }
+                    `}} />
+                    
+                    <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+                      <Typography variant="h5" fontWeight={800} sx={{ color: tokens.colors.primary, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.02em' }}>
+                        WORKIZO
+                      </Typography>
+                      <Chip label="PAYMENT RECEIPT" color="success" size="small" sx={{ fontWeight: 800, borderRadius: '6px' }} />
+                    </Box>
+                    
+                    <Divider sx={{ mb: 3 }} />
+                    
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Receipt Number</Typography>
+                        <Typography variant="body2" fontWeight={700}>{booking.payment?.receipt_number || 'N/A'}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Booking ID / Tracking ID</Typography>
+                        <Typography variant="body2" fontWeight={700}>#{booking.id} / {booking.tracking_id || 'N/A'}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Customer Name</Typography>
+                        <Typography variant="body2" fontWeight={700}>{booking.customer?.full_name}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Assigned Captain</Typography>
+                        <Typography variant="body2" fontWeight={700}>{booking.worker?.full_name || 'N/A'}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Service Category</Typography>
+                        <Typography variant="body2" fontWeight={700}>{booking.service_category_detail?.name}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payment Method / Status</Typography>
+                        <Typography variant="body2" fontWeight={700} sx={{ textTransform: 'uppercase' }}>
+                          {booking.payment?.method || 'N/A'} / {booking.payment?.status || 'PAID'}
+                        </Typography>
+                      </Grid>
+                      
+                      {booking.payment?.method === 'ONLINE' && booking.payment?.transaction_id && (
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Transaction ID (Online)</Typography>
+                          <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace' }}>{booking.payment.transaction_id}</Typography>
+                        </Grid>
+                      )}
+                      
+                      {booking.payment?.method === 'CASH' && booking.payment?.cash_confirmation_timestamp && (
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cash Confirmation Time</Typography>
+                          <Typography variant="body2" fontWeight={700}>{new Date(booking.payment.cash_confirmation_timestamp).toLocaleString()}</Typography>
+                        </Grid>
+                      )}
+                      
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payment Date & Time</Typography>
+                        <Typography variant="body2" fontWeight={700}>{booking.payment?.payment_time ? new Date(booking.payment.payment_time).toLocaleString() : new Date().toLocaleString()}</Typography>
+                      </Grid>
+                    </Grid>
+                    
+                    <Divider sx={{ mb: 3 }} />
+                    
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Payment Breakdowns
                     </Typography>
-                  </ListItem>
-                </List>
-
-                <Box display="flex" gap={2} sx={{ mt: 3, flexWrap: 'wrap' }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    onClick={handleDownloadInvoice}
-                    sx={{ borderColor: tokens.colors.primary, color: tokens.colors.primary, borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
-                  >
-                    Download Invoice
-                  </Button>
-                  
-                  {!bill.is_approved ? (
-                    <Button
-                      variant="contained"
-                      onClick={handleApproveBill}
-                      sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#23232F' } }}
-                    >
-                      Approve Invoice
-                    </Button>
-                  ) : (
-                    booking.status !== 'completed' && (
+                    <List disablePadding>
+                      <ListItem sx={{ py: 0.75, px: 0 }}>
+                        <ListItemText primary="Service/Labour base charges" />
+                        <Typography variant="body2" fontWeight={700}>₹{bill.labour_charges}</Typography>
+                      </ListItem>
+                      <ListItem sx={{ py: 0.75, px: 0 }}>
+                        <ListItemText primary="Spare parts & materials charges" />
+                        <Typography variant="body2" fontWeight={700}>₹{bill.parts_charges}</Typography>
+                      </ListItem>
+                      <ListItem sx={{ py: 0.75, px: 0 }}>
+                        <ListItemText primary="GST (18% inclusive)" />
+                        <Typography variant="body2" fontWeight={700}>₹{bill.gst}</Typography>
+                      </ListItem>
+                      {parseFloat(bill.discount) > 0 && (
+                        <ListItem sx={{ py: 0.75, px: 0 }}>
+                          <ListItemText primary="Promo Discount" sx={{ color: tokens.colors.success }} />
+                          <Typography variant="body2" color="success.main" fontWeight={700}>-₹{bill.discount}</Typography>
+                        </ListItem>
+                      )}
+                      <Divider sx={{ my: 1.5 }} />
+                      <ListItem sx={{ py: 1, px: 0 }}>
+                        <ListItemText primary="Total Amount Paid" primaryTypographyProps={{ fontWeight: 800 }} />
+                        <Typography variant="h5" fontWeight={800} color="primary" sx={{ fontFamily: 'Outfit' }}>
+                          ₹{booking.payment?.amount || bill.grand_total}
+                        </Typography>
+                      </ListItem>
+                    </List>
+                    
+                    <Box className="no-print" display="flex" gap={2} sx={{ mt: 4, flexWrap: 'wrap' }}>
                       <Button
                         variant="contained"
-                        onClick={() => setPaymentModalOpen(true)}
-                        sx={{ bgcolor: tokens.colors.success, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#16a34a' } }}
+                        startIcon={<DownloadIcon />}
+                        onClick={handleDownloadReceipt}
+                        sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#23232F' } }}
                       >
-                        Process Payout (Pay ₹{bill.grand_total})
+                        Download Receipt
                       </Button>
-                    )
-                  )}
-                </Box>
-              </Paper>
+                      <Button
+                        variant="outlined"
+                        startIcon={<PrintIcon />}
+                        onClick={handlePrintReceipt}
+                        sx={{ borderColor: tokens.colors.primary, color: tokens.colors.primary, borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { borderColor: tokens.colors.primary, bgcolor: tokens.colors.bg } }}
+                      >
+                        Print Receipt
+                      </Button>
+                    </Box>
+                  </Paper>
+                ) : booking.status === 'ready_to_complete' ? (
+                  /* PAYMENT SUCCESSFUL WAITING STATE */
+                  <Paper elevation={0} sx={{ p: 4, border: `1.5px solid ${tokens.colors.success || '#10b981'}`, borderRadius: '18px', bgcolor: 'rgba(16, 185, 129, 0.02)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                    <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
+                      <CheckCircleIcon sx={{ color: '#10b981', fontSize: 32 }} />
+                      <Typography variant="h6" fontWeight={700} sx={{ color: '#10b981', fontFamily: 'Outfit, sans-serif' }}>
+                        Payment Confirmed
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                      Your payment of ₹{booking.payment?.amount || bill.grand_total} has been confirmed. The captain is finalizing the job details. You will be able to review the final invoice receipt and rate the service shortly.
+                    </Typography>
+                    <Box display="flex" alignItems="center" gap={1.5} sx={{ p: 2, bgcolor: 'rgba(16,185,129,0.06)', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
+                      <CircularProgress size={16} sx={{ color: '#10b981' }} />
+                      <Typography variant="body2" fontWeight={600} sx={{ color: '#10b981' }}>
+                        Awaiting captain's check-out confirmation...
+                      </Typography>
+                    </Box>
+                  </Paper>
+                ) : booking.status === 'WAITING_FOR_CASH_CONFIRMATION' ? (
+                  /* CASH PAYMENT SELECTED STATE */
+                  <Paper elevation={0} sx={{ p: 4, border: `1.5px solid ${tokens.colors.warning || '#D97706'}`, borderRadius: '18px', bgcolor: 'rgba(217, 119, 6, 0.02)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                    <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
+                      <HourglassEmptyIcon sx={{ color: '#D97706', fontSize: 32 }} />
+                      <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706', fontFamily: 'Outfit, sans-serif' }}>
+                        Cash Payment Selected
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                      You have selected Cash Payment. Please pay the assigned captain after completion of the service.
+                    </Typography>
+                    <Box display="flex" alignItems="center" gap={1.5} sx={{ p: 2, bgcolor: 'rgba(217,119,6,0.06)', borderRadius: '12px', borderLeft: '4px solid #D97706' }}>
+                      <CircularProgress size={16} sx={{ color: '#D97706' }} />
+                      <Typography variant="body2" fontWeight={600} sx={{ color: '#D97706' }}>
+                        Awaiting captain's cash confirmation...
+                      </Typography>
+                    </Box>
+                  </Paper>
+                ) : !bill.is_approved ? (
+                  /* STEP 1: DEDICATED BILL SUMMARY SCREEN */
+                  <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2, fontFamily: 'Outfit, sans-serif' }}>
+                      Service Bill Summary
+                    </Typography>
+                    
+                    <Grid container spacing={2} sx={{ mb: 2.5, p: 2, bgcolor: tokens.colors.bg, borderRadius: '12px' }}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Booking ID</Typography>
+                        <Typography variant="body2" fontWeight={700}>#{booking.id}</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Service Category</Typography>
+                        <Typography variant="body2" fontWeight={700}>{booking.service_category_detail?.name}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary">Captain Name</Typography>
+                        <Typography variant="body2" fontWeight={700}>{booking.worker?.full_name || 'N/A'}</Typography>
+                      </Grid>
+                    </Grid>
+
+                    <List disablePadding>
+                      <ListItem sx={{ py: 1, px: 0 }}>
+                        <ListItemText primary="Service charges (Labour)" />
+                        <Typography variant="body2" fontWeight={700}>₹{bill.labour_charges}</Typography>
+                      </ListItem>
+                      <ListItem sx={{ py: 1, px: 0 }}>
+                        <ListItemText primary="Spare parts & materials charges" />
+                        <Typography variant="body2" fontWeight={700}>₹{bill.parts_charges}</Typography>
+                      </ListItem>
+                      <ListItem sx={{ py: 1, px: 0 }}>
+                        <ListItemText primary="GST (18% inclusive)" />
+                        <Typography variant="body2" fontWeight={700}>₹{bill.gst}</Typography>
+                      </ListItem>
+                      {parseFloat(bill.discount) > 0 && (
+                        <ListItem sx={{ py: 1, px: 0 }}>
+                          <ListItemText primary="Promo Discount" sx={{ color: tokens.colors.success }} />
+                          <Typography variant="body2" color="success.main" fontWeight={700}>-₹{bill.discount}</Typography>
+                        </ListItem>
+                      )}
+                      <Divider sx={{ my: 1.5 }} />
+                      <ListItem sx={{ py: 1, px: 0 }}>
+                        <ListItemText primary="Grand Total" primaryTypographyProps={{ fontWeight: 800 }} />
+                        <Typography variant="h6" fontWeight={800} color="primary" sx={{ fontFamily: 'Outfit' }}>
+                          ₹{bill.grand_total}
+                        </Typography>
+                      </ListItem>
+                    </List>
+
+                    <Box display="flex" gap={2} sx={{ mt: 3, flexWrap: 'wrap' }}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => navigate('/customer/dashboard')}
+                        sx={{ borderColor: tokens.colors.primary, color: tokens.colors.primary, borderRadius: '8px', textTransform: 'none', fontWeight: 700, px: 3 }}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={handleApproveBill}
+                        sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, px: 3, '&:hover': { bgcolor: '#23232F' } }}
+                      >
+                        Proceed to Payment
+                      </Button>
+                    </Box>
+                  </Paper>
+                ) : (
+                  /* STEP 2: CHOOSE PAYMENT METHOD SCREEN */
+                  <Paper elevation={0} sx={{ p: 4, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                    <Typography variant="h6" fontWeight={700} sx={{ mb: 3, fontFamily: 'Outfit, sans-serif', textAlign: 'center' }}>
+                      Choose Payment Method
+                    </Typography>
+
+                    <Grid container spacing={3}>
+                      {/* ONLINE PAYMENT CARD */}
+                      <Grid item xs={12} md={6}>
+                        <Paper 
+                          variant="outlined"
+                          sx={{ 
+                            p: 3, 
+                            textAlign: 'center', 
+                            borderRadius: '16px', 
+                            height: '100%', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            justifyContent: 'space-between',
+                            borderColor: tokens.colors.primary,
+                            transition: 'all 0.2s',
+                            '&:hover': { boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }
+                          }}
+                        >
+                          <Box sx={{ mb: 2 }}>
+                            <CreditCardIcon sx={{ fontSize: 40, color: tokens.colors.primary, mb: 1 }} />
+                            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+                              ONLINE PAYMENT
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Secure online payment powered by Razorpay.
+                            </Typography>
+                          </Box>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            disabled={paying}
+                            onClick={handlePayOnline}
+                            sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', py: 1.2, borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#23232F' } }}
+                          >
+                            {paying ? <CircularProgress size={20} color="inherit" /> : 'Pay Online'}
+                          </Button>
+                        </Paper>
+                      </Grid>
+
+                      {/* CASH PAYMENT CARD */}
+                      <Grid item xs={12} md={6}>
+                        <Paper 
+                          variant="outlined"
+                          sx={{ 
+                            p: 3, 
+                            textAlign: 'center', 
+                            borderRadius: '16px', 
+                            height: '100%', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            justifyContent: 'space-between',
+                            borderColor: tokens.borderColor,
+                            transition: 'all 0.2s',
+                            '&:hover': { boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }
+                          }}
+                        >
+                          <Box sx={{ mb: 2 }}>
+                            <LocalAtmIcon sx={{ fontSize: 40, color: '#16A34A', mb: 1 }} />
+                            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+                              CASH PAYMENT
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Pay the assigned captain directly after service completion.
+                            </Typography>
+                          </Box>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            disabled={paying}
+                            onClick={handlePayByCash}
+                            sx={{ borderColor: tokens.colors.primary, color: tokens.colors.primary, py: 1.2, borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { borderColor: tokens.colors.primary, bgcolor: tokens.colors.bg } }}
+                          >
+                            Pay by Cash
+                          </Button>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+
+                    {onlinePaymentFailed && (
+                      <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(220, 38, 38, 0.04)', borderRadius: '12px', borderLeft: '4px solid #DC2626', textAlign: 'center' }}>
+                        <Typography variant="body2" color="error" fontWeight={700} sx={{ mb: 1 }}>
+                          Payment Failed: {errorMessage || 'Could not verify your online transaction.'}
+                        </Typography>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="error"
+                          onClick={handlePayOnline}
+                          sx={{ borderRadius: '6px', textTransform: 'none', fontWeight: 700 }}
+                        >
+                          Retry Payment
+                        </Button>
+                      </Box>
+                    )}
+                  </Paper>
+                )}
+              </Box>
             )}
+
 
             {/* SECTION 7: LIVE STATUS EVENTS FEED */}
             <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
@@ -789,7 +1221,7 @@ function BookingTracker() {
             </Paper>
 
             {/* SECTION 9: SERVICE HISTORY EVENT TRACKER */}
-            <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+            <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', order: -2 }}>
               <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2.5 }}>
                 Activity Time Log
               </Typography>
@@ -881,12 +1313,10 @@ function BookingTracker() {
               </Paper>
             )}
 
-          </Box>
-        </Grid>
+        </Box>
 
-        {/* RIGHT COLUMN 35% */}
-        <Grid item xs={12} lg={4}>
-          <Box display="flex" flexDirection="column" gap={3}>
+        {/* LEFT COLUMN - Service Partner, Location & Details */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, order: 1 }}>
             
             {/* Captain Information */}
             <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
@@ -911,6 +1341,9 @@ function BookingTracker() {
                     <Box>
                       <Typography variant="subtitle1" fontWeight={800}>
                         {booking.worker.full_name}
+                      </Typography>
+                      <Typography variant="caption" display="block" sx={{ fontWeight: 700, color: tokens.colors.primary, mb: 0.5 }}>
+                        {booking.service_category_detail?.name || 'AC Technician'}
                       </Typography>
                       <Box display="flex" alignItems="center" gap={0.5}>
                         <StarIcon sx={{ color: '#f59e0b', fontSize: 16 }} />
@@ -1001,74 +1434,11 @@ function BookingTracker() {
               </List>
             </Paper>
 
-          </Box>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
 
-      {/* Payment Selection Modal */}
-      <Dialog 
-        open={paymentModalOpen} 
-        onClose={() => !paying && setPaymentModalOpen(false)}
-        PaperProps={{ style: { borderRadius: '16px', padding: '12px' } }}
-      >
-        <DialogTitle sx={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>
-          Select Payment Method
-        </DialogTitle>
-        <DialogContent>
-          {paymentSuccess ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <CheckCircleIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
-              <Typography variant="h6" fontWeight="800">Payment Successful!</Typography>
-              <Typography variant="body2" color="text.secondary">Earnings deposited to worker's wallet.</Typography>
-            </Box>
-          ) : (
-            <Box sx={{ py: 2 }}>
-              <Box display="flex" flexDirection="column" gap={2}>
-                {['upi', 'card', 'cash'].map((method) => (
-                  <Box key={method}>
-                    <Button
-                      fullWidth
-                      variant={selectedPaymentMethod === method ? 'contained' : 'outlined'}
-                      onClick={() => setSelectedPaymentMethod(method)}
-                      sx={{
-                        py: 1.5,
-                        textTransform: 'uppercase',
-                        borderRadius: '8px',
-                        fontWeight: '700',
-                        borderColor: tokens.colors.primary,
-                        color: selectedPaymentMethod === method ? '#ffffff' : tokens.colors.primary,
-                        background: selectedPaymentMethod === method ? tokens.colors.primary : 'transparent',
-                        '&:hover': {
-                          background: selectedPaymentMethod === method ? '#23232F' : 'rgba(0,0,0,0.04)',
-                          borderColor: tokens.colors.primary,
-                        }
-                      }}
-                    >
-                      {method}
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        {!paymentSuccess && (
-          <DialogActions>
-            <Button onClick={() => setPaymentModalOpen(false)} disabled={paying} sx={{ color: tokens.colors.primary }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleProcessPayment} 
-              variant="contained" 
-              disabled={paying}
-              sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px' }}
-            >
-              {paying ? <CircularProgress size={20} color="inherit" /> : 'Pay Now'}
-            </Button>
-          </DialogActions>
-        )}
-      </Dialog>
+
 
     </Box>
   );

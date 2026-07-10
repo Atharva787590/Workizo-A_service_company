@@ -181,3 +181,6 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
 # Token Expirations
 PASSWORD_RESET_TIMEOUT = 900  # 15 minutes in seconds
 
+# Razorpay Config
+RAZORPAY_KEY_ID = env('RAZORPAY_KEY_ID', default='rzp_test_51O2p3D4R5S6T7U')
+RAZORPAY_KEY_SECRET = env('RAZORPAY_KEY_SECRET', default='dummy_secret_value')

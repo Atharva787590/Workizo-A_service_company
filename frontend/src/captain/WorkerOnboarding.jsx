@@ -242,7 +242,23 @@ const WorkerOnboarding = () => {
       navigate('/captain/waiting');
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.detail || 'Failed to submit profile documents.');
+      let errorMessage = 'Failed to submit profile documents.';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'object') {
+          const errors = err.response.data;
+          const errorList = Object.keys(errors).map(key => {
+            const val = errors[key];
+            const msg = Array.isArray(val) ? val.join(', ') : String(val);
+            return `${key}: ${msg}`;
+          });
+          if (errorList.length > 0) {
+            errorMessage = errorList.join(' | ');
+          }
+        } else if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

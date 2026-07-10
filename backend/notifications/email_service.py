@@ -377,3 +377,30 @@ class EmailNotificationService:
             recipient_list=[booking.worker.email]
         )
 
+    @staticmethod
+    def send_captain_payment_confirmation_email(booking, payment):
+        """
+        Sends a payment confirmation email to the captain.
+        """
+        if not booking.worker:
+            return False
+
+        context = {
+            'subject': f"Payment Confirmed - Booking #{booking.id}",
+            'user_name': booking.worker.full_name,
+            'booking_id': booking.id,
+            'customer_name': booking.customer.full_name,
+            'amount_paid': payment.amount,
+            'payment_method': payment.get_method_display(),
+            'payment_time': payment.payment_time.strftime("%B %d, %Y at %I:%M %p") if payment.payment_time else "",
+            'transaction_id': payment.transaction_id or ""
+        }
+        
+        return send_html_email(
+            subject=context['subject'],
+            template_name='emails/payment_confirmation_captain.html',
+            context=context,
+            recipient_list=[booking.worker.email]
+        )
+
+

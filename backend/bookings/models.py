@@ -15,6 +15,8 @@ class Booking(models.Model):
         ('repair_started', 'Repair Started'),
         ('repair_completed', 'Repair Completed'),
         ('waiting_approval', 'Waiting For Customer Approval'),
+        ('WAITING_FOR_CASH_CONFIRMATION', 'Waiting For Cash Confirmation'),
+        ('ready_to_complete', 'Ready To Complete'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     )

@@ -30,6 +30,7 @@ class BookingSerializer(serializers.ModelSerializer):
     repair_token = RepairTokenSerializer(read_only=True)
     major_repairs = MajorRepairApprovalSerializer(many=True, read_only=True)
     rating = RatingSerializer(read_only=True)
+    payment = serializers.SerializerMethodField()
     
     class Meta:
         model = Booking
@@ -38,9 +39,19 @@ class BookingSerializer(serializers.ModelSerializer):
             'problem_type', 'problem_description', 'address', 'city', 'state', 'pincode',
             'status', 'qr_code_value',
             'before_photo', 'after_photo', 'spare_part_photo', 'invoice_photo', 'optional_video',
-            'repair_token', 'major_repairs', 'rating', 'created_at', 'updated_at'
+            'repair_token', 'major_repairs', 'rating', 'payment', 'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'tracking_id', 'customer', 'worker', 'qr_code_value', 'created_at', 'updated_at')
+
+    def get_payment(self, obj):
+        from billing.serializers import PaymentSerializer
+        try:
+            if hasattr(obj, 'payment') and obj.payment:
+                return PaymentSerializer(obj.payment).data
+        except Exception:
+            pass
+        return None
+
 
 
 class PublicBookingSerializer(serializers.ModelSerializer):

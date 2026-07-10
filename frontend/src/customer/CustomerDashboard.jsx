@@ -5,10 +5,12 @@ import {
   Box, Button, Typography, List, ListItem, ListItemText,
   InputBase, Grid, Chip, CircularProgress, Paper, Divider,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  MenuItem, Select, FormControl, LinearProgress
+  MenuItem, Select, FormControl, LinearProgress,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 } from '@mui/material';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import DownloadIcon from '@mui/icons-material/Download';
 
 
 import HandymanIcon from '@mui/icons-material/Handyman';
@@ -161,6 +163,20 @@ function CustomerDashboard() {
   const handleViewDetails = (bookingId) => {
     navigate(`/customer/booking/${bookingId}`);
   };
+
+  const handleDownloadReceipt = async (bookingId) => {
+    try {
+      const response = await api.get(`/api/billing/${bookingId}/download-receipt/`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (err) {
+      toast.error('Failed to download receipt');
+    }
+  };
+
 
   useEffect(() => {
     if (location.state?.openBookingId) {
@@ -761,6 +777,107 @@ function CustomerDashboard() {
             </Paper>
           )}
         </Box>
+
+        {/* ── 5B. PAYMENT & BILLING HISTORY ─────────────────────────────── */}
+        <Box sx={span.full}>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'Outfit, sans-serif', color: tokens.colors.primary }}>
+              Payment & Billing History
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Receipts and details of all your service transactions
+            </Typography>
+          </Box>
+
+          {bookings.filter(b => b.payment).length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 6, textAlign: 'center',
+                border: `1px dashed ${tokens.borderColor}`,
+                borderRadius: `${tokens.borderRadius}px`,
+                bgcolor: tokens.colors.bg
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                No transaction logs or receipts registered yet.
+              </Typography>
+            </Paper>
+          ) : (
+            <Paper
+              elevation={0}
+              sx={{
+                border: `1px solid ${tokens.borderColor}`,
+                borderRadius: `${tokens.borderRadius}px`,
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(15, 23, 42, 0.02)'
+              }}
+            >
+              <TableContainer sx={{ border: 'none' }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: tokens.colors.bg }}>
+                      <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem', color: tokens.colors.primary }}>Receipt No</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem', color: tokens.colors.primary }}>Booking ID</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem', color: tokens.colors.primary }}>Amount</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem', color: tokens.colors.primary }}>Payment Method</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem', color: tokens.colors.primary }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem', color: tokens.colors.primary }}>Payment Date</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem', color: tokens.colors.primary, textAlign: 'right' }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {bookings.filter(b => b.payment).map((bk) => {
+                      const p = bk.payment;
+                      return (
+                        <TableRow key={bk.id} hover>
+                          <TableCell sx={{ fontWeight: 600 }}>{p.receipt_number || 'N/A'}</TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>#{bk.tracking_id || bk.id}</TableCell>
+                          <TableCell sx={{ fontWeight: 700 }}>₹{p.amount}</TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>{p.method.toUpperCase()}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={p.status.toUpperCase()}
+                              size="small"
+                              color={p.status === 'PAID' || p.status === 'success' ? 'success' : p.status === 'FAILED' ? 'error' : 'warning'}
+                              sx={{ fontWeight: 800, fontSize: '0.7rem' }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ color: 'text.secondary' }}>
+                            {new Date(p.payment_time || p.created_at).toLocaleDateString('en-IN')}
+                          </TableCell>
+                          <TableCell sx={{ textAlign: 'right' }}>
+                            {p.status === 'PAID' || p.status === 'success' ? (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<DownloadIcon />}
+                                onClick={() => handleDownloadReceipt(bk.id)}
+                                sx={{ borderRadius: '6px', textTransform: 'none', fontWeight: 700, py: 0.5 }}
+                              >
+                                Receipt
+                              </Button>
+                            ) : (
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() => handleViewDetails(bk.id)}
+                                sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '6px', textTransform: 'none', fontWeight: 700, py: 0.5 }}
+                              >
+                                View / Pay
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          )}
+        </Box>
+
 
         {/* ── 6. ACCOUNT + SUPPORT ─────────────────────────────────────── */}
         <Box sx={span.half}>
