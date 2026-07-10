@@ -651,7 +651,7 @@ function BookingTracker() {
           <Box sx={{ minWidth: { xs: '840px', md: 'auto' }, position: 'relative', py: 1 }}>
             {/* Progress Connector Line */}
             <Box sx={{ 
-              position: 'absolute', top: '22px', left: '6%', right: '6%', height: '4px', 
+              position: 'absolute', top: '22px', left: 'calc(100% / 14)', right: 'calc(100% / 14)', height: '4px', 
               bgcolor: '#E5E7EB', zIndex: 1 
             }}>
               <Box sx={{ 
@@ -660,7 +660,7 @@ function BookingTracker() {
               }} />
             </Box>
 
-            <Grid container justifyContent="space-between">
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               {[
                 { key: 'searching', label: 'Searching', desc: 'Finding nearby captain' },
                 { key: 'accepted', label: 'Accepted', desc: 'Captain assigned' },
@@ -691,7 +691,7 @@ function BookingTracker() {
                 }
 
                 return (
-                  <Grid item key={idx} sx={{ zIndex: 2, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '12%' }}>
+                  <Box key={idx} sx={{ zIndex: 2, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1 1 0', minWidth: 0 }}>
                     <motion.div
                       animate={isActive ? { scale: [1, 1.12, 1] } : {}}
                       transition={{ repeat: Infinity, duration: 2 }}
@@ -710,21 +710,21 @@ function BookingTracker() {
                     </motion.div>
                     <Typography 
                       variant="body2" 
-                      fontWeight={800} 
-                      sx={{ color: labelColor, display: 'block', mb: 0.5, fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                      fontWeight={600} 
+                      sx={{ color: labelColor, display: 'block', mb: 0.5, fontSize: '0.8rem', whiteSpace: 'nowrap' }}
                     >
                       {step.label}
                     </Typography>
                     <Typography 
                       variant="caption" 
-                      sx={{ color: '#9CA3AF', display: 'block', fontSize: '0.72rem', maxWidth: '100px', lineHeight: 1.3, mx: 'auto' }}
+                      sx={{ color: '#6B7280', display: 'block', fontSize: '0.68rem', maxWidth: '100px', lineHeight: 1.3, mx: 'auto' }}
                     >
                       {step.desc}
                     </Typography>
-                  </Grid>
+                  </Box>
                 );
               })}
-            </Grid>
+            </Box>
           </Box>
         </Box>
       </Paper>
@@ -745,6 +745,11 @@ function BookingTracker() {
         {/* RIGHT COLUMN - Activity, Progress & Payment */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, order: 2 }}>
             
+            {/* Live Service Status Feed */}
+            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: -1 }}>
+              Live Service Status Feed
+            </Typography>
+
             {/* Service Progress Card */}
             <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
               <Box display="flex" gap={2.5} alignItems="flex-start">
@@ -766,6 +771,8 @@ function BookingTracker() {
                     {['inspection', 'repair_started'].includes(booking.status) && "Service repairs are actively in progress..."}
                     {booking.status === 'repair_completed' && "Repairs done! Invoice pending checkout"}
                     {booking.status === 'waiting_approval' && "Invoice awaiting your checkout approval"}
+                    {booking.status === 'WAITING_FOR_CASH_CONFIRMATION' && "Cash payment selected — awaiting confirmation"}
+                    {booking.status === 'ready_to_complete' && "Payment confirmed! Awaiting captain checkout"}
                     {booking.status === 'completed' && "Booking finished and closed!"}
                     {booking.status === 'cancelled' && "Booking request was cancelled."}
                   </Typography>
@@ -778,6 +785,8 @@ function BookingTracker() {
                     {['inspection', 'repair_started'].includes(booking.status) && "The captain is actively implementing the repair tasks. Progress updates will sync here automatically."}
                     {booking.status === 'repair_completed' && "Service job finished successfully. The invoice statement has been built by the partner."}
                     {booking.status === 'waiting_approval' && "Captain is seeking estimate approval for spare parts. Please check details below to proceed."}
+                    {booking.status === 'WAITING_FOR_CASH_CONFIRMATION' && "You selected cash payment. Please hand the payment to the captain for confirmation."}
+                    {booking.status === 'ready_to_complete' && "Your payment has been confirmed. The captain is finalizing job details and will close the booking shortly."}
                     {booking.status === 'completed' && "Thank you for using WORKIZO! The billing invoice has been cleared and payment was successful."}
                     {booking.status === 'cancelled' && "This booking request was cancelled and terminated."}
                   </Typography>
