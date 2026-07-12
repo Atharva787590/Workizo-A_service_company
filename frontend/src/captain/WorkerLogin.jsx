@@ -153,7 +153,7 @@ const WorkerLogin = ({ defaultSignUp = false }) => {
           position: 'relative',
           width: '100%',
           maxWidth: '850px',
-          minHeight: '680px',
+          minHeight: '620px',
           backgroundColor: '#ffffff',
           borderRadius: '24px',
           boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.05)',
@@ -167,7 +167,7 @@ const WorkerLogin = ({ defaultSignUp = false }) => {
           sx={{
             width: { xs: '100%', md: '50%' },
             height: '100%',
-            minHeight: '680px',
+            minHeight: '620px',
             position: { xs: 'relative', md: 'absolute' },
             top: 0,
             left: 0,
@@ -306,7 +306,7 @@ const WorkerLogin = ({ defaultSignUp = false }) => {
           sx={{
             width: { xs: '100%', md: '50%' },
             height: '100%',
-            minHeight: '680px',
+            minHeight: '620px',
             position: { xs: 'relative', md: 'absolute' },
             top: 0,
             left: { xs: 0, md: '50%' },
