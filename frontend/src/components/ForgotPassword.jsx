@@ -11,7 +11,7 @@ import { AuthPageShell } from './dashboard';
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
+
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = (data) => {
@@ -37,7 +37,7 @@ const ForgotPassword = () => {
           label="Email Address"
           autoComplete="email"
           autoFocus
-          {...register('email', { 
+          {...register('email', {
             required: 'Email is required',
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,

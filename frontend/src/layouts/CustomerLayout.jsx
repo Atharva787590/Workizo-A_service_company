@@ -54,8 +54,8 @@ const CustomerLayout = () => {
   return (
     <Box display="flex" flexDirection="column" minHeight="100vh" bgcolor="#FAFAFB">
       {/* Glassmorphic Navbar */}
-      <AppBar 
-        position="sticky" 
+      <AppBar
+        position="sticky"
         elevation={0}
         sx={{
           background: 'rgba(255, 255, 255, 0.95)',
@@ -67,18 +67,18 @@ const CustomerLayout = () => {
         <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
             {/* Branding Logo */}
-            <Box 
-              onClick={() => navigate('/')} 
+            <Box
+              onClick={() => navigate('/')}
               sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 1.5 }}
             >
-              <Box 
-                sx={{ 
-                  width: 38, 
-                  height: 38, 
-                  bgcolor: '#000000', 
-                  borderRadius: '8px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  bgcolor: '#000000',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
                   overflow: 'hidden'
@@ -103,28 +103,28 @@ const CustomerLayout = () => {
 
             {/* Nav Menu Actions */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Button 
-                variant="text" 
-                color="inherit" 
+              <Button
+                variant="text"
+                color="inherit"
                 onClick={() => navigate('/')}
                 sx={{ color: location.pathname === '/' ? '#000000' : '#4B5563', fontWeight: 600 }}
               >
                 Home
               </Button>
-              <Button 
-                variant="text" 
-                color="inherit" 
+              <Button
+                variant="text"
+                color="inherit"
                 onClick={() => navigate('/about')}
                 sx={{ color: location.pathname === '/about' ? '#000000' : '#4B5563', fontWeight: 600 }}
               >
                 About Us
               </Button>
-              
+
               {(!isAuthenticated || user?.role === 'customer') && (
                 <>
-                  <Button 
-                    variant="text" 
-                    color="inherit" 
+                  <Button
+                    variant="text"
+                    color="inherit"
                     onClick={() => {
                       if (isAuthenticated) {
                         navigate('/customer/book');
@@ -142,9 +142,9 @@ const CustomerLayout = () => {
               )}
 
               {(!isAuthenticated || user?.role === 'admin') && (
-                <Button 
-                  variant="text" 
-                  color="inherit" 
+                <Button
+                  variant="text"
+                  color="inherit"
                   onClick={() => navigate(user?.role === 'admin' ? '/admin/dashboard' : '/admin/login')}
                   sx={{ color: location.pathname.includes('/admin') ? '#000000' : '#4B5563', fontWeight: 600 }}
                 >
@@ -154,15 +154,15 @@ const CustomerLayout = () => {
 
               {/* Become a Captain button - styled in Workizo black outlined pill button */}
               {!isAuthenticated && (
-                <Button 
-                  variant="outlined" 
+                <Button
+                  variant="outlined"
                   onClick={() => navigate('/captain/login')}
-                  sx={{ 
-                    borderColor: '#000000', 
-                    color: '#000000', 
-                    borderRadius: '24px', 
-                    fontWeight: 'bold', 
-                    px: 3, 
+                  sx={{
+                    borderColor: '#000000',
+                    color: '#000000',
+                    borderRadius: '24px',
+                    fontWeight: 'bold',
+                    px: 3,
                     py: 0.8,
                     textTransform: 'none',
                     '&:hover': {
@@ -174,23 +174,23 @@ const CustomerLayout = () => {
                   Become a Captain
                 </Button>
               )}
-              
+
               {isAuthenticated ? (
                 <>
                   {user?.role !== 'customer' && (
-                    <Button 
-                      variant="text" 
-                      color="inherit" 
+                    <Button
+                      variant="text"
+                      color="inherit"
                       onClick={() => navigate(getDashboardRoute())}
                       sx={{ color: location.pathname.includes('/dashboard') ? '#000000' : '#4B5563', fontWeight: 600 }}
                     >
                       Dashboard
                     </Button>
                   )}
-                  
+
                   <Tooltip title="Account Settings">
                     <IconButton onClick={handleMenuOpen} sx={{ p: 0, ml: 1 }}>
-                      <Avatar 
+                      <Avatar
                         src={user.profile_photo ? `http://127.0.0.1:8001${user.profile_photo}` : ''}
                         sx={{ bgcolor: '#000000', width: 36, height: 36 }}
                       >
@@ -198,7 +198,7 @@ const CustomerLayout = () => {
                       </Avatar>
                     </IconButton>
                   </Tooltip>
-                  
+
                   <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
@@ -240,8 +240,8 @@ const CustomerLayout = () => {
                   </Menu>
                 </>
               ) : (
-                <Button 
-                  variant="contained" 
+                <Button
+                  variant="contained"
                   color="primary"
                   onClick={() => navigate('/customer/login')}
                   sx={{ borderRadius: '24px', px: 3 }}
@@ -260,24 +260,24 @@ const CustomerLayout = () => {
       </Box>
 
       {/* Footer */}
-      <Box 
-        component="footer" 
-        sx={{ 
-          py: 8, 
-          px: 2, 
-          mt: 'auto', 
-          backgroundColor: '#111111', 
+      <Box
+        component="footer"
+        sx={{
+          py: 8,
+          px: 2,
+          mt: 'auto',
+          backgroundColor: '#111111',
           color: '#FFFFFF',
-          borderTop: '1px solid #222222' 
+          borderTop: '1px solid #222222'
         }}
       >
         <Container maxWidth="xl">
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' }, 
-              justifyContent: 'space-between', 
-              alignItems: 'flex-start', 
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
               gap: { xs: 4, sm: 3, md: 4 },
               flexWrap: 'wrap'
             }}
@@ -285,14 +285,14 @@ const CustomerLayout = () => {
             {/* Column 1: Brand Info & Socials */}
             <Box sx={{ flex: '1 1 250px', minWidth: '220px', maxWidth: '300px' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                <Box 
-                  sx={{ 
-                    width: 38, 
-                    height: 38, 
-                    bgcolor: '#ffffff', 
-                    borderRadius: '8px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                <Box
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    bgcolor: '#ffffff',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
                     overflow: 'hidden'
@@ -358,7 +358,8 @@ const CustomerLayout = () => {
                 {[
                   { text: 'Home', path: '/' },
                   { text: 'About Us', path: '/about' },
-                  { text: 'Book Service', path: '/customer/book', action: () => {
+                  {
+                    text: 'Book Service', path: '/customer/book', action: () => {
                       if (isAuthenticated) {
                         navigate('/customer/book');
                       } else {
@@ -366,7 +367,7 @@ const CustomerLayout = () => {
                         localStorage.setItem('redirect_after_login', '/customer/book');
                         navigate('/customer/login');
                       }
-                    } 
+                    }
                   },
                   { text: 'Become a Captain', path: '/captain/login' },
                   { text: 'Admin Login', path: '/admin/login' }
@@ -483,13 +484,13 @@ const CustomerLayout = () => {
 
           <Divider sx={{ my: 5, borderColor: '#222222' }} />
 
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' }, 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              gap: 2 
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 2
             }}
           >
             <Typography variant="body2" sx={{ color: '#9CA3AF' }}>

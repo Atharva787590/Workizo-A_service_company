@@ -48,106 +48,106 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <AuthProvider>
-          <Routes>
-            {/* Public and Customer Routes under CustomerLayout */}
-            <Route element={<CustomerLayout />}>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/about" element={<AboutUs />} />
-              <Route path="/customer/login" element={<CustomerLogin />} />
-              <Route path="/customer/register" element={<CustomerRegister />} />
-              <Route path="/captain/login" element={<WorkerLogin />} />
-              <Route path="/captain/register" element={<WorkerRegister />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Routes>
+              {/* Public and Customer Routes under CustomerLayout */}
+              <Route element={<CustomerLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="/customer/login" element={<CustomerLogin />} />
+                <Route path="/customer/register" element={<CustomerRegister />} />
+                <Route path="/captain/login" element={<WorkerLogin />} />
+                <Route path="/captain/register" element={<WorkerRegister />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
-              {/* Customer Protected Routes */}
+                {/* Customer Protected Routes */}
+                <Route
+                  path="/customer/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['customer']}>
+                      <CustomerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customer/book"
+                  element={
+                    <ProtectedRoute allowedRoles={['customer']}>
+                      <BookingFlow />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customer/profile"
+                  element={
+                    <ProtectedRoute allowedRoles={['customer']}>
+                      <CustomerProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customer/booking/:bookingId"
+                  element={
+                    <ProtectedRoute allowedRoles={['customer']}>
+                      <BookingTracker />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              {/* Captain Onboarding/Waiting (Non-approved) Routes */}
               <Route
-                path="/customer/dashboard"
                 element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <CustomerDashboard />
+                  <ProtectedRoute allowedRoles={['worker']}>
+                    <CaptainRouteWrapper requireApproved={false}>
+                      <Outlet />
+                    </CaptainRouteWrapper>
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route path="/captain/onboarding" element={<WorkerOnboarding />} />
+                <Route path="/captain/waiting" element={<WorkerWaiting />} />
+              </Route>
+
+              {/* Captain Protected Routes under CaptainLayout */}
               <Route
-                path="/customer/book"
                 element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <BookingFlow />
+                  <ProtectedRoute allowedRoles={['worker']}>
+                    <CaptainRouteWrapper requireApproved={true}>
+                      <CaptainLayout />
+                    </CaptainRouteWrapper>
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route path="/captain/dashboard" element={<WorkerDashboard />} />
+                <Route path="/captain/job/:id" element={<WorkerJobDetails />} />
+                <Route path="/captain/profile" element={<WorkerProfile />} />
+                <Route path="/captain/history" element={<WorkerJobHistory />} />
+                <Route path="/captain/wallet" element={<WorkerWallet />} />
+                <Route path="/captain/settings" element={<WorkerSettings />} />
+              </Route>
+
+              {/* Admin Protected Routes under AdminLayout */}
               <Route
-                path="/customer/profile"
                 element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <CustomerProfile />
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/customer/booking/:bookingId"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <BookingTracker />
-                  </ProtectedRoute>
+              >
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              </Route>
+            </Routes>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: '#ffffff',
+                  color: '#0F0F14',
+                  border: '1px solid #E5E7EB'
                 }
-              />
-            </Route>
-
-            {/* Captain Onboarding/Waiting (Non-approved) Routes */}
-            <Route
-              element={
-                <ProtectedRoute allowedRoles={['worker']}>
-                  <CaptainRouteWrapper requireApproved={false}>
-                    <Outlet />
-                  </CaptainRouteWrapper>
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/captain/onboarding" element={<WorkerOnboarding />} />
-              <Route path="/captain/waiting" element={<WorkerWaiting />} />
-            </Route>
-
-            {/* Captain Protected Routes under CaptainLayout */}
-            <Route
-              element={
-                <ProtectedRoute allowedRoles={['worker']}>
-                  <CaptainRouteWrapper requireApproved={true}>
-                    <CaptainLayout />
-                  </CaptainRouteWrapper>
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/captain/dashboard" element={<WorkerDashboard />} />
-              <Route path="/captain/job/:id" element={<WorkerJobDetails />} />
-              <Route path="/captain/profile" element={<WorkerProfile />} />
-              <Route path="/captain/history" element={<WorkerJobHistory />} />
-              <Route path="/captain/wallet" element={<WorkerWallet />} />
-              <Route path="/captain/settings" element={<WorkerSettings />} />
-            </Route>
-
-            {/* Admin Protected Routes under AdminLayout */}
-            <Route
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            </Route>
-          </Routes>
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: '#ffffff',
-                color: '#0F0F14',
-                border: '1px solid #E5E7EB'
-              }
-            }}
-          />
+              }}
+            />
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from './services/api';
-import { motion } from 'framer-motion';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import {
   Container, Typography, Button, Box, Grid, Card, CardContent,
   Avatar, TextField, InputAdornment, Select, MenuItem, InputLabel,
@@ -21,6 +19,8 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import StarsIcon from '@mui/icons-material/Stars';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { motion } from 'framer-motion';
 
 const ALL_CATEGORIES = [
   { id: '1', name: 'Electrician', icon: <ElectricalServicesIcon sx={{ fontSize: 32, color: '#f59e0b' }} />, bgColor: 'rgba(245, 158, 11, 0.08)', desc: 'Fan, lights & wiring repairs' },
@@ -41,26 +41,22 @@ import handymanHero from './assets/handyman_hero.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [city, setCity] = useState('Ahmedabad');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dbCategories, setDbCategories] = useState([]);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const videoRef = useRef(null);
 
   const handlePlayVideo = () => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.play().then(() => {
-          setIsPlaying(true);
-        }).catch(err => {
-          console.log("Autoplay / Play interrupted:", err);
-        });
-      }
+      videoRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.error("Playback failed", err);
+      });
     }
   };
+
+  const [city, setCity] = useState('Ahmedabad');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dbCategories, setDbCategories] = useState([]);
 
   useEffect(() => {
     api.get('/api/services/categories/')
@@ -273,12 +269,12 @@ const LandingPage = () => {
             </Typography>
           </Box>
 
-          {/* 60/40 Flexbox Container */}
+          {/* 50/50 Flexbox Layout */}
           <Box
             sx={{
               display: 'flex',
-              flexDirection: { xs: 'column', lg: 'row' },
-              gap: { xs: 4, lg: 6 },
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: { xs: 4, md: '4%' },
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
@@ -286,17 +282,18 @@ const LandingPage = () => {
               mb: 4
             }}
           >
-            {/* Left Column: 60% (Existing How It Works timeline) */}
-            <Box sx={{ width: { xs: '100%', lg: '57%' }, flexShrink: 0 }}>
+            {/* Left Column: 42% */}
+            <Box sx={{ width: { xs: '100%', md: '42%', lg: '42%' }, flexShrink: 0 }}>
               {/* Centered Timeline Tree */}
               <Box sx={{ position: 'relative', py: 2 }}>
                 {/* Vertical Center Line */}
                 <Box
                   sx={{
+                    display: { xs: 'none', md: 'block' },
                     position: 'absolute',
-                    right: '22px',
-                    top: '24px',
-                    bottom: '24px',
+                    right: '33px',
+                    top: '40px',
+                    bottom: '40px',
                     width: '4px',
                     bgcolor: '#E5E7EB',
                     borderRadius: '2px',
@@ -305,102 +302,164 @@ const LandingPage = () => {
                 />
 
                 {/* Step 1 */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', position: 'relative', zIndex: 2, mb: 6 }}>
-                  <Card sx={{ p: 4, maxWidth: '460px', width: '100%', borderRadius: '16px', border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', bgcolor: '#ffffff', mr: '32px' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5, color: '#1A73E8' }}>01</Typography>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: '#0F0F14' }}>Choose Category</Typography>
-                    <Typography variant="body2" sx={{ color: '#6B7280', lineHeight: 1.6 }}>
-                      Select from our list of vetted experts (plumber, electrician, etc.) and search local providers.
-                    </Typography>
-                  </Card>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    position: 'relative',
+                    zIndex: 2,
+                    mb: '32px'
+                  }}
+                >
+                  {/* Card */}
+                  <Box sx={{ width: { xs: '100%', md: 'calc(100% - 70px)' }, flexShrink: 0 }}>
+                    <Card sx={{ p: 4, borderRadius: '16px', border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', bgcolor: '#ffffff' }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5, color: '#1A73E8' }}>01</Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: '#0F0F14' }}>Choose Category</Typography>
+                      <Typography variant="body2" sx={{ color: '#6B7280', lineHeight: 1.6 }}>
+                        Select from our list of vetted experts (plumber, electrician, etc.) and search local providers.
+                      </Typography>
+                    </Card>
+                  </Box>
                   
                   {/* Circle Indicator */}
                   <Box
                     sx={{
-                      display: 'flex',
+                      display: { xs: 'none', md: 'flex' },
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 48,
-                      height: 48,
-                      bgcolor: '#1A73E8',
-                      color: '#ffffff',
-                      borderRadius: '50%',
-                      fontWeight: 'bold',
-                      boxShadow: '0 0 0 6px #FAFAFB, 0 4px 12px rgba(0,0,0,0.08)',
-                      zIndex: 3,
+                      width: '70px',
                       flexShrink: 0
                     }}
                   >
-                    1
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 48,
+                        height: 48,
+                        bgcolor: '#1A73E8',
+                        color: '#ffffff',
+                        borderRadius: '50%',
+                        fontWeight: 'bold',
+                        boxShadow: '0 0 0 6px #FAFAFB, 0 4px 12px rgba(0,0,0,0.08)',
+                        zIndex: 3
+                      }}
+                    >
+                      1
+                    </Box>
                   </Box>
                 </Box>
 
                 {/* Step 2 */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', position: 'relative', zIndex: 2, mb: 6 }}>
-                  <Card sx={{ p: 4, maxWidth: '460px', width: '100%', borderRadius: '16px', border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', bgcolor: '#ffffff', mr: '32px' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5, color: '#34A853' }}>02</Typography>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: '#0F0F14' }}>Match Nearby</Typography>
-                    <Typography variant="body2" sx={{ color: '#6B7280', lineHeight: 1.6 }}>
-                      Our live dispatcher alerts all online Captains in your category and pairs you in under 5 minutes.
-                    </Typography>
-                  </Card>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    position: 'relative',
+                    zIndex: 2,
+                    mb: '32px'
+                  }}
+                >
+                  {/* Card */}
+                  <Box sx={{ width: { xs: '100%', md: 'calc(100% - 70px)' }, flexShrink: 0 }}>
+                    <Card sx={{ p: 4, borderRadius: '16px', border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', bgcolor: '#ffffff' }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5, color: '#34A853' }}>02</Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: '#0F0F14' }}>Match Nearby</Typography>
+                      <Typography variant="body2" sx={{ color: '#6B7280', lineHeight: 1.6 }}>
+                        Our live dispatcher alerts all online Captains in your category and pairs you in under 5 minutes.
+                      </Typography>
+                    </Card>
+                  </Box>
 
                   {/* Circle Indicator */}
                   <Box
                     sx={{
-                      display: 'flex',
+                      display: { xs: 'none', md: 'flex' },
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 48,
-                      height: 48,
-                      bgcolor: '#34A853',
-                      color: '#ffffff',
-                      borderRadius: '50%',
-                      fontWeight: 'bold',
-                      boxShadow: '0 0 0 6px #FAFAFB, 0 4px 12px rgba(0,0,0,0.08)',
-                      zIndex: 3,
+                      width: '70px',
                       flexShrink: 0
                     }}
                   >
-                    2
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 48,
+                        height: 48,
+                        bgcolor: '#34A853',
+                        color: '#ffffff',
+                        borderRadius: '50%',
+                        fontWeight: 'bold',
+                        boxShadow: '0 0 0 6px #FAFAFB, 0 4px 12px rgba(0,0,0,0.08)',
+                        zIndex: 3
+                      }}
+                    >
+                      2
+                    </Box>
                   </Box>
                 </Box>
 
                 {/* Step 3 */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', position: 'relative', zIndex: 2 }}>
-                  <Card sx={{ p: 4, maxWidth: '460px', width: '100%', borderRadius: '16px', border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', bgcolor: '#ffffff', mr: '32px' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5, color: '#FBBC05' }}>03</Typography>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: '#0F0F14' }}>Track Timeline</Typography>
-                    <Typography variant="body2" sx={{ color: '#6B7280', lineHeight: 1.6 }}>
-                      Track the assigned Captain live on the interactive timeline, verify via secure QR, and settle payments.
-                    </Typography>
-                  </Card>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                >
+                  {/* Card */}
+                  <Box sx={{ width: { xs: '100%', md: 'calc(100% - 70px)' }, flexShrink: 0 }}>
+                    <Card sx={{ p: 4, borderRadius: '16px', border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', bgcolor: '#ffffff' }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5, color: '#FBBC05' }}>03</Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: '#0F0F14' }}>Track Timeline</Typography>
+                      <Typography variant="body2" sx={{ color: '#6B7280', lineHeight: 1.6 }}>
+                        Track the assigned Captain live on the interactive timeline, verify via secure QR, and settle payments.
+                      </Typography>
+                    </Card>
+                  </Box>
 
                   {/* Circle Indicator */}
                   <Box
                     sx={{
-                      display: 'flex',
+                      display: { xs: 'none', md: 'flex' },
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 48,
-                      height: 48,
-                      bgcolor: '#FBBC05',
-                      color: '#ffffff',
-                      borderRadius: '50%',
-                      fontWeight: 'bold',
-                      boxShadow: '0 0 0 6px #FAFAFB, 0 4px 12px rgba(0,0,0,0.08)',
-                      zIndex: 3,
+                      width: '70px',
                       flexShrink: 0
                     }}
                   >
-                    3
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 48,
+                        height: 48,
+                        bgcolor: '#FBBC05',
+                        color: '#ffffff',
+                        borderRadius: '50%',
+                        fontWeight: 'bold',
+                        boxShadow: '0 0 0 6px #FAFAFB, 0 4px 12px rgba(0,0,0,0.08)',
+                        zIndex: 3
+                      }}
+                    >
+                      3
+                    </Box>
                   </Box>
                 </Box>
               </Box>
             </Box>
 
-            {/* Right Column: 40% (Video Showcase Container) */}
-            <Box sx={{ width: { xs: '100%', lg: '38%' }, flexShrink: 0 }}>
+            {/* Right Column: 54% (Video Showcase Container) */}
+            <Box sx={{ width: { xs: '100%', md: '54%', lg: '54%' }, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
               <Box
                 component={motion.div}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -409,114 +468,127 @@ const LandingPage = () => {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 sx={{
                   position: { xs: 'relative', lg: 'sticky' },
-                  top: { xs: 'auto', lg: '120px' },
+                  top: { xs: 'auto', lg: '180px' },
                   width: '100%',
-                  height: '650px',
-                  backgroundColor: '#ffffff',
+                  aspectRatio: '16/9',
+                  background: 'linear-gradient(135deg, #4F46E5, #60A5FA)',
+                  padding: '2px',
                   borderRadius: '24px',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.06)',
-                  overflow: 'hidden',
+                  boxShadow: '0 25px 70px rgba(0, 0, 0, 0.15)',
                   zIndex: 5,
                   mb: { xs: 4, lg: 0 },
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  border: '1px solid #E5E7EB'
+                  overflow: 'hidden'
                 }}
               >
-                {/* Loop-friendly video playing inline */}
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  style={{
+                {/* Inner Video Container */}
+                <Box
+                  sx={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'cover',
-                    borderRadius: 'inherit'
+                    backgroundColor: '#ffffff',
+                    borderRadius: '22px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                   }}
                 >
-                  <source src="/videos/workizo-promo.mp4" type="video/mp4" />
-                  <source src="https://assets.mixkit.co/videos/preview/mixkit-hand-of-a-plumber-with-a-wrench-fixing-a-sink-40919-large.mp4" type="video/mp4" />
-                </video>
-
-                {/* Overlay shown when video is paused / not playing */}
-                {!isPlaying && (
-                  <Box
-                    onClick={handlePlayVideo}
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                      backdropFilter: 'blur(4px)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      p: 4,
-                      textAlign: 'center',
-                      transition: 'all 0.3s ease'
+                  {/* Loop-friendly video playing inline */}
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: 'inherit',
+                      display: 'block'
                     }}
                   >
-                    {/* Play Button */}
+                    <source src="/videos/WORKIZO_Premium_Hero_Video_Obj.mp4" type="video/mp4" />
+                    <source src="/videos/workizo-promo.mp4" type="video/mp4" />
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-hand-of-a-plumber-with-a-wrench-fixing-a-sink-40919-large.mp4" type="video/mp4" />
+                  </video>
+
+                  {/* Overlay shown when video is paused / not playing */}
+                  {!isPlaying && (
                     <Box
+                      onClick={handlePlayVideo}
                       sx={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '50%',
-                        backgroundColor: '#ffffff',
-                        boxShadow: '0 8px 30px rgba(26, 115, 232, 0.25)',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        backdropFilter: 'blur(4px)',
                         display: 'flex',
-                        alignItems: 'center',
+                        flexDirection: 'column',
                         justifyContent: 'center',
-                        mb: 4,
-                        transition: 'transform 0.2s ease',
-                        '&:hover': {
-                          transform: 'scale(1.1)'
-                        }
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        zIndex: 10,
+                        p: 4,
+                        textAlign: 'center',
+                        transition: 'all 0.3s ease'
                       }}
                     >
-                      <PlayArrowIcon sx={{ color: '#1A73E8', fontSize: '48px', ml: 0.5 }} />
+                      {/* Play Button */}
+                      <Box
+                        sx={{
+                          width: '80px',
+                          height: '80px',
+                          borderRadius: '50%',
+                          backgroundColor: '#ffffff',
+                          boxShadow: '0 8px 30px rgba(26, 115, 232, 0.25)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mb: 2,
+                          transition: 'transform 0.2s ease',
+                          '&:hover': {
+                            transform: 'scale(1.1)'
+                          }
+                        }}
+                      >
+                        <PlayArrowIcon sx={{ color: '#1A73E8', fontSize: '48px', ml: 0.5 }} />
+                      </Box>
+
+                      {/* Title */}
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontWeight: 800,
+                          color: '#0F0F14',
+                          fontFamily: 'Outfit, sans-serif',
+                          mb: 1,
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        WORKIZO IN ACTION
+                      </Typography>
+
+                      {/* Subtitle */}
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: '#5F6368',
+                          maxWidth: '400px',
+                          lineHeight: 1.5,
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        See how our Captains deliver trusted services right at your doorstep.
+                      </Typography>
                     </Box>
-
-                    {/* Title */}
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: 800,
-                        color: '#0F0F14',
-                        fontFamily: 'Outfit, sans-serif',
-                        mb: 1.5,
-                        letterSpacing: '0.05em'
-                      }}
-                    >
-                      WORKIZO IN ACTION
-                    </Typography>
-
-                    {/* Subtitle */}
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: '#5F6368',
-                        maxWidth: '400px',
-                        lineHeight: 1.6,
-                        fontSize: '0.95rem'
-                      }}
-                    >
-                      See how our Captains deliver trusted services right at your doorstep.
-                    </Typography>
-                  </Box>
-                )}
+                  )}
+                </Box>
               </Box>
             </Box>
           </Box>
