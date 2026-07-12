@@ -6,17 +6,34 @@ import {
   TextField, Button, Box, Link, CircularProgress, Typography, Divider
 } from '@mui/material';
 import { GoogleLogin } from '@react-oauth/google';
-
 import toast from 'react-hot-toast';
 import { tokens } from '../design/tokens';
-import { AuthPageShell } from '../components/dashboard';
 
-const WorkerLogin = () => {
-  const { login, logout, isAuthenticated, user, googleLogin } = useAuth();
+const WorkerLogin = ({ defaultSignUp = false }) => {
+  const { login, logout, isAuthenticated, user, googleLogin, register: registerAuth } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const [isSignUp, setIsSignUp] = useState(defaultSignUp);
+
+  // Sync state if defaultSignUp prop changes
+  useEffect(() => {
+    setIsSignUp(defaultSignUp);
+  }, [defaultSignUp]);
+
+  const { 
+    register: registerLogin, 
+    handleSubmit: handleSubmitLogin, 
+    formState: { errors: errorsLogin } 
+  } = useForm();
+
+  const { 
+    register: registerSignup, 
+    handleSubmit: handleSubmitSignup, 
+    watch: watchSignup, 
+    formState: { errors: errorsSignup } 
+  } = useForm();
+
+  const signupPassword = watchSignup('password');
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -24,13 +41,13 @@ const WorkerLogin = () => {
       if (user.role === 'worker') {
         navigate('/captain/dashboard');
       } else {
-        // Log out other roles to allow logging in as captain
         logout();
       }
     }
   }, [isAuthenticated, user, navigate, logout]);
 
-  const onSubmit = async (data) => {
+  // Login handler
+  const onLoginSubmit = async (data) => {
     setLoading(true);
     try {
       const loggedUser = await login(data.email, data.password);
@@ -47,12 +64,35 @@ const WorkerLogin = () => {
     }
   };
 
+  // Register handler
+  const onRegisterSubmit = async (data) => {
+    setLoading(true);
+    try {
+      await registerAuth(data.fullName, data.email, data.phone, data.password, 'worker');
+      toast.success('Registration successful! Please complete your profile and KYC details.');
+      navigate('/captain/onboarding');
+    } catch (err) {
+      console.error(err);
+      if (err.email) {
+        toast.error(`Email: ${err.email[0]}`);
+      } else if (err.phone) {
+        toast.error(`Phone: ${err.phone[0]}`);
+      } else {
+        toast.error(err.detail || 'Registration failed. Please check inputs.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google authentication handlers
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
     try {
       const loggedUser = await googleLogin(credentialResponse.credential, 'worker');
       if (loggedUser.role === 'worker') {
-        navigate('/captain/dashboard');
+        toast.success('Registration successful! Please complete your profile and KYC details.');
+        navigate('/captain/onboarding');
       } else {
         await logout();
         toast.error('This portal is only for Captains. Please log in on the Customer Portal.');
@@ -82,7 +122,8 @@ const WorkerLogin = () => {
       
       const loggedUser = await googleLogin(mockToken, 'worker');
       if (loggedUser.role === 'worker') {
-        navigate('/captain/dashboard');
+        toast.success('Registration successful! Please complete your profile and KYC details.');
+        navigate('/captain/onboarding');
       } else {
         await logout();
         toast.error('This portal is only for Captains. Please log in on the Customer Portal.');
@@ -95,126 +136,471 @@ const WorkerLogin = () => {
   };
 
   return (
-    <AuthPageShell
-      title="Captain Portal Login"
-      subtitle="Manage your bookings, online status, and verification"
+    <Box
+      sx={{
+        minHeight: 'calc(100vh - 64px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 6,
+        px: 2,
+        background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+      }}
     >
-      <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 1, width: '100%' }}>
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          id="email"
-          label="Email Address"
-          autoComplete="email"
-          autoFocus
-          {...register('email', { 
-            required: 'Email is required',
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Invalid email address'
-            }
-          })}
-          error={!!errors.email}
-          helperText={errors.email?.message}
-        />
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          name="password"
-          label="Password"
-          type="password"
-          id="password"
-          autoComplete="current-password"
-          {...register('password', { required: 'Password is required' })}
-          error={!!errors.password}
-          helperText={errors.password?.message}
-        />
-
-        <Box display="flex" justifyContent="space-between" sx={{ mt: 1, mb: 2 }}>
-          <Link component={RouterLink} to="/forgot-password" variant="body2" color="primary">
-            Forgot password?
-          </Link>
-        </Box>
-
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          color="secondary"
-          disabled={loading}
+      {/* Main Sliding Card Container */}
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '850px',
+          minHeight: '680px',
+          backgroundColor: '#ffffff',
+          borderRadius: '24px',
+          boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.05)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' }
+        }}
+      >
+        {/* Sign In Form Panel */}
+        <Box
           sx={{
-            py: 1.2,
-            mb: 2,
-            bgcolor: tokens.colors.primary,
-            color: '#ffffff',
-            borderRadius: `${tokens.borderRadiusSm}px`,
-            textTransform: 'none',
-            fontWeight: 700,
-            '&:hover': { bgcolor: '#23232F' }
+            width: { xs: '100%', md: '50%' },
+            height: '100%',
+            minHeight: '680px',
+            position: { xs: 'relative', md: 'absolute' },
+            top: 0,
+            left: 0,
+            transition: 'all 0.6s ease-in-out',
+            transform: { xs: 'none', md: isSignUp ? 'translateX(-100%)' : 'translateX(0)' },
+            opacity: { xs: isSignUp ? 0 : 1, md: isSignUp ? 0 : 1 },
+            zIndex: isSignUp ? 1 : 5,
+            pointerEvents: isSignUp ? 'none' : 'auto',
+            display: isSignUp ? { xs: 'none', md: 'flex' } : 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            p: { xs: 4, sm: 6 },
           }}
         >
-          {loading ? <CircularProgress size={24} color="inherit" /> : 'Log In'}
-        </Button>
+          <Box sx={{ width: '100%', maxWidth: '340px', textAlign: 'center' }}>
+            <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 40, height: 40, mb: 1, objectFit: 'contain' }} />
+            <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
+              Captain Portal
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Manage your bookings, online status, and verification
+            </Typography>
 
-        <Divider sx={{ my: 2 }}>or</Divider>
+            <Box component="form" onSubmit={handleSubmitLogin(onLoginSubmit)} noValidate sx={{ width: '100%' }}>
+              <TextField
+                margin="dense"
+                required
+                fullWidth
+                size="small"
+                id="login-email"
+                label="Email Address"
+                autoComplete="email"
+                {...registerLogin('email', { 
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address'
+                  }
+                })}
+                error={!!errorsLogin.email}
+                helperText={errorsLogin.email?.message}
+                sx={{ mb: 1.5 }}
+              />
+              <TextField
+                margin="dense"
+                required
+                fullWidth
+                size="small"
+                name="password"
+                label="Password"
+                type="password"
+                id="login-password"
+                autoComplete="current-password"
+                {...registerLogin('password', { required: 'Password is required' })}
+                error={!!errorsLogin.password}
+                helperText={errorsLogin.password?.message}
+                sx={{ mb: 1 }}
+              />
 
-        {import.meta.env.VITE_GOOGLE_CLIENT_ID && import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'MOCK_CLIENT_ID' ? (
-          <Box display="flex" justifyContent="center" width="100%" mb={2}>
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => {
-                toast.error("Google Sign-In failed.");
-              }}
-              text="continue_with"
-              width="396"
-            />
+              <Box display="flex" justifyContent="flex-start" sx={{ mb: 2 }}>
+                <Link component={RouterLink} to="/forgot-password" variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                  Forgot password?
+                </Link>
+              </Box>
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  py: 1,
+                  mb: 2,
+                  bgcolor: tokens.colors.primary,
+                  color: '#ffffff',
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  '&:hover': { bgcolor: '#23232F' }
+                }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+              </Button>
+            </Box>
+
+            <Divider sx={{ my: 2, fontSize: '0.8rem', color: 'text.secondary' }}>or use Google</Divider>
+
+            {import.meta.env.VITE_GOOGLE_CLIENT_ID && import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'MOCK_CLIENT_ID' ? (
+              <Box display="flex" justifyContent="center" width="100%" mb={2}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error("Google Sign-In failed.")}
+                  text="signin_with"
+                  width="340"
+                />
+              </Box>
+            ) : (
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleMockGoogleLogin}
+                disabled={loading}
+                sx={{
+                  py: 1,
+                  mb: 2,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: '#E5E7EB',
+                  color: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  '&:hover': { borderColor: '#D1D5DB', bgcolor: '#F9FAFB' }
+                }}
+              >
+                Continue with Google
+              </Button>
+            )}
+
+            {/* Mobile-only toggle */}
+            <Typography variant="body2" sx={{ display: { xs: 'block', md: 'none' }, mt: 2 }}>
+              Don't have an account?{' '}
+              <span onClick={() => setIsSignUp(true)} style={{ color: tokens.colors.primary, fontWeight: 700, cursor: 'pointer' }}>
+                Register As Captain
+              </span>
+            </Typography>
           </Box>
-        ) : (
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={handleMockGoogleLogin}
-            disabled={loading}
+        </Box>
+
+        {/* Sign Up Form Panel */}
+        <Box
+          sx={{
+            width: { xs: '100%', md: '50%' },
+            height: '100%',
+            minHeight: '680px',
+            position: { xs: 'relative', md: 'absolute' },
+            top: 0,
+            left: { xs: 0, md: '50%' },
+            transition: 'all 0.6s ease-in-out',
+            transform: { xs: 'none', md: isSignUp ? 'translateX(0)' : 'translateX(100%)' },
+            opacity: { xs: isSignUp ? 1 : 0, md: isSignUp ? 1 : 0 },
+            zIndex: isSignUp ? 5 : 1,
+            pointerEvents: isSignUp ? 'auto' : 'none',
+            display: isSignUp ? 'flex' : { xs: 'none', md: 'flex' },
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            p: { xs: 4, sm: 6 },
+          }}
+        >
+          <Box sx={{ width: '100%', maxWidth: '340px', textAlign: 'center' }}>
+            <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 40, height: 40, mb: 1, objectFit: 'contain' }} />
+            <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
+              Become a Captain
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Earn money by offering services near you
+            </Typography>
+
+            <Box component="form" onSubmit={handleSubmitSignup(onRegisterSubmit)} noValidate sx={{ width: '100%' }}>
+              <TextField
+                margin="dense"
+                required
+                fullWidth
+                size="small"
+                id="reg-fullName"
+                label="Full Name"
+                {...registerSignup('fullName', { required: 'Full name is required' })}
+                error={!!errorsSignup.fullName}
+                helperText={errorsSignup.fullName?.message}
+                sx={{ mb: 1 }}
+              />
+              <TextField
+                margin="dense"
+                required
+                fullWidth
+                size="small"
+                id="reg-email"
+                label="Email Address"
+                autoComplete="email"
+                {...registerSignup('email', { 
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address'
+                  }
+                })}
+                error={!!errorsSignup.email}
+                helperText={errorsSignup.email?.message}
+                sx={{ mb: 1 }}
+              />
+              <TextField
+                margin="dense"
+                required
+                fullWidth
+                size="small"
+                id="reg-phone"
+                label="Phone Number"
+                {...registerSignup('phone', { 
+                  required: 'Phone number is required',
+                  pattern: {
+                    value: /^[0-9]{10}$/,
+                    message: 'Enter a valid 10-digit phone number'
+                  }
+                })}
+                error={!!errorsSignup.phone}
+                helperText={errorsSignup.phone?.message}
+                sx={{ mb: 1 }}
+              />
+              <TextField
+                margin="dense"
+                required
+                fullWidth
+                size="small"
+                name="password"
+                label="Password"
+                type="password"
+                id="reg-password"
+                {...registerSignup('password', { required: 'Password is required' })}
+                error={!!errorsSignup.password}
+                helperText={errorsSignup.password?.message}
+                sx={{ mb: 1 }}
+              />
+              <TextField
+                margin="dense"
+                required
+                fullWidth
+                size="small"
+                name="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                id="reg-confirmPassword"
+                {...registerSignup('confirmPassword', { 
+                  required: 'Confirm password is required',
+                  validate: value => value === signupPassword || 'Passwords do not match'
+                })}
+                error={!!errorsSignup.confirmPassword}
+                helperText={errorsSignup.confirmPassword?.message}
+                sx={{ mb: 2 }}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  py: 1,
+                  mb: 2,
+                  bgcolor: tokens.colors.primary,
+                  color: '#ffffff',
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  '&:hover': { bgcolor: '#23232F' }
+                }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Register'}
+              </Button>
+            </Box>
+
+            <Divider sx={{ my: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>or use Google</Divider>
+
+            {import.meta.env.VITE_GOOGLE_CLIENT_ID && import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'MOCK_CLIENT_ID' ? (
+              <Box display="flex" justifyContent="center" width="100%" mb={2}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error("Google Sign-In failed.")}
+                  text="signup_with"
+                  width="340"
+                />
+              </Box>
+            ) : (
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleMockGoogleLogin}
+                disabled={loading}
+                sx={{
+                  py: 1,
+                  mb: 2,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: '#E5E7EB',
+                  color: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  '&:hover': { borderColor: '#D1D5DB', bgcolor: '#F9FAFB' }
+                }}
+              >
+                Continue with Google
+              </Button>
+            )}
+
+            {/* Mobile-only toggle */}
+            <Typography variant="body2" sx={{ display: { xs: 'block', md: 'none' }, mt: 2 }}>
+              Already have an account?{' '}
+              <span onClick={() => setIsSignUp(false)} style={{ color: tokens.colors.primary, fontWeight: 700, cursor: 'pointer' }}>
+                Sign In Here
+              </span>
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Sliding Overlay Panel (Hidden on Mobile) */}
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'block' },
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '50%',
+            height: '100%',
+            overflow: 'hidden',
+            transition: 'transform 0.6s ease-in-out',
+            transform: isSignUp ? 'translateX(0)' : 'translateX(100%)',
+            zIndex: 10,
+            borderTopLeftRadius: isSignUp ? '24px' : '80px 50%',
+            borderBottomLeftRadius: isSignUp ? '24px' : '80px 50%',
+            borderTopRightRadius: isSignUp ? '80px 50%' : '24px',
+            borderBottomRightRadius: isSignUp ? '80px 50%' : '24px',
+          }}
+        >
+          {/* Internal background container translating in opposite direction */}
+          <Box
             sx={{
-              py: 1.2,
-              mb: 2,
-              borderRadius: `${tokens.borderRadiusSm}px`,
-              textTransform: 'none',
-              fontWeight: 600,
-              borderColor: '#E5E7EB',
-              color: '#374151',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1.5,
-              '&:hover': {
-                borderColor: '#D1D5DB',
-                bgcolor: '#F9FAFB'
-              }
+              width: '200%',
+              height: '100%',
+              background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
+              transition: 'transform 0.6s ease-in-out',
+              transform: isSignUp ? 'translateX(0)' : 'translateX(-50%)',
+              display: 'flex'
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-          </Button>
-        )}
+            {/* Left Overlay Panel (Sign In Prompt) */}
+            <Box
+              sx={{
+                width: '50%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: '#ffffff',
+                p: 6,
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="h3" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', mb: 2 }}>
+                Welcome Back!
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 4, opacity: 0.9, lineHeight: 1.6, maxWidth: '280px' }}>
+                Keep in touch with us by logging in with your Captain credentials
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() => setIsSignUp(false)}
+                sx={{
+                  color: '#ffffff',
+                  borderColor: '#ffffff',
+                  borderRadius: '30px',
+                  px: 4,
+                  py: 1,
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  borderWidth: '2px',
+                  '&:hover': {
+                    borderWidth: '2px',
+                    borderColor: '#ffffff',
+                    backgroundColor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                Sign In
+              </Button>
+            </Box>
 
-        <Box display="flex" justifyContent="center">
-          <Typography variant="body2" color="text.secondary">
-            Don't have an account?{' '}
-            <Link component={RouterLink} to="/captain/register" color="secondary" fontWeight={600}>
-              Register as Captain
-            </Link>
-          </Typography>
+            {/* Right Overlay Panel (Sign Up Prompt) */}
+            <Box
+              sx={{
+                width: '50%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: '#ffffff',
+                p: 6,
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="h3" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', mb: 2 }}>
+                Hello, Friend!
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 4, opacity: 0.9, lineHeight: 1.6, maxWidth: '280px' }}>
+                Join the Workizo fleet as a service partner and grow your business
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() => setIsSignUp(true)}
+                sx={{
+                  color: '#ffffff',
+                  borderColor: '#ffffff',
+                  borderRadius: '30px',
+                  px: 4,
+                  py: 1,
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  borderWidth: '2px',
+                  '&:hover': {
+                    borderWidth: '2px',
+                    borderColor: '#ffffff',
+                    backgroundColor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                Sign Up
+              </Button>
+            </Box>
+          </Box>
         </Box>
       </Box>
-    </AuthPageShell>
+    </Box>
   );
 };
 
