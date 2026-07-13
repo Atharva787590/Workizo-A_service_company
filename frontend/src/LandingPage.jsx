@@ -322,7 +322,7 @@ const LandingPage = () => {
                       </Typography>
                     </Card>
                   </Box>
-                  
+
                   {/* Circle Indicator */}
                   <Box
                     sx={{
