@@ -20,7 +20,6 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import StarsIcon from '@mui/icons-material/Stars';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -538,11 +537,6 @@ const LandingPage = () => {
             {/* Right Column: 54% (Video Showcase Container) */}
             <Box sx={{ width: { xs: '100%', md: '54%', lg: '54%' }, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
               <Box
-                component={motion.div}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
                 className="video-container-reveal"
                 sx={{
                   position: { xs: 'relative', lg: 'sticky' },
