@@ -763,89 +763,56 @@ const SplineLanding = () => {
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 6,
+              gap: 4,
               width: '100%',
               maxWidth: '750px',
             }}
           >
             <Box className="spline-safety-card">
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{
                   fontWeight: 800,
-                  mb: 1.5,
                   fontFamily: "'NewBlack', sans-serif",
-                  fontSize: '1.4rem',
-                  letterSpacing: '0.02em',
+                  fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' },
+                  letterSpacing: '0.04em',
                   color: '#ffffff',
+                  textTransform: 'uppercase',
                 }}
               >
                 100% KYC Verified
               </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  lineHeight: 1.7,
-                  fontFamily: "'NewBlack', sans-serif",
-                  fontSize: '1rem',
-                }}
-              >
-                Every Captain is verified via Aadhaar & PAN background checks prior to platform listing.
-              </Typography>
             </Box>
 
             <Box className="spline-safety-card">
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{
                   fontWeight: 800,
-                  mb: 1.5,
                   fontFamily: "'NewBlack', sans-serif",
-                  fontSize: '1.4rem',
-                  letterSpacing: '0.02em',
+                  fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' },
+                  letterSpacing: '0.04em',
                   color: '#ffffff',
+                  textTransform: 'uppercase',
                 }}
               >
                 Standardized Pricing
               </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  lineHeight: 1.7,
-                  fontFamily: "'NewBlack', sans-serif",
-                  fontSize: '1rem',
-                }}
-              >
-                No bargaining. Get fixed, fair quotes for all categories before work begins.
-              </Typography>
             </Box>
 
             <Box className="spline-safety-card">
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{
                   fontWeight: 800,
-                  mb: 1.5,
                   fontFamily: "'NewBlack', sans-serif",
-                  fontSize: '1.4rem',
-                  letterSpacing: '0.02em',
+                  fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' },
+                  letterSpacing: '0.04em',
                   color: '#ffffff',
+                  textTransform: 'uppercase',
                 }}
               >
                 Elite Trained Captains
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  lineHeight: 1.7,
-                  fontFamily: "'NewBlack', sans-serif",
-                  fontSize: '1rem',
-                }}
-              >
-                Only experienced local experts are matched to guarantee 100% satisfaction.
               </Typography>
             </Box>
           </Box>
