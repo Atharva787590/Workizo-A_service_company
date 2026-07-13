@@ -195,6 +195,7 @@ const SplineLanding = () => {
                 lineHeight: 1,
                 cursor: 'pointer',
                 pointerEvents: 'auto',
+                color: '#ffffff',
                 transition: 'opacity 0.2s',
                 '&:hover': {
                   opacity: 0.8,
