@@ -48,18 +48,18 @@ const CustomerLayout = () => {
   const handleLogout = async () => {
     handleMenuClose();
     await logout();
-    navigate('/');
+    navigate('/home');
   };
 
   const getDashboardRoute = () => {
-    if (!user) return '/';
+    if (!user) return '/home';
     if (user.role === 'admin') return '/admin/dashboard';
     if (user.role === 'worker') return '/captain/dashboard';
     return '/customer/dashboard';
   };
 
   const getProfileRoute = () => {
-    if (!user) return '/';
+    if (!user) return '/home';
     if (user.role === 'worker') return '/captain/profile';
     return '/customer/profile';
   };
@@ -81,7 +81,7 @@ const CustomerLayout = () => {
           <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
             {/* Branding Logo */}
             <Box
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/home')}
               className="nav-logo-reveal"
               sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 1.5 }}
             >
@@ -121,8 +121,8 @@ const CustomerLayout = () => {
                 variant="text"
                 color="inherit"
                 className="nav-link-reveal"
-                onClick={() => navigate('/')}
-                sx={{ color: location.pathname === '/' ? '#000000' : '#4B5563', fontWeight: 600 }}
+                onClick={() => navigate('/home')}
+                sx={{ color: location.pathname === '/home' ? '#000000' : '#4B5563', fontWeight: 600 }}
               >
                 Home
               </Button>
@@ -377,7 +377,7 @@ const CustomerLayout = () => {
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {[
-                  { text: 'Home', path: '/' },
+                  { text: 'Home', path: '/home' },
                   { text: 'About Us', path: '/about' },
                   {
                     text: 'Book Service', path: '/customer/book', action: () => {

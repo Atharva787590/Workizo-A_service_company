@@ -15,6 +15,7 @@ import CaptainLayout from './layouts/CaptainLayout';
 import AdminLayout from './layouts/AdminLayout';
 
 // Pages
+import SplineLanding from './SplineLanding';
 import LandingPage from './LandingPage';
 import AboutUs from './AboutUs';
 import CustomerLogin from './customer/CustomerLogin';
@@ -49,9 +50,12 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <Routes>
+              {/* Spline Landing Page (No Layout, completely full screen) */}
+              <Route path="/" element={<SplineLanding />} />
+
               {/* Public and Customer Routes under CustomerLayout */}
               <Route element={<CustomerLayout />}>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/home" element={<LandingPage />} />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/customer/login" element={<CustomerLogin />} />
                 <Route path="/customer/register" element={<CustomerRegister />} />
