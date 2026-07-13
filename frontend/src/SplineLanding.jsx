@@ -1,18 +1,53 @@
 import React, { useEffect } from 'react';
-import { Box, Grid, Typography, Link } from '@mui/material';
+import { Box, Typography, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const SplineLanding = () => {
   const navigate = useNavigate();
 
-  // Load Playfair Display Serif font dynamically
+  // Load Valeran's exact custom fonts (Maltiner Display & NewBlack) dynamically
   useEffect(() => {
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Outfit:wght@300;400;600;800&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = `
+      @font-face {
+        font-family: 'Maltiner Display';
+        src: url('https://cdn.prod.website-files.com/6a2988625ed1354394490132/6a2988625ed135439449014d_Maltiner%20Display.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'NewBlack';
+        src: url('https://cdn.prod.website-files.com/6a2988625ed1354394490132/6a2988625ed1354394490159_NewBlackTypeface-UltraLight.woff2') format('woff2');
+        font-weight: 200;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'NewBlack';
+        src: url('https://cdn.prod.website-files.com/6a2988625ed1354394490132/6a2988625ed1354394490157_NewBlackTypeface-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'NewBlack';
+        src: url('https://cdn.prod.website-files.com/6a2988625ed1354394490132/6a2988625ed135439449015b_NewBlackTypeface-Medium.woff2') format('woff2');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'NewBlack';
+        src: url('https://cdn.prod.website-files.com/6a2988625ed1354394490132/6a2988625ed135439449015c_NewBlackTypeface-ExtraBold.woff2') format('woff2');
+        font-weight: 800;
+        font-style: normal;
+        font-display: swap;
+      }
+    `;
+    document.head.appendChild(styleEl);
     return () => {
-      document.head.removeChild(link);
+      document.head.removeChild(styleEl);
     };
   }, []);
 
@@ -25,7 +60,7 @@ const SplineLanding = () => {
         position: 'relative',
         margin: 0,
         padding: 0,
-        bgcolor: '#090d16', // Fallback color matching Spline theme
+        bgcolor: '#090d16',
       }}
     >
       {/* 1. Spline interactive background */}
@@ -48,7 +83,7 @@ const SplineLanding = () => {
         }}
       />
 
-      {/* 2. Brand Overlay (Interaction passes through to Spline canvas via pointerEvents: 'none') */}
+      {/* 2. Brand Overlay */}
       <Box
         sx={{
           position: 'absolute',
@@ -81,9 +116,9 @@ const SplineLanding = () => {
               variant="caption"
               sx={{
                 color: 'rgba(255, 255, 255, 0.4)',
-                fontFamily: 'Outfit, sans-serif',
+                fontFamily: "'NewBlack', sans-serif",
                 fontSize: '0.75rem',
-                fontWeight: 600,
+                fontWeight: 800,
                 letterSpacing: '0.1em',
               }}
             >
@@ -92,10 +127,11 @@ const SplineLanding = () => {
             <Typography
               onClick={() => navigate('/home')}
               sx={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: { xs: '1.8rem', md: '2.5rem' },
-                fontWeight: 600,
-                letterSpacing: '0.05em',
+                fontFamily: "'Maltiner Display', Georgia, serif",
+                fontSize: { xs: '2rem', md: '3rem' },
+                fontWeight: 400,
+                letterSpacing: '0.04em',
+                lineHeight: 1,
                 cursor: 'pointer',
                 pointerEvents: 'auto',
                 transition: 'opacity 0.2s',
@@ -123,7 +159,7 @@ const SplineLanding = () => {
                 variant="caption"
                 sx={{
                   color: 'rgba(255, 255, 255, 0.4)',
-                  fontFamily: 'Outfit, sans-serif',
+                  fontFamily: "'NewBlack', sans-serif",
                   fontWeight: 800,
                   fontSize: '0.7rem',
                   letterSpacing: '0.15em',
@@ -138,9 +174,11 @@ const SplineLanding = () => {
                   onClick={() => navigate('/home')}
                   sx={{
                     color: 'rgba(255, 255, 255, 0.7)',
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 500,
                     fontSize: '0.8rem',
                     textDecoration: 'none',
+                    letterSpacing: '0.02em',
                     cursor: 'pointer',
                     '&:hover': { color: '#ffffff' },
                   }}
@@ -151,9 +189,11 @@ const SplineLanding = () => {
                   onClick={() => navigate('/captain/register')}
                   sx={{
                     color: 'rgba(255, 255, 255, 0.7)',
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 500,
                     fontSize: '0.8rem',
                     textDecoration: 'none',
+                    letterSpacing: '0.02em',
                     cursor: 'pointer',
                     '&:hover': { color: '#ffffff' },
                   }}
@@ -169,7 +209,7 @@ const SplineLanding = () => {
                 variant="caption"
                 sx={{
                   color: 'rgba(255, 255, 255, 0.4)',
-                  fontFamily: 'Outfit, sans-serif',
+                  fontFamily: "'NewBlack', sans-serif",
                   fontWeight: 800,
                   fontSize: '0.7rem',
                   letterSpacing: '0.15em',
@@ -184,9 +224,11 @@ const SplineLanding = () => {
                   onClick={() => navigate('/about')}
                   sx={{
                     color: 'rgba(255, 255, 255, 0.7)',
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 500,
                     fontSize: '0.8rem',
                     textDecoration: 'none',
+                    letterSpacing: '0.02em',
                     cursor: 'pointer',
                     '&:hover': { color: '#ffffff' },
                   }}
@@ -197,9 +239,11 @@ const SplineLanding = () => {
                   onClick={() => navigate('/home')}
                   sx={{
                     color: 'rgba(255, 255, 255, 0.7)',
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 500,
                     fontSize: '0.8rem',
                     textDecoration: 'none',
+                    letterSpacing: '0.02em',
                     cursor: 'pointer',
                     '&:hover': { color: '#ffffff' },
                   }}
@@ -227,13 +271,13 @@ const SplineLanding = () => {
             <Typography
               variant="h2"
               sx={{
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 900,
+                fontFamily: "'Maltiner Display', Georgia, serif",
+                fontWeight: 400,
                 fontSize: { xs: '1.8rem', sm: '2.8rem', md: '3.6rem' },
                 lineHeight: 1.15,
                 color: '#ffffff',
                 textTransform: 'uppercase',
-                letterSpacing: '0.02em',
+                letterSpacing: '0.04em',
               }}
             >
               One request,
@@ -296,7 +340,7 @@ const SplineLanding = () => {
               <Box>
                 <Typography
                   sx={{
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: "'NewBlack', sans-serif",
                     fontSize: '0.8rem',
                     fontWeight: 800,
                     letterSpacing: '0.05em',
@@ -308,7 +352,8 @@ const SplineLanding = () => {
                 </Typography>
                 <Typography
                   sx={{
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 400,
                     fontSize: '0.75rem',
                     color: 'rgba(255, 255, 255, 0.5)',
                     lineHeight: 1.3,
@@ -321,9 +366,9 @@ const SplineLanding = () => {
                   onClick={() => navigate('/home')}
                   sx={{
                     color: '#ffffff',
-                    fontFamily: 'Outfit, sans-serif',
+                    fontFamily: "'NewBlack', sans-serif",
                     fontSize: '0.8rem',
-                    fontWeight: 600,
+                    fontWeight: 800,
                     textDecoration: 'none',
                     letterSpacing: '0.05em',
                     cursor: 'pointer',
