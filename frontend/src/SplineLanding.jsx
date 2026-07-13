@@ -1005,7 +1005,7 @@ const SplineLanding = () => {
             </Typography>
           </Box>
 
-          {/* Staggered Founder Cards (futuristic neon cyberpunk style matching Workizo) */}
+          {/* Staggered Founder Cards (futuristic transparent monochrome style matching Workizo) */}
           <Grid container spacing={4} sx={{ width: '100%' }}>
             {/* Card 1: Ambariya Vivek */}
             <Grid item xs={12} md={6} className="spline-team-card">
@@ -1013,8 +1013,8 @@ const SplineLanding = () => {
                 sx={{
                   p: 4,
                   borderRadius: '24px',
-                  border: '1px solid rgba(26, 115, 232, 0.2)',
-                  bgcolor: 'rgba(9, 13, 22, 0.75)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
                   backdropFilter: 'blur(16px)',
                   boxShadow: 'none',
                   color: '#ffffff',
@@ -1027,42 +1027,17 @@ const SplineLanding = () => {
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
                     transform: 'translateY(-8px)',
-                    borderColor: 'rgba(26, 115, 232, 0.6)',
-                    boxShadow: '0 0 25px rgba(26, 115, 232, 0.25)',
+                    borderColor: 'rgba(255, 255, 255, 0.25)',
+                    boxShadow: '0 0 25px rgba(255, 255, 255, 0.1)',
                   },
                 }}
               >
-                {/* Top Right Verified Intel Badge */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 20,
-                    right: 20,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    bgcolor: 'rgba(26, 115, 232, 0.1)',
-                    border: '1px solid rgba(26, 115, 232, 0.4)',
-                    color: '#60a5fa',
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: '8px',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  <VerifiedIcon sx={{ fontSize: 12, color: '#60a5fa' }} />
-                  VERIFIED INTEL
-                </Box>
-
-                {/* Avatar with styled neon scope double-ring */}
+                {/* Avatar with styled scope double-ring */}
                 <Box
                   sx={{
                     display: 'inline-block',
                     p: '8px',
-                    border: '1px dashed rgba(26, 115, 232, 0.4)',
+                    border: '1px dashed rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
                     mb: 3.5,
                     mt: 2,
@@ -1072,7 +1047,7 @@ const SplineLanding = () => {
                   <Box
                     sx={{
                       p: '4px',
-                      border: '2px solid rgba(26, 115, 232, 0.7)',
+                      border: '2px solid rgba(255, 255, 255, 0.4)',
                       borderRadius: '50%',
                     }}
                   >
@@ -1080,8 +1055,8 @@ const SplineLanding = () => {
                       sx={{
                         width: 96,
                         height: 96,
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
-                        border: '1px solid rgba(26, 115, 232, 0.3)',
+                        bgcolor: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         color: '#ffffff',
                         fontFamily: "'NewBlack', sans-serif",
                         fontSize: '2rem',
@@ -1110,7 +1085,7 @@ const SplineLanding = () => {
                 </Typography>
                 <Typography
                   sx={{
-                    color: '#60a5fa',
+                    color: 'rgba(255, 255, 255, 0.6)',
                     fontSize: '0.8rem',
                     fontWeight: 800,
                     fontFamily: "'NewBlack', sans-serif",
@@ -1135,7 +1110,7 @@ const SplineLanding = () => {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <WorkIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
                         DEPARTMENT
@@ -1147,7 +1122,7 @@ const SplineLanding = () => {
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <SchoolIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <SchoolIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
                         STUDENT
@@ -1159,7 +1134,7 @@ const SplineLanding = () => {
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <CodeIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <CodeIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
                         SPECIALIZATION
@@ -1171,13 +1146,12 @@ const SplineLanding = () => {
                   </Box>
                 </Box>
 
-                {/* ID & Clearance Badge bar */}
+                {/* ID Bar */}
                 <Box
                   sx={{
                     width: '100%',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    justifyContent: 'center',
                     borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                     pt: 2.5,
                     mb: 3,
@@ -1189,26 +1163,11 @@ const SplineLanding = () => {
                       color: 'rgba(255, 255, 255, 0.4)',
                       fontWeight: 800,
                       fontFamily: "'NewBlack', sans-serif",
+                      letterSpacing: '0.05em',
                     }}
                   >
                     ID: WKZ-001
                   </Typography>
-                  <Box
-                    sx={{
-                      bgcolor: 'rgba(26, 115, 232, 0.1)',
-                      border: '1px solid rgba(26, 115, 232, 0.4)',
-                      color: '#60a5fa',
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: '6px',
-                      fontSize: '0.65rem',
-                      fontWeight: 800,
-                      fontFamily: "'NewBlack', sans-serif",
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    CLEARANCE: LEVEL 5 (SCI)
-                  </Box>
                 </Box>
 
                 {/* Social Quick Access Square Buttons */}
@@ -1222,14 +1181,14 @@ const SplineLanding = () => {
                       width: '40px',
                       height: '40px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(26, 115, 232, 0.3)',
-                      bgcolor: 'rgba(26, 115, 232, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
                       color: 'rgba(255, 255, 255, 0.6)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#60a5fa',
-                        borderColor: '#60a5fa',
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        color: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                         transform: 'scale(1.08)',
                       },
                     }}
@@ -1245,14 +1204,14 @@ const SplineLanding = () => {
                       width: '40px',
                       height: '40px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(26, 115, 232, 0.3)',
-                      bgcolor: 'rgba(26, 115, 232, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
                       color: 'rgba(255, 255, 255, 0.6)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#60a5fa',
-                        borderColor: '#60a5fa',
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        color: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                         transform: 'scale(1.08)',
                       },
                     }}
@@ -1266,14 +1225,14 @@ const SplineLanding = () => {
                       width: '40px',
                       height: '40px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(26, 115, 232, 0.3)',
-                      bgcolor: 'rgba(26, 115, 232, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
                       color: 'rgba(255, 255, 255, 0.6)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#60a5fa',
-                        borderColor: '#60a5fa',
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        color: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                         transform: 'scale(1.08)',
                       },
                     }}
@@ -1290,8 +1249,8 @@ const SplineLanding = () => {
                 sx={{
                   p: 4,
                   borderRadius: '24px',
-                  border: '1px solid rgba(26, 115, 232, 0.2)',
-                  bgcolor: 'rgba(9, 13, 22, 0.75)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
                   backdropFilter: 'blur(16px)',
                   boxShadow: 'none',
                   color: '#ffffff',
@@ -1304,42 +1263,17 @@ const SplineLanding = () => {
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
                     transform: 'translateY(-8px)',
-                    borderColor: 'rgba(26, 115, 232, 0.6)',
-                    boxShadow: '0 0 25px rgba(26, 115, 232, 0.25)',
+                    borderColor: 'rgba(255, 255, 255, 0.25)',
+                    boxShadow: '0 0 25px rgba(255, 255, 255, 0.1)',
                   },
                 }}
               >
-                {/* Top Right Verified Intel Badge */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 20,
-                    right: 20,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    bgcolor: 'rgba(26, 115, 232, 0.1)',
-                    border: '1px solid rgba(26, 115, 232, 0.4)',
-                    color: '#60a5fa',
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: '8px',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  <VerifiedIcon sx={{ fontSize: 12, color: '#60a5fa' }} />
-                  VERIFIED INTEL
-                </Box>
-
-                {/* Avatar with styled neon scope double-ring */}
+                {/* Avatar with styled scope double-ring */}
                 <Box
                   sx={{
                     display: 'inline-block',
                     p: '8px',
-                    border: '1px dashed rgba(26, 115, 232, 0.4)',
+                    border: '1px dashed rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
                     mb: 3.5,
                     mt: 2,
@@ -1349,7 +1283,7 @@ const SplineLanding = () => {
                   <Box
                     sx={{
                       p: '4px',
-                      border: '2px solid rgba(26, 115, 232, 0.7)',
+                      border: '2px solid rgba(255, 255, 255, 0.4)',
                       borderRadius: '50%',
                     }}
                   >
@@ -1357,8 +1291,8 @@ const SplineLanding = () => {
                       sx={{
                         width: 96,
                         height: 96,
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
-                        border: '1px solid rgba(26, 115, 232, 0.3)',
+                        bgcolor: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         color: '#ffffff',
                         fontFamily: "'NewBlack', sans-serif",
                         fontSize: '2rem',
@@ -1387,7 +1321,7 @@ const SplineLanding = () => {
                 </Typography>
                 <Typography
                   sx={{
-                    color: '#60a5fa',
+                    color: 'rgba(255, 255, 255, 0.6)',
                     fontSize: '0.8rem',
                     fontWeight: 800,
                     fontFamily: "'NewBlack', sans-serif",
@@ -1412,7 +1346,7 @@ const SplineLanding = () => {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <WorkIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
                         DEPARTMENT
@@ -1424,7 +1358,7 @@ const SplineLanding = () => {
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <SchoolIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <SchoolIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
                         STUDENT
@@ -1436,7 +1370,7 @@ const SplineLanding = () => {
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <CodeIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <CodeIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
                         SPECIALIZATION
@@ -1448,13 +1382,12 @@ const SplineLanding = () => {
                   </Box>
                 </Box>
 
-                {/* ID & Clearance Badge bar */}
+                {/* ID Bar */}
                 <Box
                   sx={{
                     width: '100%',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    justifyContent: 'center',
                     borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                     pt: 2.5,
                     mb: 3,
@@ -1466,26 +1399,11 @@ const SplineLanding = () => {
                       color: 'rgba(255, 255, 255, 0.4)',
                       fontWeight: 800,
                       fontFamily: "'NewBlack', sans-serif",
+                      letterSpacing: '0.05em',
                     }}
                   >
                     ID: WKZ-002
                   </Typography>
-                  <Box
-                    sx={{
-                      bgcolor: 'rgba(26, 115, 232, 0.1)',
-                      border: '1px solid rgba(26, 115, 232, 0.4)',
-                      color: '#60a5fa',
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: '6px',
-                      fontSize: '0.65rem',
-                      fontWeight: 800,
-                      fontFamily: "'NewBlack', sans-serif",
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    CLEARANCE: LEVEL 5 (SCI)
-                  </Box>
                 </Box>
 
                 {/* Social Quick Access Square Buttons */}
@@ -1499,14 +1417,14 @@ const SplineLanding = () => {
                       width: '40px',
                       height: '40px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(26, 115, 232, 0.3)',
-                      bgcolor: 'rgba(26, 115, 232, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
                       color: 'rgba(255, 255, 255, 0.6)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#60a5fa',
-                        borderColor: '#60a5fa',
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        color: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                         transform: 'scale(1.08)',
                       },
                     }}
@@ -1522,14 +1440,14 @@ const SplineLanding = () => {
                       width: '40px',
                       height: '40px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(26, 115, 232, 0.3)',
-                      bgcolor: 'rgba(26, 115, 232, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
                       color: 'rgba(255, 255, 255, 0.6)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#60a5fa',
-                        borderColor: '#60a5fa',
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        color: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                         transform: 'scale(1.08)',
                       },
                     }}
@@ -1543,14 +1461,14 @@ const SplineLanding = () => {
                       width: '40px',
                       height: '40px',
                       borderRadius: '8px',
-                      border: '1px solid rgba(26, 115, 232, 0.3)',
-                      bgcolor: 'rgba(26, 115, 232, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
                       color: 'rgba(255, 255, 255, 0.6)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#60a5fa',
-                        borderColor: '#60a5fa',
-                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        color: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                         transform: 'scale(1.08)',
                       },
                     }}
