@@ -448,7 +448,7 @@ const SplineLanding = () => {
             }}
           />
 
-          <Grid container spacing={4} sx={{ position: 'relative', zIndex: 2 }}>
+          <Grid container spacing={0} sx={{ position: 'relative', zIndex: 2 }}>
             {/* Left Column (Points 1 & 3) */}
             <Grid
               item
@@ -460,6 +460,7 @@ const SplineLanding = () => {
                 alignItems: { xs: 'center', md: 'flex-end' },
                 gap: { xs: 4, md: 12 },
                 pr: { md: 6 },
+                pl: 0,
               }}
             >
               {/* Step 1 */}
@@ -579,6 +580,7 @@ const SplineLanding = () => {
                 alignItems: { xs: 'center', md: 'flex-start' },
                 gap: { xs: 4, md: 12 },
                 pl: { md: 6 },
+                pr: 0,
                 pt: { md: 16 },
               }}
             >
