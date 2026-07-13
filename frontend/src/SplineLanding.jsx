@@ -519,10 +519,23 @@ const SplineLanding = () => {
             }}
           />
 
-          <Grid container spacing={6} sx={{ position: 'relative', zIndex: 2 }}>
-            {/* Step 1: Left Side */}
-            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, pr: { md: 6 } }} className="spline-timeline-step-left">
+          <Grid container spacing={4} sx={{ position: 'relative', zIndex: 2 }}>
+            {/* Left Column (Points 1 & 3) */}
+            <Grid
+              item
+              xs={12}
+              md={6}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: { xs: 'center', md: 'flex-end' },
+                gap: { xs: 4, md: 12 },
+                pr: { md: 6 },
+              }}
+            >
+              {/* Step 1 */}
               <Card
+                className="spline-timeline-step-left"
                 sx={{
                   p: 4,
                   borderRadius: '20px',
@@ -532,7 +545,7 @@ const SplineLanding = () => {
                   boxShadow: 'none',
                   color: '#ffffff',
                   width: '100%',
-                  maxWidth: '500px',
+                  maxWidth: '480px',
                   position: 'relative',
                 }}
               >
@@ -554,6 +567,7 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     fontSize: '0.9rem',
                     fontFamily: "'NewBlack', sans-serif",
+                    zIndex: 10,
                   }}
                 >
                   1
@@ -568,15 +582,10 @@ const SplineLanding = () => {
                   WebSocket pathways connect available Captains and Customers instantly. Real-time notifications push booking requests directly based on status and geographical proximity.
                 </Typography>
               </Card>
-            </Grid>
-            {/* Spacer */}
-            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
 
-            {/* Spacer */}
-            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
-            {/* Step 2: Right Side */}
-            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' }, pl: { md: 6 } }} className="spline-timeline-step-right">
+              {/* Step 3 */}
               <Card
+                className="spline-timeline-step-left"
                 sx={{
                   p: 4,
                   borderRadius: '20px',
@@ -586,7 +595,73 @@ const SplineLanding = () => {
                   boxShadow: 'none',
                   color: '#ffffff',
                   width: '100%',
-                  maxWidth: '500px',
+                  maxWidth: '480px',
+                  position: 'relative',
+                  mt: { md: 12 },
+                }}
+              >
+                {/* Center Badge indicator */}
+                <Box
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    bgcolor: '#10B981',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    right: '-68px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    fontFamily: "'NewBlack', sans-serif",
+                    zIndex: 10,
+                  }}
+                >
+                  3
+                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#10B981', fontFamily: "'NewBlack', sans-serif" }}>
+                  03
+                </Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
+                  Secure Razorpay Payments & Billing
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                  Built-in transaction flow with Razorpay integration. Auto-generates transactional logs, triggers database payment status transitions, and compiles downloadable billing invoices.
+                </Typography>
+              </Card>
+            </Grid>
+
+            {/* Right Column (Points 2 & 4) */}
+            <Grid
+              item
+              xs={12}
+              md={6}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: { xs: 'center', md: 'flex-start' },
+                gap: { xs: 4, md: 12 },
+                pl: { md: 6 },
+                pt: { md: 16 },
+              }}
+            >
+              {/* Step 2 */}
+              <Card
+                className="spline-timeline-step-right"
+                sx={{
+                  p: 4,
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                  width: '100%',
+                  maxWidth: '480px',
                   position: 'relative',
                 }}
               >
@@ -608,6 +683,7 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     fontSize: '0.9rem',
                     fontFamily: "'NewBlack', sans-serif",
+                    zIndex: 10,
                   }}
                 >
                   2
@@ -622,11 +698,10 @@ const SplineLanding = () => {
                   Segmented custom control panels. Customers book, track, and pay, while Captains accept bookings, upload work completion metadata, and manage online status.
                 </Typography>
               </Card>
-            </Grid>
 
-            {/* Step 3: Left Side */}
-            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, pr: { md: 6 } }} className="spline-timeline-step-left">
+              {/* Step 4 */}
               <Card
+                className="spline-timeline-step-right"
                 sx={{
                   p: 4,
                   borderRadius: '20px',
@@ -636,62 +711,9 @@ const SplineLanding = () => {
                   boxShadow: 'none',
                   color: '#ffffff',
                   width: '100%',
-                  maxWidth: '500px',
+                  maxWidth: '480px',
                   position: 'relative',
-                }}
-              >
-                {/* Center Badge indicator */}
-                <Box
-                  sx={{
-                    display: { xs: 'none', md: 'flex' },
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '40px',
-                    height: '40px',
-                    bgcolor: '#10B981',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    right: '-68px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    fontFamily: "'NewBlack', sans-serif",
-                  }}
-                >
-                  3
-                </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#10B981', fontFamily: "'NewBlack', sans-serif" }}>
-                  03
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
-                  Secure Razorpay Payments & Billing
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
-                  Built-in transaction flow with Razorpay integration. Auto-generates transactional logs, triggers database payment status transitions, and compiles downloadable billing invoices.
-                </Typography>
-              </Card>
-            </Grid>
-            {/* Spacer */}
-            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
-
-            {/* Spacer */}
-            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
-            {/* Step 4: Right Side */}
-            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' }, pl: { md: 6 } }} className="spline-timeline-step-right">
-              <Card
-                sx={{
-                  p: 4,
-                  borderRadius: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: 'none',
-                  color: '#ffffff',
-                  width: '100%',
-                  maxWidth: '500px',
-                  position: 'relative',
+                  mt: { md: 12 },
                 }}
               >
                 {/* Center Badge indicator */}
@@ -712,6 +734,7 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     fontSize: '0.9rem',
                     fontFamily: "'NewBlack', sans-serif",
+                    zIndex: 10,
                   }}
                 >
                   4
