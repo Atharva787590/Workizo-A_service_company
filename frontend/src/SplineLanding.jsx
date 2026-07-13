@@ -1005,15 +1005,13 @@ const SplineLanding = () => {
             </Typography>
           </Box>
 
-          {/* Staggered Founder Cards (futuristic transparent monochrome style matching Workizo) */}
-          <Grid container spacing={4} sx={{ width: '100%' }}>
+          <Grid container spacing={4} justifyContent="center" alignItems="stretch">
             {/* Card 1: Ambariya Vivek */}
-            <Grid item xs={12} md={6} className="spline-team-card" sx={{ display: 'flex' }}>
+            <Grid item xs={12} md={6} className="spline-team-card" sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card
                 sx={{
                   p: 4,
-                  width: '100%',
-                  maxWidth: '480px',
+                  width: { xs: '100%', sm: '440px' },
                   mx: 'auto',
                   borderRadius: '24px',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -1247,12 +1245,11 @@ const SplineLanding = () => {
             </Grid>
 
             {/* Card 2: Ved Goyani */}
-            <Grid item xs={12} md={6} className="spline-team-card" sx={{ display: 'flex' }}>
+            <Grid item xs={12} md={6} className="spline-team-card" sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card
                 sx={{
                   p: 4,
-                  width: '100%',
-                  maxWidth: '480px',
+                  width: { xs: '100%', sm: '440px' },
                   mx: 'auto',
                   borderRadius: '24px',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
