@@ -514,7 +514,7 @@ const SplineLanding = () => {
               top: '220px',
               bottom: '40px',
               width: '2px',
-              background: 'linear-gradient(to bottom, #4F46E5, #3b82f6, #10B981, #EF4444)',
+              bgcolor: 'rgba(255, 255, 255, 0.15)',
               zIndex: 1,
             }}
           />
@@ -557,7 +557,8 @@ const SplineLanding = () => {
                     justifyContent: 'center',
                     width: '40px',
                     height: '40px',
-                    bgcolor: '#4F46E5',
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
                     position: 'absolute',
                     right: '-68px',
@@ -568,11 +569,12 @@ const SplineLanding = () => {
                     fontSize: '0.9rem',
                     fontFamily: "'NewBlack', sans-serif",
                     zIndex: 10,
+                    color: '#ffffff',
                   }}
                 >
                   1
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#4F46E5', fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
                   01
                 </Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
@@ -608,7 +610,8 @@ const SplineLanding = () => {
                     justifyContent: 'center',
                     width: '40px',
                     height: '40px',
-                    bgcolor: '#10B981',
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
                     position: 'absolute',
                     right: '-68px',
@@ -619,11 +622,12 @@ const SplineLanding = () => {
                     fontSize: '0.9rem',
                     fontFamily: "'NewBlack', sans-serif",
                     zIndex: 10,
+                    color: '#ffffff',
                   }}
                 >
                   3
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#10B981', fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
                   03
                 </Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
@@ -673,7 +677,8 @@ const SplineLanding = () => {
                     justifyContent: 'center',
                     width: '40px',
                     height: '40px',
-                    bgcolor: '#3b82f6',
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
                     position: 'absolute',
                     left: '-68px',
@@ -684,11 +689,12 @@ const SplineLanding = () => {
                     fontSize: '0.9rem',
                     fontFamily: "'NewBlack', sans-serif",
                     zIndex: 10,
+                    color: '#ffffff',
                   }}
                 >
                   2
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#3b82f6', fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
                   02
                 </Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
@@ -724,7 +730,8 @@ const SplineLanding = () => {
                     justifyContent: 'center',
                     width: '40px',
                     height: '40px',
-                    bgcolor: '#EF4444',
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
                     position: 'absolute',
                     left: '-68px',
@@ -735,11 +742,12 @@ const SplineLanding = () => {
                     fontSize: '0.9rem',
                     fontFamily: "'NewBlack', sans-serif",
                     zIndex: 10,
+                    color: '#ffffff',
                   }}
                 >
                   4
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#EF4444', fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
                   04
                 </Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
