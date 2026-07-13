@@ -11,6 +11,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import WorkIcon from '@mui/icons-material/Work';
 import SchoolIcon from '@mui/icons-material/School';
 import CodeIcon from '@mui/icons-material/Code';
+import handymanHero from './assets/handyman_hero.png';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -236,6 +237,37 @@ const SplineLanding = () => {
           transition: 'pointer-events 0.1s ease',
         }}
       />
+
+      {/* 1.5 Left side half-oval image background mask (hides Spline) */}
+      <Box
+        sx={{
+          position: 'absolute',
+          left: 0,
+          top: '18vh',
+          width: { xs: '200px', md: '360px' },
+          height: { xs: '350px', md: '580px' },
+          bgcolor: '#090d16',
+          borderTopRightRadius: { xs: '175px 175px', md: '290px 290px' },
+          borderBottomRightRadius: { xs: '175px 175px', md: '290px 290px' },
+          zIndex: 2, // above Spline iframe (z-index 1)
+          overflow: 'hidden',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderLeft: 'none',
+          pointerEvents: 'none', // let mouse clicks pass through
+        }}
+      >
+        <Box
+          component="img"
+          src={handymanHero}
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: 0.7,
+            filter: 'grayscale(20%) brightness(90%)',
+          }}
+        />
+      </Box>
 
       {/* 2. Brand Overlay - Hero Fold (pointerEvents: none to let hover reach iframe) */}
       <Box
