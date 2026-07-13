@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Link, Container, Card } from '@mui/material';
+import { Box, Typography, Link, Container, Grid, Card, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import StarsIcon from '@mui/icons-material/Stars';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -89,11 +92,13 @@ const SplineLanding = () => {
     };
   }, []);
 
-  // GSAP ScrollTrigger for alternating timeline reveals
+  // GSAP ScrollTrigger for alternating timeline and safety reveals
   useEffect(() => {
     // Set initial hidden states for the scrollable elements
     gsap.set('.spline-timeline-step-left', { opacity: 0, x: -60 });
     gsap.set('.spline-timeline-step-right', { opacity: 0, x: 60 });
+    gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
+    gsap.set('.spline-safety-card', { opacity: 0, y: 40 });
 
     // Left slide-ins
     ScrollTrigger.batch('.spline-timeline-step-left', {
@@ -105,6 +110,21 @@ const SplineLanding = () => {
     // Right slide-ins
     ScrollTrigger.batch('.spline-timeline-step-right', {
       onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 1.4, stagger: 0.35, ease: 'power4.out', overwrite: 'auto' }),
+      start: 'top 85%',
+      once: true
+    });
+
+    // Safety Header Reveal
+    ScrollTrigger.create({
+      trigger: '.spline-safety-header',
+      start: 'top 85%',
+      onEnter: () => gsap.to('.spline-safety-header', { opacity: 1, y: 0, duration: 1.4, ease: 'power4.out' }),
+      once: true
+    });
+
+    // Safety Cards Staggered Reveal
+    ScrollTrigger.batch('.spline-safety-card', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.4, stagger: 0.25, ease: 'power4.out', overwrite: 'auto' }),
       start: 'top 85%',
       once: true
     });
@@ -649,6 +669,158 @@ const SplineLanding = () => {
               </Card>
             </Box>
           </Box>
+        </Container>
+      </Box>
+
+      {/* 4. Safety & Assurance Section (Overlay block with transparent background and pointerEvents: auto) */}
+      <Box
+        sx={{
+          bgcolor: 'transparent',
+          pb: 16,
+          pt: 4,
+          position: 'relative',
+          zIndex: 10,
+          pointerEvents: 'auto', // Keep fully interactive
+          color: '#ffffff',
+        }}
+      >
+        <Container maxWidth="lg" className="spline-safety-header">
+          {/* Header Block */}
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.4)',
+                fontFamily: "'NewBlack', sans-serif",
+                fontWeight: 800,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                fontSize: '0.75rem',
+                display: 'block',
+                mb: 1.5,
+              }}
+            >
+              TRUST & SAFETY
+            </Typography>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 400,
+                mb: 2.5,
+                fontFamily: "'Maltiner Display', Georgia, serif",
+                letterSpacing: '0.03em',
+              }}
+            >
+              Workizo Quality & Safety Assurance
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontFamily: "'NewBlack', sans-serif",
+                maxWidth: '700px',
+                mx: 'auto',
+                fontSize: '0.9rem',
+                lineHeight: 1.6,
+                mb: 4,
+              }}
+            >
+              Just like India's top home platforms, we prioritize trust, background verification, and quality of work.
+            </Typography>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/captain/register')}
+              sx={{
+                borderRadius: '24px',
+                px: 4,
+                py: 1.2,
+                fontWeight: 800,
+                fontFamily: "'NewBlack', sans-serif",
+                fontSize: '0.8rem',
+                color: '#ffffff',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                letterSpacing: '0.05em',
+                '&:hover': {
+                  borderColor: '#ffffff',
+                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                },
+              }}
+            >
+              BECOME A VERIFIED CAPTAIN
+            </Button>
+          </Box>
+
+          {/* 3-Column Grid of Cards */}
+          <Grid container spacing={4}>
+            <Grid item xs={12} sm={4} className="spline-safety-card">
+              <Card
+                sx={{
+                  p: 4,
+                  height: '100%',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                }}
+              >
+                <VerifiedUserIcon sx={{ color: '#4F46E5', fontSize: 40, mb: 2 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5, fontFamily: "'NewBlack', sans-serif", fontSize: '1.1rem', letterSpacing: '0.02em' }}>
+                  100% KYC Verified
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif", fontSize: '0.85rem' }}>
+                  Every Captain is verified via Aadhaar & PAN background checks prior to platform listing.
+                </Typography>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={4} className="spline-safety-card">
+              <Card
+                sx={{
+                  p: 4,
+                  height: '100%',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                }}
+              >
+                <MonetizationOnIcon sx={{ color: '#10B981', fontSize: 40, mb: 2 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5, fontFamily: "'NewBlack', sans-serif", fontSize: '1.1rem', letterSpacing: '0.02em' }}>
+                  Standardized Pricing
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif", fontSize: '0.85rem' }}>
+                  No bargaining. Get fixed, fair quotes for all categories before work begins.
+                </Typography>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={4} className="spline-safety-card">
+              <Card
+                sx={{
+                  p: 4,
+                  height: '100%',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                }}
+              >
+                <StarsIcon sx={{ color: '#F59E0B', fontSize: 40, mb: 2 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5, fontFamily: "'NewBlack', sans-serif", fontSize: '1.1rem', letterSpacing: '0.02em' }}>
+                  Elite Trained Captains
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif", fontSize: '0.85rem' }}>
+                  Only experienced local experts are matched to guarantee 100% satisfaction.
+                </Typography>
+              </Card>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
     </Box>
