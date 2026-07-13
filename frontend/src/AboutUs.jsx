@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Register GSAP ScrollTrigger
+gsap.registerPlugin(ScrollTrigger);
 import { useAuth } from './context/AuthContext';
 import toast from 'react-hot-toast';
 import { 
@@ -77,6 +82,72 @@ const AboutUs = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Set initial hidden states
+    gsap.set('.about-hero-overline', { opacity: 0, y: -20 });
+    gsap.set('.about-hero-title', { opacity: 0, y: 30 });
+    gsap.set('.about-hero-desc', { opacity: 0, y: 20 });
+    gsap.set('.about-hero-cta', { opacity: 0, scale: 0.95 });
+    gsap.set('.about-hero-card', { opacity: 0, x: 40, scale: 0.95 });
+
+    gsap.set('.about-modules-header', { opacity: 0, y: 30 });
+    gsap.set('.about-modules-canvas', { opacity: 0, scale: 0.96 });
+    gsap.set('.about-modules-card', { opacity: 0, y: 40 });
+
+    gsap.set('.about-team-header', { opacity: 0, y: 30 });
+    gsap.set('.about-team-card', { opacity: 0, y: 50 });
+
+    // Hero timeline
+    const tl = gsap.timeline({ defaults: { ease: 'power4.out', duration: 1.2 } });
+    tl.to('.about-hero-overline', { opacity: 1, y: 0, duration: 0.8 })
+      .to('.about-hero-title', { opacity: 1, y: 0 }, '-=0.6')
+      .to('.about-hero-desc', { opacity: 1, y: 0 }, '-=0.8')
+      .to('.about-hero-cta', { opacity: 1, scale: 1, stagger: 0.15 }, '-=0.8')
+      .to('.about-hero-card', { opacity: 1, x: 0, scale: 1, duration: 1.4 }, '-=1');
+
+    // Modules header reveal
+    ScrollTrigger.create({
+      trigger: '.about-modules-header',
+      start: 'top 85%',
+      onEnter: () => gsap.to('.about-modules-header', { opacity: 1, y: 0, duration: 1.2, ease: 'power4.out' }),
+      once: true
+    });
+
+    // Modules canvas reveal
+    ScrollTrigger.create({
+      trigger: '.about-modules-canvas',
+      start: 'top 80%',
+      onEnter: () => gsap.to('.about-modules-canvas', { opacity: 1, scale: 1, duration: 1.4, ease: 'power4.out' }),
+      once: true
+    });
+
+    // Staggered reveal for modules cards
+    ScrollTrigger.batch('.about-modules-card', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.2, stagger: 0.2, ease: 'power4.out', overwrite: 'auto' }),
+      start: 'top 85%',
+      once: true
+    });
+
+    // Team section header reveal
+    ScrollTrigger.create({
+      trigger: '.about-team-header',
+      start: 'top 85%',
+      onEnter: () => gsap.to('.about-team-header', { opacity: 1, y: 0, duration: 1.2, ease: 'power4.out' }),
+      once: true
+    });
+
+    // Staggered reveal for team cards
+    ScrollTrigger.batch('.about-team-card', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.2, stagger: 0.25, ease: 'power4.out', overwrite: 'auto' }),
+      start: 'top 85%',
+      once: true
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, []);
+
   const handleBookServiceClick = () => {
     if (isAuthenticated) {
       navigate('/customer/book');
@@ -151,6 +222,7 @@ const AboutUs = () => {
             <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
               <Typography 
                 variant="overline" 
+                className="about-hero-overline"
                 sx={{ 
                   color: '#4f46e5',
                   fontWeight: 800, 
@@ -165,6 +237,7 @@ const AboutUs = () => {
               
               <Typography 
                 variant="h1" 
+                className="about-hero-title"
                 sx={{ 
                   fontFamily: 'Outfit', 
                   fontWeight: 900, 
@@ -201,6 +274,7 @@ const AboutUs = () => {
               
               <Typography 
                 variant="body1" 
+                className="about-hero-desc"
                 sx={{ 
                   color: '#4B5563', 
                   lineHeight: 1.8, 
@@ -223,6 +297,7 @@ const AboutUs = () => {
               >
                 <Button 
                   variant="contained" 
+                  className="about-hero-cta"
                   onClick={handleBookServiceClick}
                   sx={{ 
                     bgcolor: '#0F0F14', 
@@ -244,6 +319,7 @@ const AboutUs = () => {
                 </Button>
                 <Button 
                   variant="outlined" 
+                  className="about-hero-cta"
                   onClick={() => navigate('/captain/login')}
                   sx={{ 
                     borderColor: '#0F0F14', 
@@ -270,6 +346,7 @@ const AboutUs = () => {
 
             {/* Hero Right: University Showcase Card */}
             <Box 
+              className="about-hero-card"
               sx={{ 
                 position: 'relative',
                 width: '100%',
@@ -378,7 +455,7 @@ const AboutUs = () => {
       {/* 2. Platform Modules & Technical Highlights (Redesigned with Visual Architecture) */}
       <Box sx={{ py: 12, bgcolor: '#ffffff' }}>
         <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 9 }}>
+          <Box className="about-modules-header" sx={{ textAlign: 'center', mb: 9 }}>
             <Typography variant="overline" sx={{ color: '#4f46e5', fontWeight: 800, letterSpacing: '0.2em' }}>
               HOW IT WORKS
             </Typography>
@@ -403,6 +480,7 @@ const AboutUs = () => {
           >
             {/* Left: Interactive Visual Flow Canvas */}
             <Box 
+              className="about-modules-canvas"
               sx={{ 
                 position: 'relative', 
                 height: { xs: '380px', sm: '420px' }, 
@@ -526,6 +604,7 @@ const AboutUs = () => {
               ].map((feat, idx) => (
                 <Paper
                   key={idx}
+                  className="about-modules-card"
                   elevation={0}
                   sx={{
                     p: 3,
@@ -607,7 +686,7 @@ const AboutUs = () => {
             }}
           >
             {/* Team Left: Title & Description */}
-            <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+            <Box className="about-team-header" sx={{ textAlign: { xs: 'center', md: 'left' } }}>
               <Typography 
                 variant="h2" 
                 sx={{ 
@@ -680,6 +759,7 @@ const AboutUs = () => {
             >
               {/* Profile 1: Ambariya Vivek */}
               <Paper
+                className="about-team-card"
                 elevation={0}
                 sx={{
                   flex: 1,
@@ -834,6 +914,7 @@ const AboutUs = () => {
 
               {/* Profile 2: Ved Goyani */}
               <Paper
+                className="about-team-card"
                 elevation={0}
                 sx={{
                   flex: 1,

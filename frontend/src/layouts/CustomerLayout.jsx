@@ -17,12 +17,25 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { gsap } from 'gsap';
 
 const CustomerLayout = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [anchorEl, setAnchorEl] = React.useState(null);
+
+  React.useEffect(() => {
+    // Set initial hidden states
+    gsap.set('.nav-logo-reveal', { opacity: 0, x: -20 });
+    gsap.set('.nav-link-reveal', { opacity: 0, y: -10 });
+    gsap.set('.nav-action-reveal', { opacity: 0, scale: 0.9 });
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
+    tl.to('.nav-logo-reveal', { opacity: 1, x: 0 })
+      .to('.nav-link-reveal', { opacity: 1, y: 0, stagger: 0.1 }, '-=0.5')
+      .to('.nav-action-reveal', { opacity: 1, scale: 1, stagger: 0.1 }, '-=0.4');
+  }, []);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -69,6 +82,7 @@ const CustomerLayout = () => {
             {/* Branding Logo */}
             <Box
               onClick={() => navigate('/')}
+              className="nav-logo-reveal"
               sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 1.5 }}
             >
               <Box
@@ -106,6 +120,7 @@ const CustomerLayout = () => {
               <Button
                 variant="text"
                 color="inherit"
+                className="nav-link-reveal"
                 onClick={() => navigate('/')}
                 sx={{ color: location.pathname === '/' ? '#000000' : '#4B5563', fontWeight: 600 }}
               >
@@ -114,6 +129,7 @@ const CustomerLayout = () => {
               <Button
                 variant="text"
                 color="inherit"
+                className="nav-link-reveal"
                 onClick={() => navigate('/about')}
                 sx={{ color: location.pathname === '/about' ? '#000000' : '#4B5563', fontWeight: 600 }}
               >
@@ -125,6 +141,7 @@ const CustomerLayout = () => {
                   <Button
                     variant="text"
                     color="inherit"
+                    className="nav-link-reveal"
                     onClick={() => {
                       if (isAuthenticated) {
                         navigate('/customer/book');
@@ -145,6 +162,7 @@ const CustomerLayout = () => {
                 <Button
                   variant="text"
                   color="inherit"
+                  className="nav-link-reveal"
                   onClick={() => navigate(user?.role === 'admin' ? '/admin/dashboard' : '/admin/login')}
                   sx={{ color: location.pathname.includes('/admin') ? '#000000' : '#4B5563', fontWeight: 600 }}
                 >
@@ -156,6 +174,7 @@ const CustomerLayout = () => {
               {!isAuthenticated && (
                 <Button
                   variant="outlined"
+                  className="nav-link-reveal"
                   onClick={() => navigate('/captain/login')}
                   sx={{
                     borderColor: '#000000',
@@ -181,6 +200,7 @@ const CustomerLayout = () => {
                     <Button
                       variant="text"
                       color="inherit"
+                      className="nav-link-reveal"
                       onClick={() => navigate(getDashboardRoute())}
                       sx={{ color: location.pathname.includes('/dashboard') ? '#000000' : '#4B5563', fontWeight: 600 }}
                     >
@@ -189,7 +209,7 @@ const CustomerLayout = () => {
                   )}
 
                   <Tooltip title="Account Settings">
-                    <IconButton onClick={handleMenuOpen} sx={{ p: 0, ml: 1 }}>
+                    <IconButton className="nav-action-reveal" onClick={handleMenuOpen} sx={{ p: 0, ml: 1 }}>
                       <Avatar
                         src={user.profile_photo ? `http://127.0.0.1:8001${user.profile_photo}` : ''}
                         sx={{ bgcolor: '#000000', width: 36, height: 36 }}
@@ -243,6 +263,7 @@ const CustomerLayout = () => {
                 <Button
                   variant="contained"
                   color="primary"
+                  className="nav-action-reveal"
                   onClick={() => navigate('/customer/login')}
                   sx={{ borderRadius: '24px', px: 3 }}
                 >

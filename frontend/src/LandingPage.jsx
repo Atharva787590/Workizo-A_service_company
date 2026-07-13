@@ -74,7 +74,14 @@ const LandingPage = () => {
 
   // GSAP ScrollTrigger implementation to reveal information on scroll
   useEffect(() => {
-    // Set initial hidden states
+    // Set initial hidden states for Hero Section
+    gsap.set('.landing-hero-title', { opacity: 0, y: 30 });
+    gsap.set('.landing-hero-desc', { opacity: 0, y: 20 });
+    gsap.set('.landing-hero-btn', { opacity: 0, scale: 0.95 });
+    gsap.set('.landing-hero-highlight', { opacity: 0, y: 20 });
+    gsap.set('.landing-hero-img', { opacity: 0, x: 40, scale: 0.95 });
+
+    // Set initial hidden states for scroll reveals
     gsap.set('.timeline-step', { opacity: 0, x: -40 });
     gsap.set('.video-container-reveal', { opacity: 0, scale: 0.96 });
     gsap.set('.categories-header-reveal', { opacity: 0, y: 40 });
@@ -82,6 +89,14 @@ const LandingPage = () => {
     gsap.set('.category-item-reveal', { opacity: 0, y: 40, scale: 0.96 });
     gsap.set('.safety-header-reveal', { opacity: 0, y: 40 });
     gsap.set('.safety-card-reveal', { opacity: 0, y: 50 });
+
+    // Hero Section Load Timeline
+    const heroTl = gsap.timeline({ defaults: { ease: 'power4.out', duration: 1.2 } });
+    heroTl.to('.landing-hero-title', { opacity: 1, y: 0 })
+          .to('.landing-hero-desc', { opacity: 1, y: 0 }, '-=0.8')
+          .to('.landing-hero-btn', { opacity: 1, scale: 1 }, '-=0.8')
+          .to('.landing-hero-highlight', { opacity: 1, y: 0, stagger: 0.15 }, '-=0.8')
+          .to('.landing-hero-img', { opacity: 1, x: 0, scale: 1, duration: 1.4 }, '-=1.2');
 
     // 1. Timeline steps slide-in
     ScrollTrigger.batch('.timeline-step', {
@@ -187,6 +202,7 @@ const LandingPage = () => {
               <Typography
                 variant="h1"
                 component="h1"
+                className="landing-hero-title"
                 sx={{
                   fontSize: { xs: '2.5rem', sm: '3.2rem', md: '4rem' },
                   fontWeight: 700,
@@ -203,6 +219,7 @@ const LandingPage = () => {
 
               <Typography
                 variant="body1"
+                className="landing-hero-desc"
                 sx={{
                   mb: 4.5,
                   fontSize: { xs: '1rem', md: '1.25rem' },
@@ -217,6 +234,7 @@ const LandingPage = () => {
               <Box sx={{ alignSelf: 'flex-start' }}>
                 <Button
                   variant="contained"
+                  className="landing-hero-btn"
                   onClick={() => {
                     const token = localStorage.getItem('access_token');
                     if (!token) {
@@ -258,7 +276,7 @@ const LandingPage = () => {
                   gap: 2
                 }}
               >
-                <Box sx={{ flex: 1 }}>
+                <Box className="landing-hero-highlight" sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.2rem', color: '#0F0F14' }}>
                     Verified
                   </Typography>
@@ -266,7 +284,7 @@ const LandingPage = () => {
                     CAPTAIN PARTNERS
                   </Typography>
                 </Box>
-                <Box sx={{ flex: 1 }}>
+                <Box className="landing-hero-highlight" sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.2rem', color: '#0F0F14' }}>
                     Live
                   </Typography>
@@ -274,7 +292,7 @@ const LandingPage = () => {
                     TRACKING TIMELINE
                   </Typography>
                 </Box>
-                <Box sx={{ flex: 1 }}>
+                <Box className="landing-hero-highlight" sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.2rem', color: '#0F0F14' }}>
                     Fixed
                   </Typography>
@@ -287,6 +305,7 @@ const LandingPage = () => {
 
             {/* Right Side: Handyman Portrait Image Card */}
             <Box
+              className="landing-hero-img"
               sx={{
                 width: { xs: '100%', md: '45%' },
                 display: 'flex',
