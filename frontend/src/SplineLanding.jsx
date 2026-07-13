@@ -590,29 +590,38 @@ const SplineLanding = () => {
           />
         </Box>
 
-        {/* Right-side oval — 16:9 video, oval shape clips from the right edge */}
+        {/* Right-side reverse-D — flat edge on screen right, curved arc on left, 16:9 video inside */}
         <Box
           className="pinned-oval-mask-right"
           sx={{
             position: 'absolute',
-            right: 0,
+            // Push right half off-screen so the flat edge sits at the screen boundary
+            right: { xs: '-10vw', md: '-6vw' },
             top: '50%',
             transform: 'translateY(-50%)',
-            // Wide enough to show full 16:9 video; ~55vw wide, height = 55vw * 9/16
-            width: { xs: '85vw', md: '58vw' },
-            height: { xs: 'calc(85vw * 9 / 16)', md: 'calc(58vw * 9 / 16)' },
+            // Container is exactly 16:9
+            width: { xs: '80vw', md: '60vw' },
+            height: { xs: 'calc(80vw * 9 / 16)', md: 'calc(60vw * 9 / 16)' },
             bgcolor: '#090d16',
-            // Half-oval: only the left edge is rounded, right edge bleeds off-screen
-            borderTopLeftRadius: '50% 50%',
-            borderBottomLeftRadius: '50% 50%',
+            // Reverse-D shape: a very large radius on left corners becomes a perfect arc
+            // Right corners stay square (flat edge touching screen boundary)
+            borderTopLeftRadius: '9999px',
+            borderBottomLeftRadius: '9999px',
+            borderTopRightRadius: 0,
+            borderBottomRightRadius: 0,
             zIndex: 2,
             overflow: 'hidden',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            // Subtle left-side glow border only
+            borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
             borderRight: 'none',
             pointerEvents: 'none',
+            // Subtle dark glow
+            boxShadow: '-12px 0 60px rgba(0,0,0,0.5)',
           }}
         >
-          {/* Video plays naturally in 16:9 — no rotation */}
+          {/* Video in natural 16:9 — fills the reverse-D container */}
           <Box
             component="video"
             src="/videos/WORKIZO_Premium_Hero_Video_Obj.mp4"
@@ -624,8 +633,8 @@ const SplineLanding = () => {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              opacity: 0.9,
-              filter: 'brightness(85%)',
+              opacity: 0.92,
+              filter: 'brightness(88%)',
               display: 'block',
             }}
           />
