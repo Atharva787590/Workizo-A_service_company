@@ -695,6 +695,9 @@ const SplineLanding = () => {
         </Container>
       </Box>
 
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
+
       {/* 4. Safety & Assurance Section (Left aligned, text-only, pointwise) */}
       <Box
         sx={{
