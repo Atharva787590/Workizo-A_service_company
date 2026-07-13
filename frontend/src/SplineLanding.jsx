@@ -12,6 +12,11 @@ import WorkIcon from '@mui/icons-material/Work';
 import SchoolIcon from '@mui/icons-material/School';
 import CodeIcon from '@mui/icons-material/Code';
 import handymanHero from './assets/handyman_hero.png';
+import slide1 from './assets/slide1.jpg';
+import slide2 from './assets/slide2.jpg';
+import slide3 from './assets/slide3.jpg';
+import slide4 from './assets/slide4.jpg';
+import slide5 from './assets/slide5.jpg';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -1619,57 +1624,66 @@ const SplineLanding = () => {
               boxShadow: '0 0 60px rgba(0,0,0,0.6)',
             }}
           >
-            {/* Slides */}
-            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+            {/* Slides — real photos for slides 1-5, placeholders for 6-8 */}
+            {[slide1, slide2, slide3, slide4, slide5, null, null, null].map((src, i) => (
               <Box
                 key={i}
                 sx={{
                   position: 'absolute',
                   inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   opacity: currentSlide === i ? 1 : 0,
                   transition: 'opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1)',
-                  bgcolor: 'transparent',
                 }}
               >
-                {/* ── SWAP THIS Box with an <img> or screenshot when ready ── */}
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 2,
-                    bgcolor: `rgba(255,255,255,${0.01 + i * 0.005})`,
-                  }}
-                >
-                  <Typography
+                {src ? (
+                  <Box
+                    component="img"
+                    src={src}
+                    alt={`Project highlight ${i + 1}`}
                     sx={{
-                      fontFamily: "'Maltiner Display', Georgia, serif",
-                      fontSize: { xs: '1.2rem', md: '2rem' },
-                      color: 'rgba(255,255,255,0.25)',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      userSelect: 'none',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 2,
+                      bgcolor: `rgba(255,255,255,${0.01 + i * 0.005})`,
                     }}
                   >
-                    Slide {i + 1}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: "'NewBlack', sans-serif",
-                      fontSize: '0.75rem',
-                      color: 'rgba(255,255,255,0.15)',
-                      letterSpacing: '0.08em',
-                    }}
-                  >
-                    Replace with your project screenshot
-                  </Typography>
-                </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: "'Maltiner Display', Georgia, serif",
+                        fontSize: { xs: '1.2rem', md: '2rem' },
+                        color: 'rgba(255,255,255,0.2)',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        userSelect: 'none',
+                      }}
+                    >
+                      Slide {i + 1}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: "'NewBlack', sans-serif",
+                        fontSize: '0.75rem',
+                        color: 'rgba(255,255,255,0.12)',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      Add your photo here
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             ))}
 
