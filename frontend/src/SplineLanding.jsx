@@ -25,6 +25,27 @@ const SplineLanding = () => {
   const [iframePointerEvents, setIframePointerEvents] = useState('auto');
   const scrollTimeoutRef = useRef(null);
 
+  // Slideshow state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slideIntervalRef = useRef(null);
+  const TOTAL_SLIDES = 8;
+
+  // Auto-advance slideshow every 4 seconds, loops
+  useEffect(() => {
+    slideIntervalRef.current = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % TOTAL_SLIDES);
+    }, 4000);
+    return () => clearInterval(slideIntervalRef.current);
+  }, []);
+
+  const goToSlide = (index) => {
+    clearInterval(slideIntervalRef.current);
+    setCurrentSlide((index + TOTAL_SLIDES) % TOTAL_SLIDES);
+    slideIntervalRef.current = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % TOTAL_SLIDES);
+    }, 4000);
+  };
+
   useEffect(() => {
     const handleScrollGestureStart = () => {
       // Temporarily disable pointer events on the iframe so gestures scroll the parent document
@@ -1538,6 +1559,221 @@ const SplineLanding = () => {
               </Card>
             </Grid>
           </Grid>
+        </Container>
+      </Box>
+
+      {/* 6. Project Highlights Slideshow Section */}
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 10,
+          py: { xs: 8, md: 12 },
+          px: { xs: 2, md: 8 },
+          pointerEvents: 'auto',
+        }}
+      >
+        <Container maxWidth="lg">
+          {/* Section header */}
+          <Box sx={{ mb: 6 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255,255,255,0.4)',
+                fontFamily: "'NewBlack', sans-serif",
+                fontWeight: 800,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                fontSize: '0.75rem',
+                display: 'block',
+                mb: 1.5,
+              }}
+            >
+              GALLERY
+            </Typography>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 400,
+                fontFamily: "'Maltiner Display', Georgia, serif",
+                letterSpacing: '0.03em',
+                fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3rem' },
+                textTransform: 'uppercase',
+                color: '#ffffff',
+              }}
+            >
+              Project Highlights
+            </Typography>
+          </Box>
+
+          {/* 16:9 slideshow container */}
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              paddingTop: '56.25%', // 16:9 aspect ratio
+              borderRadius: '20px',
+              overflow: 'hidden',
+              bgcolor: 'rgba(255,255,255,0.03)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 0 60px rgba(0,0,0,0.6)',
+            }}
+          >
+            {/* Slides */}
+            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+              <Box
+                key={i}
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: currentSlide === i ? 1 : 0,
+                  transition: 'opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1)',
+                  bgcolor: 'transparent',
+                }}
+              >
+                {/* ── SWAP THIS Box with an <img> or screenshot when ready ── */}
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 2,
+                    bgcolor: `rgba(255,255,255,${0.01 + i * 0.005})`,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: "'Maltiner Display', Georgia, serif",
+                      fontSize: { xs: '1.2rem', md: '2rem' },
+                      color: 'rgba(255,255,255,0.25)',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      userSelect: 'none',
+                    }}
+                  >
+                    Slide {i + 1}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "'NewBlack', sans-serif",
+                      fontSize: '0.75rem',
+                      color: 'rgba(255,255,255,0.15)',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    Replace with your project screenshot
+                  </Typography>
+                </Box>
+              </Box>
+            ))}
+
+            {/* Prev arrow */}
+            <Box
+              onClick={() => goToSlide(currentSlide - 1)}
+              sx={{
+                position: 'absolute',
+                left: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 20,
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                bgcolor: 'rgba(0,0,0,0.45)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                transition: 'all 0.2s',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
+              }}
+            >
+              <Typography sx={{ color: '#fff', fontSize: '1.1rem', lineHeight: 1 }}>‹</Typography>
+            </Box>
+
+            {/* Next arrow */}
+            <Box
+              onClick={() => goToSlide(currentSlide + 1)}
+              sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 20,
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                bgcolor: 'rgba(0,0,0,0.45)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                transition: 'all 0.2s',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
+              }}
+            >
+              <Typography sx={{ color: '#fff', fontSize: '1.1rem', lineHeight: 1 }}>›</Typography>
+            </Box>
+
+            {/* Dot indicators */}
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 18,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                gap: 1,
+                zIndex: 20,
+              }}
+            >
+              {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+                <Box
+                  key={i}
+                  onClick={() => goToSlide(i)}
+                  sx={{
+                    width: currentSlide === i ? 24 : 7,
+                    height: 7,
+                    borderRadius: '4px',
+                    bgcolor: currentSlide === i ? '#ffffff' : 'rgba(255,255,255,0.3)',
+                    cursor: 'pointer',
+                    transition: 'all 0.35s ease',
+                  }}
+                />
+              ))}
+            </Box>
+
+            {/* Slide counter */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 20,
+                zIndex: 20,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '0.7rem',
+                  color: 'rgba(255,255,255,0.35)',
+                  letterSpacing: '0.12em',
+                }}
+              >
+                {String(currentSlide + 1).padStart(2, '0')} / {String(TOTAL_SLIDES).padStart(2, '0')}
+              </Typography>
+            </Box>
+          </Box>
         </Container>
       </Box>
 
