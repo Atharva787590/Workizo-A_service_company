@@ -7,6 +7,10 @@ import StarsIcon from '@mui/icons-material/Stars';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import WorkIcon from '@mui/icons-material/Work';
+import SchoolIcon from '@mui/icons-material/School';
+import CodeIcon from '@mui/icons-material/Code';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
