@@ -672,7 +672,7 @@ const SplineLanding = () => {
         </Container>
       </Box>
 
-      {/* 4. Safety & Assurance Section (Overlay block with transparent background and pointerEvents: auto) */}
+      {/* 4. Safety & Assurance Section (Left aligned, text-only, pointwise) */}
       <Box
         sx={{
           bgcolor: 'transparent',
@@ -680,13 +680,21 @@ const SplineLanding = () => {
           pt: 4,
           position: 'relative',
           zIndex: 10,
-          pointerEvents: 'auto', // Keep fully interactive
+          pointerEvents: 'auto',
           color: '#ffffff',
         }}
       >
-        <Container maxWidth="lg" className="spline-safety-header">
+        <Container maxWidth="lg">
           {/* Header Block */}
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
+          <Box
+            className="spline-safety-header"
+            sx={{
+              textAlign: 'left',
+              mb: 8,
+              width: '100%',
+              maxWidth: '700px',
+            }}
+          >
             <Typography
               variant="caption"
               sx={{
@@ -709,6 +717,8 @@ const SplineLanding = () => {
                 mb: 2.5,
                 fontFamily: "'Maltiner Display', Georgia, serif",
                 letterSpacing: '0.03em',
+                fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3.2rem' },
+                textTransform: 'uppercase',
               }}
             >
               Workizo Quality & Safety Assurance
@@ -718,9 +728,7 @@ const SplineLanding = () => {
               sx={{
                 color: 'rgba(255, 255, 255, 0.6)',
                 fontFamily: "'NewBlack', sans-serif",
-                maxWidth: '700px',
-                mx: 'auto',
-                fontSize: '0.9rem',
+                fontSize: '1rem',
                 lineHeight: 1.6,
                 mb: 4,
               }}
@@ -750,77 +758,97 @@ const SplineLanding = () => {
             </Button>
           </Box>
 
-          {/* 3-Column Grid of Cards */}
-          <Grid container spacing={4}>
-            <Grid item xs={12} sm={4} className="spline-safety-card">
-              <Card
+          {/* Pointwise Text-only guarantees */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              width: '100%',
+              maxWidth: '750px',
+            }}
+          >
+            <Box className="spline-safety-card">
+              <Typography
+                variant="h5"
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  borderRadius: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: 'none',
+                  fontWeight: 800,
+                  mb: 1.5,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '1.4rem',
+                  letterSpacing: '0.02em',
                   color: '#ffffff',
                 }}
               >
-                <VerifiedUserIcon sx={{ color: '#4F46E5', fontSize: 40, mb: 2 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5, fontFamily: "'NewBlack', sans-serif", fontSize: '1.1rem', letterSpacing: '0.02em' }}>
-                  100% KYC Verified
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif", fontSize: '0.85rem' }}>
-                  Every Captain is verified via Aadhaar & PAN background checks prior to platform listing.
-                </Typography>
-              </Card>
-            </Grid>
+                100% KYC Verified
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  lineHeight: 1.7,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '1rem',
+                }}
+              >
+                Every Captain is verified via Aadhaar & PAN background checks prior to platform listing.
+              </Typography>
+            </Box>
 
-            <Grid item xs={12} sm={4} className="spline-safety-card">
-              <Card
+            <Box className="spline-safety-card">
+              <Typography
+                variant="h5"
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  borderRadius: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: 'none',
+                  fontWeight: 800,
+                  mb: 1.5,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '1.4rem',
+                  letterSpacing: '0.02em',
                   color: '#ffffff',
                 }}
               >
-                <MonetizationOnIcon sx={{ color: '#10B981', fontSize: 40, mb: 2 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5, fontFamily: "'NewBlack', sans-serif", fontSize: '1.1rem', letterSpacing: '0.02em' }}>
-                  Standardized Pricing
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif", fontSize: '0.85rem' }}>
-                  No bargaining. Get fixed, fair quotes for all categories before work begins.
-                </Typography>
-              </Card>
-            </Grid>
+                Standardized Pricing
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  lineHeight: 1.7,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '1rem',
+                }}
+              >
+                No bargaining. Get fixed, fair quotes for all categories before work begins.
+              </Typography>
+            </Box>
 
-            <Grid item xs={12} sm={4} className="spline-safety-card">
-              <Card
+            <Box className="spline-safety-card">
+              <Typography
+                variant="h5"
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  borderRadius: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: 'none',
+                  fontWeight: 800,
+                  mb: 1.5,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '1.4rem',
+                  letterSpacing: '0.02em',
                   color: '#ffffff',
                 }}
               >
-                <StarsIcon sx={{ color: '#F59E0B', fontSize: 40, mb: 2 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5, fontFamily: "'NewBlack', sans-serif", fontSize: '1.1rem', letterSpacing: '0.02em' }}>
-                  Elite Trained Captains
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif", fontSize: '0.85rem' }}>
-                  Only experienced local experts are matched to guarantee 100% satisfaction.
-                </Typography>
-              </Card>
-            </Grid>
-          </Grid>
+                Elite Trained Captains
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  lineHeight: 1.7,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '1rem',
+                }}
+              >
+                Only experienced local experts are matched to guarantee 100% satisfaction.
+              </Typography>
+            </Box>
+          </Box>
         </Container>
       </Box>
     </Box>
