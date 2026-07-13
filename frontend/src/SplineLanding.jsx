@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Link, Container, Grid, Card } from '@mui/material';
+import { Box, Typography, Link, Container, Card } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -433,34 +433,42 @@ const SplineLanding = () => {
             </Typography>
           </Box>
 
-          {/* Alternating central vertical line */}
+          {/* Timeline Flex Wrapper (Left Column, Spine, Right Column) */}
           <Box
             sx={{
-              display: { xs: 'none', md: 'block' },
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '220px',
-              bottom: '40px',
-              width: '2px',
-              bgcolor: 'rgba(255, 255, 255, 0.15)',
-              zIndex: 1,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              position: 'relative',
+              width: '100%',
             }}
-          />
-
-          <Grid container spacing={0} sx={{ position: 'relative', zIndex: 2 }}>
-            {/* Left Column (Points 1 & 3) */}
-            <Grid
-              item
-              xs={12}
-              md={6}
+          >
+            {/* Center vertical line */}
+            <Box
               sx={{
+                display: { xs: 'none', md: 'block' },
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                top: 0,
+                bottom: 0,
+                width: '2px',
+                bgcolor: 'rgba(255, 255, 255, 0.15)',
+                zIndex: 1,
+              }}
+            />
+
+            {/* Left Column (Points 1 & 3) */}
+            <Box
+              sx={{
+                width: { xs: '100%', md: '50%' },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: { xs: 'center', md: 'flex-end' },
                 gap: { xs: 4, md: 12 },
-                pr: { md: 6 },
-                pl: 0,
+                pr: { md: 6 }, // Exactly 48px gutter spacing from the center line
+                boxSizing: 'border-box',
+                zIndex: 2,
               }}
             >
               {/* Step 1 */}
@@ -476,41 +484,29 @@ const SplineLanding = () => {
                   color: '#ffffff',
                   width: '100%',
                   maxWidth: '480px',
-                  position: 'relative',
                 }}
               >
-                {/* Center Badge indicator */}
-                <Box
+                <Typography
+                  variant="subtitle1"
                   sx={{
-                    display: { xs: 'none', md: 'flex' },
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '40px',
-                    height: '40px',
-                    bgcolor: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    right: '-68px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    zIndex: 10,
-                    color: '#ffffff',
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.02em',
                   }}
                 >
-                  1
-                </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                  01
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
                   Real-Time Dispatching (WebSockets)
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: 1.6,
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.85rem',
+                  }}
+                >
                   WebSocket pathways connect available Captains and Customers instantly. Real-time notifications push booking requests directly based on status and geographical proximity.
                 </Typography>
               </Card>
@@ -528,60 +524,47 @@ const SplineLanding = () => {
                   color: '#ffffff',
                   width: '100%',
                   maxWidth: '480px',
-                  position: 'relative',
                   mt: { md: 12 },
                 }}
               >
-                {/* Center Badge indicator */}
-                <Box
+                <Typography
+                  variant="subtitle1"
                   sx={{
-                    display: { xs: 'none', md: 'flex' },
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '40px',
-                    height: '40px',
-                    bgcolor: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    right: '-68px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    zIndex: 10,
-                    color: '#ffffff',
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.02em',
                   }}
                 >
-                  3
-                </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                  03
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
                   Secure Razorpay Payments & Billing
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: 1.6,
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.85rem',
+                  }}
+                >
                   Built-in transaction flow with Razorpay integration. Auto-generates transactional logs, triggers database payment status transitions, and compiles downloadable billing invoices.
                 </Typography>
               </Card>
-            </Grid>
+            </Box>
 
             {/* Right Column (Points 2 & 4) */}
-            <Grid
-              item
-              xs={12}
-              md={6}
+            <Box
               sx={{
+                width: { xs: '100%', md: '50%' },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: { xs: 'center', md: 'flex-start' },
                 gap: { xs: 4, md: 12 },
-                pl: { md: 6 },
-                pr: 0,
-                pt: { md: 16 },
+                pl: { md: 6 }, // Exactly 48px gutter spacing from the center line
+                pt: { md: 16 }, // Offset columns to make it alternate
+                boxSizing: 'border-box',
+                zIndex: 2,
               }}
             >
               {/* Step 2 */}
@@ -597,41 +580,29 @@ const SplineLanding = () => {
                   color: '#ffffff',
                   width: '100%',
                   maxWidth: '480px',
-                  position: 'relative',
                 }}
               >
-                {/* Center Badge indicator */}
-                <Box
+                <Typography
+                  variant="subtitle1"
                   sx={{
-                    display: { xs: 'none', md: 'flex' },
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '40px',
-                    height: '40px',
-                    bgcolor: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    left: '-68px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    zIndex: 10,
-                    color: '#ffffff',
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.02em',
                   }}
                 >
-                  2
-                </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                  02
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
                   Role-Based Dashboard Core
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: 1.6,
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.85rem',
+                  }}
+                >
                   Segmented custom control panels. Customers book, track, and pay, while Captains accept bookings, upload work completion metadata, and manage online status.
                 </Typography>
               </Card>
@@ -649,47 +620,35 @@ const SplineLanding = () => {
                   color: '#ffffff',
                   width: '100%',
                   maxWidth: '480px',
-                  position: 'relative',
                   mt: { md: 12 },
                 }}
               >
-                {/* Center Badge indicator */}
-                <Box
+                <Typography
+                  variant="subtitle1"
                   sx={{
-                    display: { xs: 'none', md: 'flex' },
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '40px',
-                    height: '40px',
-                    bgcolor: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    left: '-68px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    zIndex: 10,
-                    color: '#ffffff',
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.02em',
                   }}
                 >
-                  4
-                </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                  04
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
                   Automated KYC & Safety Verification
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: 1.6,
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.85rem',
+                  }}
+                >
                   Specialized onboarding channels for Captains. Captures document uploads, enables admin KYC status reviews, and verifies service credentials to guarantee user protection.
                 </Typography>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Container>
       </Box>
     </Box>
