@@ -147,6 +147,8 @@ const SplineLanding = () => {
 
     // Set initial offscreen state for the half-oval background mask
     gsap.set('.pinned-oval-mask', { x: -380, opacity: 0 });
+    // Set initial offscreen state for the right video oval
+    gsap.set('.pinned-oval-mask-right', { x: 380, opacity: 0 });
 
     textTl
       // 1. Fade in trusted
@@ -168,7 +170,23 @@ const SplineLanding = () => {
         opacity: 1,
         duration: 2.0,
         ease: 'power2.out',
-      }, '-=0.5'); // Overlap slightly with text slide-up for premium fluidity
+      }, '-=0.5') // Overlap slightly with text slide-up for premium fluidity
+      // 6. Hold the handyman oval visible momentarily
+      .to({}, { duration: 0.6 })
+      // 7. Slide the handyman oval back out to the left
+      .to('.pinned-oval-mask', {
+        x: -420,
+        opacity: 0,
+        duration: 1.6,
+        ease: 'power2.inOut',
+      })
+      // 8. Slide the right video oval in from the right
+      .to('.pinned-oval-mask-right', {
+        x: 0,
+        opacity: 1,
+        duration: 2.0,
+        ease: 'power2.out',
+      }, '-=0.6'); // Overlap slightly with handyman exit for smooth crossover
 
     // 2. Set initial hidden states for headers
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
