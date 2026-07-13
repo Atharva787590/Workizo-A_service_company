@@ -464,12 +464,11 @@ const SplineLanding = () => {
         </Box>
       </Box>
 
-      {/* 3. How It Works Section (Overlay block with solid dark background and pointerEvents: auto) */}
+      {/* 3. How It Works Section (Overlay block with transparent background and pointerEvents: auto) */}
       <Box
         sx={{
-          bgcolor: '#090d16',
+          bgcolor: 'transparent',
           py: 12,
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           position: 'relative',
           zIndex: 10,
           pointerEvents: 'auto', // Keep fully interactive
