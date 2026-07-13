@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Link, Container, Card } from '@mui/material';
+import { Box, Typography, Link, Container, Grid, Card } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -10,8 +9,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 const SplineLanding = () => {
   const navigate = useNavigate();
-  const [isPlaying, setIsPlaying] = useState(true);
-  const videoRef = useRef(null);
 
   // Dynamic iframe pointer events state to solve trackpad & touch scroll hijacking
   const [iframePointerEvents, setIframePointerEvents] = useState('auto');
@@ -45,16 +42,6 @@ const SplineLanding = () => {
       }
     };
   }, []);
-
-  const handlePlayVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.play().then(() => {
-        setIsPlaying(true);
-      }).catch(err => {
-        console.error("Playback failed", err);
-      });
-    }
-  };
 
   // Load Valeran's exact custom fonts (Maltiner Display & NewBlack) dynamically
   useEffect(() => {
@@ -102,24 +89,23 @@ const SplineLanding = () => {
     };
   }, []);
 
-  // GSAP ScrollTrigger for How It Works reveals
+  // GSAP ScrollTrigger for alternating timeline reveals
   useEffect(() => {
     // Set initial hidden states for the scrollable elements
-    gsap.set('.spline-timeline-step', { opacity: 0, x: -40 });
-    gsap.set('.spline-video-reveal', { opacity: 0, scale: 0.96 });
+    gsap.set('.spline-timeline-step-left', { opacity: 0, x: -60 });
+    gsap.set('.spline-timeline-step-right', { opacity: 0, x: 60 });
 
-    // 1. Timeline steps
-    ScrollTrigger.batch('.spline-timeline-step', {
+    // Left slide-ins
+    ScrollTrigger.batch('.spline-timeline-step-left', {
       onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 1.4, stagger: 0.35, ease: 'power4.out', overwrite: 'auto' }),
       start: 'top 85%',
       once: true
     });
 
-    // 2. Video container
-    ScrollTrigger.create({
-      trigger: '.spline-video-reveal',
-      start: 'top 80%',
-      onEnter: () => gsap.to('.spline-video-reveal', { opacity: 1, scale: 1, duration: 1.6, ease: 'power4.out' }),
+    // Right slide-ins
+    ScrollTrigger.batch('.spline-timeline-step-right', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 1.4, stagger: 0.35, ease: 'power4.out', overwrite: 'auto' }),
+      start: 'top 85%',
       once: true
     });
 
@@ -464,19 +450,19 @@ const SplineLanding = () => {
         </Box>
       </Box>
 
-      {/* 3. How It Works Section (Overlay block with transparent background and pointerEvents: auto) */}
+      {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box
         sx={{
           bgcolor: 'transparent',
           py: 12,
           position: 'relative',
           zIndex: 10,
-          pointerEvents: 'auto', // Keep fully interactive
+          pointerEvents: 'auto',
           color: '#ffffff',
         }}
       >
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Container maxWidth="lg" sx={{ position: 'relative' }}>
+          <Box sx={{ textAlign: 'center', mb: 10 }}>
             <Typography
               variant="caption"
               sx={{
@@ -488,7 +474,7 @@ const SplineLanding = () => {
                 fontSize: '0.75rem',
               }}
             >
-              Simple Process
+              Platform Core
             </Typography>
             <Typography
               variant="h3"
@@ -513,416 +499,234 @@ const SplineLanding = () => {
                 lineHeight: 1.6,
               }}
             >
-              Get your home services completed in three easy steps. No complications, just results.
+              Robust digital architecture ensuring secure, real-time coordination for home services.
             </Typography>
           </Box>
 
+          {/* Alternating central vertical line */}
           <Box
             sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', md: 'row' },
-              gap: { xs: 6, md: '6%' },
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              mt: 6,
+              display: { xs: 'none', md: 'block' },
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              top: '220px',
+              bottom: '40px',
+              width: '2px',
+              background: 'linear-gradient(to bottom, #4F46E5, #3b82f6, #10B981, #EF4444)',
+              zIndex: 1,
             }}
-          >
-            {/* Timeline tree */}
-            <Box sx={{ width: { xs: '100%', md: '44%' }, flexShrink: 0 }}>
-              <Box sx={{ position: 'relative', py: 2 }}>
-                {/* Vertical Center Line */}
-                <Box
-                  sx={{
-                    display: { xs: 'none', md: 'block' },
-                    position: 'absolute',
-                    right: '33px',
-                    top: '40px',
-                    bottom: '40px',
-                    width: '2px',
-                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                    zIndex: 1,
-                  }}
-                />
+          />
 
-                {/* Step 1 */}
-                <Box
-                  className="spline-timeline-step"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    position: 'relative',
-                    zIndex: 2,
-                    mb: '32px',
-                  }}
-                >
-                  <Box sx={{ width: { xs: '100%', md: 'calc(100% - 70px)' }, flexShrink: 0 }}>
-                    <Card
-                      sx={{
-                        p: 4,
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        bgcolor: 'rgba(255, 255, 255, 0.02)',
-                        boxShadow: 'none',
-                        color: '#ffffff',
-                      }}
-                    >
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: 800,
-                          mb: 1.5,
-                          color: '#4F46E5',
-                          fontFamily: "'NewBlack', sans-serif",
-                        }}
-                      >
-                        01
-                      </Typography>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 800,
-                          mb: 1,
-                          fontFamily: "'NewBlack', sans-serif",
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        Choose Category
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          lineHeight: 1.6,
-                          fontFamily: "'NewBlack', sans-serif",
-                        }}
-                      >
-                        Select from our list of vetted experts (plumber, electrician, etc.) and search local providers.
-                      </Typography>
-                    </Card>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: { xs: 'none', md: 'flex' },
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '70px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 48,
-                        height: 48,
-                        bgcolor: '#4F46E5',
-                        color: '#ffffff',
-                        borderRadius: '50%',
-                        fontWeight: 'bold',
-                        boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
-                        zIndex: 3,
-                        fontFamily: "'NewBlack', sans-serif",
-                      }}
-                    >
-                      1
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* Step 2 */}
-                <Box
-                  className="spline-timeline-step"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    position: 'relative',
-                    zIndex: 2,
-                    mb: '32px',
-                  }}
-                >
-                  <Box sx={{ width: { xs: '100%', md: 'calc(100% - 70px)' }, flexShrink: 0 }}>
-                    <Card
-                      sx={{
-                        p: 4,
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        bgcolor: 'rgba(255, 255, 255, 0.02)',
-                        boxShadow: 'none',
-                        color: '#ffffff',
-                      }}
-                    >
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: 800,
-                          mb: 1.5,
-                          color: '#10B981',
-                          fontFamily: "'NewBlack', sans-serif",
-                        }}
-                      >
-                        02
-                      </Typography>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 800,
-                          mb: 1,
-                          fontFamily: "'NewBlack', sans-serif",
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        Match Nearby
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          lineHeight: 1.6,
-                          fontFamily: "'NewBlack', sans-serif",
-                        }}
-                      >
-                        Our live dispatcher alerts all online Captains in your category and pairs you in under 5 minutes.
-                      </Typography>
-                    </Card>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: { xs: 'none', md: 'flex' },
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '70px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 48,
-                        height: 48,
-                        bgcolor: '#10B981',
-                        color: '#ffffff',
-                        borderRadius: '50%',
-                        fontWeight: 'bold',
-                        boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
-                        zIndex: 3,
-                        fontFamily: "'NewBlack', sans-serif",
-                      }}
-                    >
-                      2
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* Step 3 */}
-                <Box
-                  className="spline-timeline-step"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    position: 'relative',
-                    zIndex: 2,
-                  }}
-                >
-                  <Box sx={{ width: { xs: '100%', md: 'calc(100% - 70px)' }, flexShrink: 0 }}>
-                    <Card
-                      sx={{
-                        p: 4,
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        bgcolor: 'rgba(255, 255, 255, 0.02)',
-                        boxShadow: 'none',
-                        color: '#ffffff',
-                      }}
-                    >
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: 800,
-                          mb: 1.5,
-                          color: '#F59E0B',
-                          fontFamily: "'NewBlack', sans-serif",
-                        }}
-                      >
-                        03
-                      </Typography>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 800,
-                          mb: 1,
-                          fontFamily: "'NewBlack', sans-serif",
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        Track Timeline
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          lineHeight: 1.6,
-                          fontFamily: "'NewBlack', sans-serif",
-                        }}
-                      >
-                        Track the assigned Captain live on the interactive timeline, verify via secure QR, and settle payments.
-                      </Typography>
-                    </Card>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: { xs: 'none', md: 'flex' },
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '70px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 48,
-                        height: 48,
-                        bgcolor: '#F59E0B',
-                        color: '#ffffff',
-                        borderRadius: '50%',
-                        fontWeight: 'bold',
-                        boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
-                        zIndex: 3,
-                        fontFamily: "'NewBlack', sans-serif",
-                      }}
-                    >
-                      3
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
-
-            {/* Video Player */}
-            <Box sx={{ width: { xs: '100%', md: '50%' }, flexShrink: 0, display: 'flex', justifyContent: 'center' }} className="spline-video-reveal">
-              <Box
+          <Grid container spacing={6} sx={{ position: 'relative', zIndex: 2 }}>
+            {/* Step 1: Left Side */}
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, pr: { md: 6 } }} className="spline-timeline-step-left">
+              <Card
                 sx={{
-                  position: 'relative',
+                  p: 4,
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
                   width: '100%',
-                  aspectRatio: '16/9',
-                  background: 'linear-gradient(135deg, #4F46E5, #3b82f6)',
-                  padding: '2px',
-                  borderRadius: '24px',
-                  boxShadow: '0 25px 70px rgba(0, 0, 0, 0.4)',
-                  overflow: 'hidden',
+                  maxWidth: '500px',
+                  position: 'relative',
                 }}
               >
+                {/* Center Badge indicator */}
                 <Box
                   sx={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#090d16',
-                    borderRadius: '22px',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    display: 'flex',
-                    justifyContent: 'center',
+                    display: { xs: 'none', md: 'flex' },
                     alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    bgcolor: '#4F46E5',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    right: '-68px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    fontFamily: "'NewBlack', sans-serif",
                   }}
                 >
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: 'inherit',
-                      display: 'block',
-                    }}
-                  >
-                    <source src="/videos/WORKIZO_Premium_Hero_Video_Obj.mp4" type="video/mp4" />
-                    <source src="/videos/workizo-promo.mp4" type="video/mp4" />
-                    <source src="https://assets.mixkit.co/videos/preview/mixkit-hand-of-a-plumber-with-a-wrench-fixing-a-sink-40919-large.mp4" type="video/mp4" />
-                  </video>
-
-                  {!isPlaying && (
-                    <Box
-                      onClick={handlePlayVideo}
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(9, 13, 22, 0.95)',
-                        backdropFilter: 'blur(4px)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        zIndex: 10,
-                        p: 4,
-                        textAlign: 'center',
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '80px',
-                          height: '80px',
-                          borderRadius: '50%',
-                          backgroundColor: '#ffffff',
-                          boxShadow: '0 8px 30px rgba(79, 70, 229, 0.4)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mb: 2,
-                          transition: 'transform 0.2s ease',
-                          '&:hover': { transform: 'scale(1.1)' },
-                        }}
-                      >
-                        <PlayArrowIcon sx={{ color: '#4F46E5', fontSize: '48px', ml: 0.5 }} />
-                      </Box>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: 800,
-                          color: '#ffffff',
-                          fontFamily: "'NewBlack', sans-serif",
-                          mb: 1,
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        WORKIZO IN ACTION
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          maxWidth: '400px',
-                          lineHeight: 1.5,
-                          fontFamily: "'NewBlack', sans-serif",
-                        }}
-                      >
-                        See how our Captains deliver trusted services right at your doorstep.
-                      </Typography>
-                    </Box>
-                  )}
+                  1
                 </Box>
-              </Box>
-            </Box>
-          </Box>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#4F46E5', fontFamily: "'NewBlack', sans-serif" }}>
+                  01
+                </Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
+                  Real-Time Dispatching (WebSockets)
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                  WebSocket pathways connect available Captains and Customers instantly. Real-time notifications push booking requests directly based on status and geographical proximity.
+                </Typography>
+              </Card>
+            </Grid>
+            {/* Spacer */}
+            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
+
+            {/* Spacer */}
+            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
+            {/* Step 2: Right Side */}
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' }, pl: { md: 6 } }} className="spline-timeline-step-right">
+              <Card
+                sx={{
+                  p: 4,
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                  width: '100%',
+                  maxWidth: '500px',
+                  position: 'relative',
+                }}
+              >
+                {/* Center Badge indicator */}
+                <Box
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    bgcolor: '#3b82f6',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    left: '-68px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    fontFamily: "'NewBlack', sans-serif",
+                  }}
+                >
+                  2
+                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#3b82f6', fontFamily: "'NewBlack', sans-serif" }}>
+                  02
+                </Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
+                  Role-Based Dashboard Core
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                  Segmented custom control panels. Customers book, track, and pay, while Captains accept bookings, upload work completion metadata, and manage online status.
+                </Typography>
+              </Card>
+            </Grid>
+
+            {/* Step 3: Left Side */}
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, pr: { md: 6 } }} className="spline-timeline-step-left">
+              <Card
+                sx={{
+                  p: 4,
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                  width: '100%',
+                  maxWidth: '500px',
+                  position: 'relative',
+                }}
+              >
+                {/* Center Badge indicator */}
+                <Box
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    bgcolor: '#10B981',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    right: '-68px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    fontFamily: "'NewBlack', sans-serif",
+                  }}
+                >
+                  3
+                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#10B981', fontFamily: "'NewBlack', sans-serif" }}>
+                  03
+                </Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
+                  Secure Razorpay Payments & Billing
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                  Built-in transaction flow with Razorpay integration. Auto-generates transactional logs, triggers database payment status transitions, and compiles downloadable billing invoices.
+                </Typography>
+              </Card>
+            </Grid>
+            {/* Spacer */}
+            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
+
+            {/* Spacer */}
+            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }} />
+            {/* Step 4: Right Side */}
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' }, pl: { md: 6 } }} className="spline-timeline-step-right">
+              <Card
+                sx={{
+                  p: 4,
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                  width: '100%',
+                  maxWidth: '500px',
+                  position: 'relative',
+                }}
+              >
+                {/* Center Badge indicator */}
+                <Box
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    bgcolor: '#EF4444',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    left: '-68px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    boxShadow: '0 0 0 6px #090d16, 0 4px 12px rgba(0,0,0,0.3)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    fontFamily: "'NewBlack', sans-serif",
+                  }}
+                >
+                  4
+                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5, color: '#EF4444', fontFamily: "'NewBlack', sans-serif" }}>
+                  04
+                </Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.02em' }}>
+                  Automated KYC & Safety Verification
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontFamily: "'NewBlack', sans-serif" }}>
+                  Specialized onboarding channels for Captains. Captures document uploads, enables admin KYC status reviews, and verifies service credentials to guarantee user protection.
+                </Typography>
+              </Card>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
     </Box>
