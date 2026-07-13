@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Link, Container, Grid, Card, Button } from '@mui/material';
+import { Box, Typography, Link, Container, Grid, Card, Button, Avatar, IconButton, Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import StarsIcon from '@mui/icons-material/Stars';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import GoogleIcon from '@mui/icons-material/Google';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -92,13 +95,15 @@ const SplineLanding = () => {
     };
   }, []);
 
-  // GSAP ScrollTrigger for alternating timeline and safety reveals
+  // GSAP ScrollTrigger for alternating timeline, safety and team reveals
   useEffect(() => {
     // Set initial hidden states for the scrollable elements
     gsap.set('.spline-timeline-step-left', { opacity: 0, x: -60 });
     gsap.set('.spline-timeline-step-right', { opacity: 0, x: 60 });
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
     gsap.set('.spline-safety-card', { opacity: 0, y: 40 });
+    gsap.set('.spline-team-header', { opacity: 0, y: 35 });
+    gsap.set('.spline-team-card', { opacity: 0, y: 50 });
 
     // Left slide-ins
     ScrollTrigger.batch('.spline-timeline-step-left', {
@@ -124,6 +129,21 @@ const SplineLanding = () => {
 
     // Safety Cards Staggered Reveal
     ScrollTrigger.batch('.spline-safety-card', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.4, stagger: 0.25, ease: 'power4.out', overwrite: 'auto' }),
+      start: 'top 85%',
+      once: true
+    });
+
+    // Team Header Reveal
+    ScrollTrigger.create({
+      trigger: '.spline-team-header',
+      start: 'top 85%',
+      onEnter: () => gsap.to('.spline-team-header', { opacity: 1, y: 0, duration: 1.2, ease: 'power4.out' }),
+      once: true
+    });
+
+    // Team Cards Staggered Reveal
+    ScrollTrigger.batch('.spline-team-card', {
       onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.4, stagger: 0.25, ease: 'power4.out', overwrite: 'auto' }),
       start: 'top 85%',
       once: true
@@ -676,7 +696,7 @@ const SplineLanding = () => {
       <Box
         sx={{
           bgcolor: 'transparent',
-          pb: 16,
+          pb: 12,
           pt: 4,
           position: 'relative',
           zIndex: 10,
@@ -816,6 +836,345 @@ const SplineLanding = () => {
               </Typography>
             </Box>
           </Box>
+        </Container>
+      </Box>
+
+      {/* 5. Champions of the Startup Idea Section (Founding Team profiles) */}
+      <Box
+        sx={{
+          bgcolor: 'transparent',
+          pb: 16,
+          pt: 4,
+          position: 'relative',
+          zIndex: 10,
+          pointerEvents: 'auto',
+          color: '#ffffff',
+        }}
+      >
+        <Container maxWidth="lg">
+          {/* Header Block */}
+          <Box
+            className="spline-team-header"
+            sx={{
+              textAlign: 'left',
+              mb: 8,
+              width: '100%',
+              maxWidth: '700px',
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.4)',
+                fontFamily: "'NewBlack', sans-serif",
+                fontWeight: 800,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                fontSize: '0.75rem',
+                display: 'block',
+                mb: 1.5,
+              }}
+            >
+              FOUNDING TEAM
+            </Typography>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 400,
+                mb: 2.5,
+                fontFamily: "'Maltiner Display', Georgia, serif",
+                letterSpacing: '0.03em',
+                fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3.2rem' },
+                textTransform: 'uppercase',
+              }}
+            >
+              Champions of the Startup Idea
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontFamily: "'NewBlack', sans-serif",
+                fontSize: '1rem',
+                lineHeight: 1.6,
+              }}
+            >
+              The minds behind Workizo, dedicated to bridging local home services with modern web architecture.
+            </Typography>
+          </Box>
+
+          {/* Staggered Founder Cards (Glassmorphic dark design) */}
+          <Grid container spacing={4} sx={{ width: '100%' }}>
+            {/* Card 1: Ambariya Vivek */}
+            <Grid item xs={12} md={6} className="spline-team-card">
+              <Card
+                sx={{
+                  p: 5,
+                  borderRadius: '24px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  height: '100%',
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'inline-block',
+                    p: '4px',
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '50%',
+                    mb: 3,
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      bgcolor: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                      fontFamily: "'NewBlack', sans-serif",
+                      fontSize: '2rem',
+                      fontWeight: 800,
+                    }}
+                  >
+                    AV
+                  </Avatar>
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    mb: 0.5,
+                  }}
+                >
+                  Ambariya Vivek
+                </Typography>
+                <Box
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: '12px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    fontFamily: "'NewBlack', sans-serif",
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    mb: 2.5,
+                  }}
+                >
+                  Project Leader & Architect
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: 1.6,
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.9rem',
+                    mb: 3,
+                    flexGrow: 1,
+                  }}
+                >
+                  Designed the database structures, set up JWT-based custom session flows, developed role permissions, and integrated notifications via SMTP and WebSockets.
+                </Typography>
+                {/* Social links */}
+                <Box sx={{ display: 'flex', gap: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', pt: 2, width: '100%', justifyContent: 'center' }}>
+                  <IconButton
+                    component="a"
+                    href="https://linkedin.com/in/vivek-ambariya"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      '&:hover': {
+                        color: '#0A66C2',
+                        bgcolor: 'rgba(10, 102, 194, 0.1)',
+                      },
+                    }}
+                  >
+                    <LinkedInIcon />
+                  </IconButton>
+                  <IconButton
+                    component="a"
+                    href="https://github.com/vivek-ambariya"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      '&:hover': {
+                        color: '#ffffff',
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                    }}
+                  >
+                    <GitHubIcon />
+                  </IconButton>
+                  <IconButton
+                    component="a"
+                    href="mailto:ambariyavivek5@gmail.com"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      '&:hover': {
+                        color: '#DB4437',
+                        bgcolor: 'rgba(219, 68, 55, 0.1)',
+                      },
+                    }}
+                  >
+                    <GoogleIcon />
+                  </IconButton>
+                </Box>
+              </Card>
+            </Grid>
+
+            {/* Card 2: Ved Goyani */}
+            <Grid item xs={12} md={6} className="spline-team-card">
+              <Card
+                sx={{
+                  p: 5,
+                  borderRadius: '24px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  color: '#ffffff',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  height: '100%',
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'inline-block',
+                    p: '4px',
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '50%',
+                    mb: 3,
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      bgcolor: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                      fontFamily: "'NewBlack', sans-serif",
+                      fontSize: '2rem',
+                      fontWeight: 800,
+                    }}
+                  >
+                    VG
+                  </Avatar>
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    mb: 0.5,
+                  }}
+                >
+                  Ved Goyani
+                </Typography>
+                <Box
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: '12px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    fontFamily: "'NewBlack', sans-serif",
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    mb: 2.5,
+                  }}
+                >
+                  Frontend & UI Developer
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: 1.6,
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.9rem',
+                    mb: 3,
+                    flexGrow: 1,
+                  }}
+                >
+                  Crafted high-fidelity web views, interactive booking timelines, worker toggle panels, client dashboard lists, and dynamic maps.
+                </Typography>
+                {/* Social links */}
+                <Box sx={{ display: 'flex', gap: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', pt: 2, width: '100%', justifyContent: 'center' }}>
+                  <IconButton
+                    component="a"
+                    href="https://linkedin.com/in/ved-goyani"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      '&:hover': {
+                        color: '#0A66C2',
+                        bgcolor: 'rgba(10, 102, 194, 0.1)',
+                      },
+                    }}
+                  >
+                    <LinkedInIcon />
+                  </IconButton>
+                  <IconButton
+                    component="a"
+                    href="https://github.com/ved-goyani"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      '&:hover': {
+                        color: '#ffffff',
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                    }}
+                  >
+                    <GitHubIcon />
+                  </IconButton>
+                  <IconButton
+                    component="a"
+                    href="mailto:goyanived@gmail.com"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      '&:hover': {
+                        color: '#DB4437',
+                        bgcolor: 'rgba(219, 68, 55, 0.1)',
+                      },
+                    }}
+                  >
+                    <GoogleIcon />
+                  </IconButton>
+                </Box>
+              </Card>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
     </Box>
