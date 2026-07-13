@@ -572,6 +572,56 @@ const SplineLanding = () => {
           />
         </Box>
 
+        {/* Right-side oval — video displayed in 9:16 portrait orientation */}
+        <Box
+          className="pinned-oval-mask-right"
+          sx={{
+            position: 'absolute',
+            right: 0,
+            top: '10vh',
+            width: { xs: '200px', md: '340px' },
+            height: { xs: '380px', md: '620px' },
+            bgcolor: '#090d16',
+            borderTopLeftRadius: { xs: '175px 175px', md: '290px 290px' },
+            borderBottomLeftRadius: { xs: '175px 175px', md: '290px 290px' },
+            zIndex: 2,
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRight: 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Rotate the 16:9 video 90° and scale up so it fills the portrait oval */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '170%',
+              height: 'auto',
+              aspectRatio: '16/9',
+              transform: 'translate(-50%, -50%) rotate(90deg)',
+            }}
+          >
+            <Box
+              component="video"
+              src="/videos/WORKIZO_Premium_Hero_Video_Obj.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 0.85,
+                filter: 'brightness(80%)',
+                display: 'block',
+              }}
+            />
+          </Box>
+        </Box>
+
         <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
           <Typography
             className="reveal-text-line"
