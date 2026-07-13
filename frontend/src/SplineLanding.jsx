@@ -590,18 +590,21 @@ const SplineLanding = () => {
           />
         </Box>
 
-        {/* Right-side oval — video displayed in 9:16 portrait orientation */}
+        {/* Right-side oval — 16:9 video, oval shape clips from the right edge */}
         <Box
           className="pinned-oval-mask-right"
           sx={{
             position: 'absolute',
             right: 0,
-            top: '10vh',
-            width: { xs: '200px', md: '340px' },
-            height: { xs: '380px', md: '620px' },
+            top: '50%',
+            transform: 'translateY(-50%)',
+            // Wide enough to show full 16:9 video; ~55vw wide, height = 55vw * 9/16
+            width: { xs: '85vw', md: '58vw' },
+            height: { xs: 'calc(85vw * 9 / 16)', md: 'calc(58vw * 9 / 16)' },
             bgcolor: '#090d16',
-            borderTopLeftRadius: { xs: '175px 175px', md: '290px 290px' },
-            borderBottomLeftRadius: { xs: '175px 175px', md: '290px 290px' },
+            // Half-oval: only the left edge is rounded, right edge bleeds off-screen
+            borderTopLeftRadius: '50% 50%',
+            borderBottomLeftRadius: '50% 50%',
             zIndex: 2,
             overflow: 'hidden',
             border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -609,35 +612,23 @@ const SplineLanding = () => {
             pointerEvents: 'none',
           }}
         >
-          {/* Rotate the 16:9 video 90° and scale up so it fills the portrait oval */}
+          {/* Video plays naturally in 16:9 — no rotation */}
           <Box
+            component="video"
+            src="/videos/WORKIZO_Premium_Hero_Video_Obj.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
             sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: '170%',
-              height: 'auto',
-              aspectRatio: '16/9',
-              transform: 'translate(-50%, -50%) rotate(90deg)',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.9,
+              filter: 'brightness(85%)',
+              display: 'block',
             }}
-          >
-            <Box
-              component="video"
-              src="/videos/WORKIZO_Premium_Hero_Video_Obj.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              sx={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                opacity: 0.85,
-                filter: 'brightness(80%)',
-                display: 'block',
-              }}
-            />
-          </Box>
+          />
         </Box>
 
         <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
