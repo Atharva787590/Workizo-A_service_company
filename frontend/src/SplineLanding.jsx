@@ -350,103 +350,32 @@ const SplineLanding = () => {
             </Typography>
           </Box>
 
-          {/* Bottom Right: Entry Portal card */}
+          {/* Bottom Right: Go to Website link */}
           <Box
             sx={{
               pointerEvents: 'auto',
               alignSelf: { xs: 'stretch', md: 'auto' },
             }}
           >
-            <Box
+            <Link
+              onClick={() => navigate('/home')}
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2.5,
-                p: 3,
-                borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                bgcolor: 'rgba(9, 13, 22, 0.7)',
-                backdropFilter: 'blur(16px)',
-                maxWidth: { xs: '100%', md: '360px' },
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+                color: '#ffffff',
+                fontFamily: "'NewBlack', sans-serif",
+                fontSize: { xs: '0.9rem', md: '1rem' },
+                fontWeight: 800,
+                textDecoration: 'none',
+                letterSpacing: '0.08em',
+                cursor: 'pointer',
+                display: 'inline-block',
+                transition: 'opacity 0.2s',
+                '&:hover': {
+                  opacity: 0.7,
+                },
               }}
             >
-              {/* Left thumbnail */}
-              <Box
-                sx={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  bgcolor: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  overflow: 'hidden',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
-              >
-                <Box
-                  component="img"
-                  src="/logo.png"
-                  alt="Workizo"
-                  sx={{
-                    width: '42px',
-                    height: '42px',
-                    objectFit: 'contain',
-                  }}
-                />
-              </Box>
-
-              {/* Right text links */}
-              <Box>
-                <Typography
-                  sx={{
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.05em',
-                    color: '#ffffff',
-                    mb: 0.5,
-                  }}
-                >
-                  ENTER MAIN PORTAL
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 400,
-                    fontSize: '0.75rem',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    lineHeight: 1.3,
-                    mb: 1.5,
-                  }}
-                >
-                  Book background-verified local service Captains.
-                </Typography>
-                <Link
-                  onClick={() => navigate('/home')}
-                  sx={{
-                    color: '#ffffff',
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    textDecoration: 'none',
-                    letterSpacing: '0.05em',
-                    cursor: 'pointer',
-                    display: 'inline-block',
-                    borderBottom: '1px solid #ffffff',
-                    pb: 0.2,
-                    '&:hover': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      borderColor: 'rgba(255, 255, 255, 0.7)',
-                    },
-                  }}
-                >
-                  [ GO TO WEBSITE ]
-                </Link>
-              </Box>
-            </Box>
+              [ GO TO WEBSITE ]
+            </Link>
           </Box>
         </Box>
       </Box>
