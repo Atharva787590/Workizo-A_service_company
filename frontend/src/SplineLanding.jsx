@@ -54,16 +54,15 @@ const SplineLanding = () => {
   return (
     <Box
       sx={{
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
+        width: '100%',
+        minHeight: '100vh',
         position: 'relative',
         margin: 0,
         padding: 0,
         bgcolor: '#090d16',
       }}
     >
-      {/* 1. Spline interactive background */}
+      {/* 1. Spline interactive background - FIXED to the screen */}
       <iframe
         src="https://my.spline.design/particles-YTBDLEkKYDerayq5gxeww7yv/"
         frameBorder="0"
@@ -73,32 +72,31 @@ const SplineLanding = () => {
         allow="autoplay; fullscreen"
         style={{
           border: 'none',
-          width: '100%',
-          height: '100%',
+          width: '100vw',
+          height: '100vh',
           display: 'block',
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
           zIndex: 1,
+          pointerEvents: 'auto', // Allows hover interaction with canvas
         }}
       />
 
-      {/* 2. Brand Overlay */}
+      {/* 2. Brand Overlay - RELATIVE document layout allowing content to scroll */}
       <Box
         sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
+          position: 'relative',
           zIndex: 10,
+          width: '100%',
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           p: { xs: 4, md: 8 },
-          pointerEvents: 'none',
-          color: '#ffffff',
+          pointerEvents: 'none', // Hover events bypass this layer to hit fixed iframe
           boxSizing: 'border-box',
+          gap: 6,
         }}
       >
         {/* Top Navigation Row */}
@@ -133,7 +131,7 @@ const SplineLanding = () => {
                 letterSpacing: '0.04em',
                 lineHeight: 1,
                 cursor: 'pointer',
-                pointerEvents: 'auto',
+                pointerEvents: 'auto', // Enabled clicking
                 transition: 'opacity 0.2s',
                 '&:hover': {
                   opacity: 0.8,
@@ -149,7 +147,7 @@ const SplineLanding = () => {
             sx={{
               display: 'flex',
               gap: { xs: 4, md: 8 },
-              pointerEvents: 'auto',
+              pointerEvents: 'auto', // Enabled links clicking
               textAlign: 'left',
             }}
           >
@@ -291,7 +289,7 @@ const SplineLanding = () => {
           {/* Bottom Right: Entry Portal card */}
           <Box
             sx={{
-              pointerEvents: 'auto',
+              pointerEvents: 'auto', // Enabled portal card clicking
               alignSelf: { xs: 'stretch', md: 'auto' },
             }}
           >
