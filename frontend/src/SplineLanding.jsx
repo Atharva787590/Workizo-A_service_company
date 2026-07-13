@@ -420,6 +420,9 @@ const SplineLanding = () => {
         </Box>
       </Box>
 
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
+
       {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box
         sx={{
@@ -1180,6 +1183,9 @@ const SplineLanding = () => {
           </Grid>
         </Container>
       </Box>
+
+      {/* Elegant long empty space showing the Spline particles at the bottom */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
     </Box>
   );
 };
