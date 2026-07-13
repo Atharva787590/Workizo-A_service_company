@@ -119,7 +119,6 @@ const SplineLanding = () => {
 
     // 2. Set initial hidden states for headers
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
-    gsap.set('.spline-team-header', { opacity: 0, y: 35 });
 
     // Left steps scroll-scrub
     gsap.utils.toArray('.spline-timeline-step-left').forEach((card) => {
