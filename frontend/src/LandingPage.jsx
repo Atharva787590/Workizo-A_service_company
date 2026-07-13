@@ -75,17 +75,17 @@ const LandingPage = () => {
   // GSAP ScrollTrigger implementation to reveal information on scroll
   useEffect(() => {
     // Set initial hidden states
-    gsap.set('.timeline-step', { opacity: 0, x: -30 });
-    gsap.set('.video-container-reveal', { opacity: 0, scale: 0.95 });
-    gsap.set('.categories-header-reveal', { opacity: 0, y: 30 });
-    gsap.set('.search-widget-reveal', { opacity: 0, y: 20 });
-    gsap.set('.category-item-reveal', { opacity: 0, y: 30, scale: 0.95 });
-    gsap.set('.safety-header-reveal', { opacity: 0, y: 30 });
-    gsap.set('.safety-card-reveal', { opacity: 0, y: 40 });
+    gsap.set('.timeline-step', { opacity: 0, x: -40 });
+    gsap.set('.video-container-reveal', { opacity: 0, scale: 0.96 });
+    gsap.set('.categories-header-reveal', { opacity: 0, y: 40 });
+    gsap.set('.search-widget-reveal', { opacity: 0, y: 30 });
+    gsap.set('.category-item-reveal', { opacity: 0, y: 40, scale: 0.96 });
+    gsap.set('.safety-header-reveal', { opacity: 0, y: 40 });
+    gsap.set('.safety-card-reveal', { opacity: 0, y: 50 });
 
     // 1. Timeline steps slide-in
     ScrollTrigger.batch('.timeline-step', {
-      onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 0.8, stagger: 0.2, ease: 'power3.out', overwrite: 'auto' }),
+      onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 1.4, stagger: 0.35, ease: 'power4.out', overwrite: 'auto' }),
       start: 'top 85%',
       once: true
     });
@@ -94,7 +94,7 @@ const LandingPage = () => {
     ScrollTrigger.create({
       trigger: '.video-container-reveal',
       start: 'top 80%',
-      onEnter: () => gsap.to('.video-container-reveal', { opacity: 1, scale: 1, duration: 1, ease: 'power3.out' }),
+      onEnter: () => gsap.to('.video-container-reveal', { opacity: 1, scale: 1, duration: 1.6, ease: 'power4.out' }),
       once: true
     });
 
@@ -102,7 +102,7 @@ const LandingPage = () => {
     ScrollTrigger.create({
       trigger: '.categories-header-reveal',
       start: 'top 85%',
-      onEnter: () => gsap.to('.categories-header-reveal', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }),
+      onEnter: () => gsap.to('.categories-header-reveal', { opacity: 1, y: 0, duration: 1.4, ease: 'power4.out' }),
       once: true
     });
 
@@ -110,13 +110,13 @@ const LandingPage = () => {
     ScrollTrigger.create({
       trigger: '.search-widget-reveal',
       start: 'top 85%',
-      onEnter: () => gsap.to('.search-widget-reveal', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }),
+      onEnter: () => gsap.to('.search-widget-reveal', { opacity: 1, y: 0, duration: 1.4, ease: 'power4.out' }),
       once: true
     });
 
     // 5. Staggered reveal for Category cards grid
     ScrollTrigger.batch('.category-item-reveal', {
-      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.08, ease: 'power3.out', overwrite: 'auto' }),
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, scale: 1, duration: 1.2, stagger: 0.12, ease: 'power4.out', overwrite: 'auto' }),
       start: 'top 85%',
       once: true
     });
@@ -125,13 +125,13 @@ const LandingPage = () => {
     ScrollTrigger.create({
       trigger: '.safety-header-reveal',
       start: 'top 85%',
-      onEnter: () => gsap.to('.safety-header-reveal', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }),
+      onEnter: () => gsap.to('.safety-header-reveal', { opacity: 1, y: 0, duration: 1.4, ease: 'power4.out' }),
       once: true
     });
 
     // 7. Safety cards staggered fade/slide-up
     ScrollTrigger.batch('.safety-card-reveal', {
-      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 0.8, stagger: 0.2, ease: 'power3.out', overwrite: 'auto' }),
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.4, stagger: 0.35, ease: 'power4.out', overwrite: 'auto' }),
       start: 'top 85%',
       once: true
     });
