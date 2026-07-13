@@ -188,17 +188,34 @@ const SplineLanding = () => {
       once: true
     });
 
-    // Team Cards scroll-scrub
-    gsap.utils.toArray('.spline-team-card').forEach((teamCard) => {
-      gsap.fromTo(teamCard,
-        { opacity: 0.15, y: 40 },
+    // Team Card Left (Vivek) scroll-scrub
+    gsap.utils.toArray('.spline-team-card-left').forEach((card) => {
+      gsap.fromTo(card,
+        { opacity: 0.15, x: -100 },
         {
           opacity: 1,
-          y: 0,
+          x: 0,
           scrollTrigger: {
-            trigger: teamCard,
+            trigger: card,
             start: 'top 85%',
             end: 'top 60%',
+            scrub: 1,
+          }
+        }
+      );
+    });
+
+    // Team Card Right (Ved) scroll-scrub
+    gsap.utils.toArray('.spline-team-card-right').forEach((card) => {
+      gsap.fromTo(card,
+        { opacity: 0.15, x: 100 },
+        {
+          opacity: 1,
+          x: 0,
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 80%',
+            end: 'top 55%',
             scrub: 1,
           }
         }
@@ -1007,7 +1024,7 @@ const SplineLanding = () => {
 
           <Grid container spacing={4} justifyContent="center" alignItems="stretch">
             {/* Card 1: Ambariya Vivek */}
-            <Grid item xs={12} md={6} className="spline-team-card" sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Grid item xs={12} md={6} className="spline-team-card-left" sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card
                 sx={{
                   p: 4,
@@ -1245,7 +1262,7 @@ const SplineLanding = () => {
             </Grid>
 
             {/* Card 2: Ved Goyani */}
-            <Grid item xs={12} md={6} className="spline-team-card" sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Grid item xs={12} md={6} className="spline-team-card-right" sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card
                 sx={{
                   p: 4,
