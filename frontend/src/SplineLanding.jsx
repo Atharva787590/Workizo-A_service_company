@@ -95,9 +95,25 @@ const SplineLanding = () => {
     };
   }, []);
 
-  // GSAP ScrollTrigger for alternating timeline, safety and team reveals
+  // GSAP ScrollTrigger animations
   useEffect(() => {
-    // Set initial hidden states for the scrollable elements
+    // 1. Pinned Horizontal text reveal sentence animation
+    const textTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.pinned-text-section',
+        start: 'top top',
+        end: '+=150%',
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+      }
+    });
+
+    textTl
+      .to('.word-comma-trusted', { opacity: 1, duration: 1.2, ease: 'power1.inOut' })
+      .to('.word-professional', { opacity: 1, duration: 1.4, ease: 'power1.inOut' });
+
+    // 2. Set initial hidden states for the timeline steps & safety elements
     gsap.set('.spline-timeline-step-left', { opacity: 0, x: -60 });
     gsap.set('.spline-timeline-step-right', { opacity: 0, x: 60 });
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
@@ -418,6 +434,43 @@ const SplineLanding = () => {
             </Link>
           </Box>
         </Box>
+      </Box>
+
+      {/* Pinned Scroll-Reveal Text Section (Apple-style scroll scrubbing sentence) */}
+      <Box
+        className="pinned-text-section"
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'transparent',
+          position: 'relative',
+          zIndex: 10,
+          pointerEvents: 'none',
+          boxSizing: 'border-box',
+        }}
+      >
+        <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
+          <Typography
+            sx={{
+              fontFamily: "'Maltiner Display', Georgia, serif",
+              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
+              fontWeight: 400,
+              lineHeight: 1.25,
+              color: '#ffffff',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              display: 'inline-block',
+              maxWidth: '90%',
+              mx: 'auto',
+            }}
+          >
+            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
+            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
+            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
+          </Typography>
+        </Container>
       </Box>
 
       {/* Elegant long empty space showing the Spline particles */}
