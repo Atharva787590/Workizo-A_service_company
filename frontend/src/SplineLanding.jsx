@@ -839,6 +839,9 @@ const SplineLanding = () => {
         </Container>
       </Box>
 
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
+
       {/* 5. Champions of the Startup Idea Section (Founding Team profiles) */}
       <Box
         sx={{
