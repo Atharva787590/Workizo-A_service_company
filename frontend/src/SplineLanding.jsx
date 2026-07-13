@@ -228,11 +228,12 @@ const SplineLanding = () => {
               variant="h2"
               sx={{
                 fontFamily: "'Playfair Display', serif",
-                fontWeight: 400,
-                fontSize: { xs: '2rem', sm: '3rem', md: '4rem' },
+                fontWeight: 900,
+                fontSize: { xs: '1.8rem', sm: '2.8rem', md: '3.6rem' },
                 lineHeight: 1.15,
                 color: '#ffffff',
-                textTransform: 'none',
+                textTransform: 'uppercase',
+                letterSpacing: '0.02em',
               }}
             >
               One request,
