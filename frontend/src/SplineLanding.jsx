@@ -180,47 +180,25 @@ const SplineLanding = () => {
       );
     });
 
-    // Team Header Reveal
-    ScrollTrigger.create({
-      trigger: '.spline-team-header',
-      start: 'top 85%',
-      onEnter: () => gsap.to('.spline-team-header', { opacity: 1, y: 0, duration: 1.2, ease: 'power4.out' }),
-      once: true
+    // Pinned scroll team reveal timeline
+    const teamTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.pinned-team-section',
+        start: 'top top',
+        end: '+=180%',
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+      }
     });
 
-    // Team Card Left (Vivek) scroll-scrub
-    gsap.utils.toArray('.spline-team-card-left').forEach((card) => {
-      gsap.fromTo(card,
-        { opacity: 0.15, x: -100 },
-        {
-          opacity: 1,
-          x: 0,
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 85%',
-            end: 'top 60%',
-            scrub: 1,
-          }
-        }
-      );
-    });
+    // Set initial card states
+    gsap.set('.spline-team-card-left', { opacity: 0.15, x: -120 });
+    gsap.set('.spline-team-card-right', { opacity: 0.15, x: 120 });
 
-    // Team Card Right (Ved) scroll-scrub
-    gsap.utils.toArray('.spline-team-card-right').forEach((card) => {
-      gsap.fromTo(card,
-        { opacity: 0.15, x: 100 },
-        {
-          opacity: 1,
-          x: 0,
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 80%',
-            end: 'top 55%',
-            scrub: 1,
-          }
-        }
-      );
-    });
+    teamTl
+      .to('.spline-team-card-left', { opacity: 1, x: 0, duration: 1.5, ease: 'power2.out' })
+      .to('.spline-team-card-right', { opacity: 1, x: 0, duration: 1.5, ease: 'power2.out' }, '+=0.5');
 
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
@@ -960,14 +938,19 @@ const SplineLanding = () => {
 
       {/* 5. Champions of the Startup Idea Section (Founding Team profiles) */}
       <Box
+        className="pinned-team-section"
         sx={{
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
           bgcolor: 'transparent',
-          pb: 16,
-          pt: 4,
           position: 'relative',
           zIndex: 10,
           pointerEvents: 'auto',
           color: '#ffffff',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
         }}
       >
         <Container maxWidth="lg">
