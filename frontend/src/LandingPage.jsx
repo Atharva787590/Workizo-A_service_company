@@ -21,6 +21,11 @@ import StarsIcon from '@mui/icons-material/Stars';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { motion } from 'framer-motion';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Register GSAP ScrollTrigger
+gsap.registerPlugin(ScrollTrigger);
 
 const ALL_CATEGORIES = [
   { id: '1', name: 'Electrician', icon: <ElectricalServicesIcon sx={{ fontSize: 32, color: '#f59e0b' }} />, bgColor: 'rgba(245, 158, 11, 0.08)', desc: 'Fan, lights & wiring repairs' },
@@ -68,6 +73,75 @@ const LandingPage = () => {
       });
   }, []);
 
+  // GSAP ScrollTrigger implementation to reveal information on scroll
+  useEffect(() => {
+    // Set initial hidden states
+    gsap.set('.timeline-step', { opacity: 0, x: -30 });
+    gsap.set('.video-container-reveal', { opacity: 0, scale: 0.95 });
+    gsap.set('.categories-header-reveal', { opacity: 0, y: 30 });
+    gsap.set('.search-widget-reveal', { opacity: 0, y: 20 });
+    gsap.set('.category-item-reveal', { opacity: 0, y: 30, scale: 0.95 });
+    gsap.set('.safety-header-reveal', { opacity: 0, y: 30 });
+    gsap.set('.safety-card-reveal', { opacity: 0, y: 40 });
+
+    // 1. Timeline steps slide-in
+    ScrollTrigger.batch('.timeline-step', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 0.8, stagger: 0.2, ease: 'power3.out', overwrite: 'auto' }),
+      start: 'top 85%',
+      once: true
+    });
+
+    // 2. Video container zoom/fade-in
+    ScrollTrigger.create({
+      trigger: '.video-container-reveal',
+      start: 'top 80%',
+      onEnter: () => gsap.to('.video-container-reveal', { opacity: 1, scale: 1, duration: 1, ease: 'power3.out' }),
+      once: true
+    });
+
+    // 3. Categories section header reveal
+    ScrollTrigger.create({
+      trigger: '.categories-header-reveal',
+      start: 'top 85%',
+      onEnter: () => gsap.to('.categories-header-reveal', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }),
+      once: true
+    });
+
+    // 4. Categories search widget reveal
+    ScrollTrigger.create({
+      trigger: '.search-widget-reveal',
+      start: 'top 85%',
+      onEnter: () => gsap.to('.search-widget-reveal', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }),
+      once: true
+    });
+
+    // 5. Staggered reveal for Category cards grid
+    ScrollTrigger.batch('.category-item-reveal', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.08, ease: 'power3.out', overwrite: 'auto' }),
+      start: 'top 85%',
+      once: true
+    });
+
+    // 6. Safety section header reveal
+    ScrollTrigger.create({
+      trigger: '.safety-header-reveal',
+      start: 'top 85%',
+      onEnter: () => gsap.to('.safety-header-reveal', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }),
+      once: true
+    });
+
+    // 7. Safety cards staggered fade/slide-up
+    ScrollTrigger.batch('.safety-card-reveal', {
+      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 0.8, stagger: 0.2, ease: 'power3.out', overwrite: 'auto' }),
+      start: 'top 85%',
+      once: true
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, []);
+
   const filteredCategories = ALL_CATEGORIES.filter(cat =>
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -97,7 +171,7 @@ const LandingPage = () => {
   return (
     <Box sx={{ pb: 8 }}>
 
-      {/* Boxy-Style Split Hero Section */}
+      {/* 1. Hero Section (First Look - Light Mode Boxy Style) */}
       <Box sx={{ background: '#ffffff', pt: { xs: 8, md: 10 }, pb: { xs: 8, md: 10 }, borderBottom: '1px solid #E5E7EB' }}>
         <Container maxWidth="lg">
           <Box
@@ -212,7 +286,7 @@ const LandingPage = () => {
               </Box>
             </Box>
 
-            {/* Right Side: Generated Handyman Portrait Image Card */}
+            {/* Right Side: Handyman Portrait Image Card */}
             <Box
               sx={{
                 width: { xs: '100%', md: '45%' },
@@ -254,7 +328,7 @@ const LandingPage = () => {
         </Container>
       </Box>
 
-      {/* Simple Process: How It Works Section */}
+      {/* 2. Timeline & Video Process Section (GSAP Scroll-Revealed) */}
       <Box sx={{ bgcolor: '#FAFAFB', py: 10, borderBottom: '1px solid #E5E7EB' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 6 }}>
@@ -303,6 +377,7 @@ const LandingPage = () => {
 
                 {/* Step 1 */}
                 <Box
+                  className="timeline-step"
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -355,6 +430,7 @@ const LandingPage = () => {
 
                 {/* Step 2 */}
                 <Box
+                  className="timeline-step"
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -407,6 +483,7 @@ const LandingPage = () => {
 
                 {/* Step 3 */}
                 <Box
+                  className="timeline-step"
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -466,6 +543,7 @@ const LandingPage = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
+                className="video-container-reveal"
                 sx={{
                   position: { xs: 'relative', lg: 'sticky' },
                   top: { xs: 'auto', lg: '180px' },
@@ -595,8 +673,8 @@ const LandingPage = () => {
         </Container>
       </Box>
 
-      {/* Redesigned Category Search & Selection Section */}
-      <Container maxWidth="md" sx={{ mt: 10 }}>
+      {/* 3. Category Search & Selection Section (GSAP Scroll-Revealed) */}
+      <Container maxWidth="md" sx={{ mt: 10 }} className="categories-header-reveal">
         <Typography variant="h4" fontWeight={700} align="center" sx={{ mb: 1.5, fontFamily: 'Outfit, sans-serif' }}>
           Select a Service Category
         </Typography>
@@ -607,6 +685,7 @@ const LandingPage = () => {
         {/* Central Search Widget */}
         <Paper
           elevation={0}
+          className="search-widget-reveal"
           sx={{
             p: 1,
             display: 'flex',
@@ -670,7 +749,7 @@ const LandingPage = () => {
 
         <Grid container spacing={3} justifyContent="center">
           {filteredCategories.map((cat) => (
-            <Grid item xs={6} sm={4} md={2} key={cat.id} sx={{ textAlign: 'center' }}>
+            <Grid item xs={6} sm={4} md={2} key={cat.id} sx={{ textAlign: 'center' }} className="category-item-reveal">
               <Box
                 onClick={() => handleCategoryClick(cat.name)}
                 sx={{
@@ -710,8 +789,8 @@ const LandingPage = () => {
         </Grid>
       </Container>
 
-      {/* Safety & Assurance Section */}
-      <Container maxWidth="lg" sx={{ mt: 10, pt: 8, borderTop: '1px solid #E5E7EB', pb: 10 }}>
+      {/* 4. Safety & Assurance Section (GSAP Scroll-Revealed) */}
+      <Container maxWidth="lg" sx={{ mt: 10, pt: 8, borderTop: '1px solid #E5E7EB', pb: 10 }} className="safety-header-reveal">
         {/* Header Block */}
         <Box sx={{ textAlign: 'center', mb: 6 }}>
           <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, fontFamily: 'Outfit, sans-serif' }}>
@@ -727,7 +806,7 @@ const LandingPage = () => {
 
         {/* 3-Column Grid of Cards */}
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={4} className="safety-card-reveal">
             <Card sx={{ p: 3, height: '100%', backgroundColor: '#ffffff', borderColor: '#E5E7EB', boxShadow: 'none', border: '1px solid #E5E7EB', borderRadius: '16px' }}>
               <VerifiedUserIcon color="primary" sx={{ fontSize: 36, mb: 1.5 }} />
               <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
@@ -739,7 +818,7 @@ const LandingPage = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={4} className="safety-card-reveal">
             <Card sx={{ p: 3, height: '100%', backgroundColor: '#ffffff', borderColor: '#E5E7EB', boxShadow: 'none', border: '1px solid #E5E7EB', borderRadius: '16px' }}>
               <MonetizationOnIcon color="primary" sx={{ fontSize: 36, mb: 1.5 }} />
               <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
@@ -751,7 +830,7 @@ const LandingPage = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={4} className="safety-card-reveal">
             <Card sx={{ p: 3, height: '100%', backgroundColor: '#ffffff', borderColor: '#E5E7EB', boxShadow: 'none', border: '1px solid #E5E7EB', borderRadius: '16px' }}>
               <StarsIcon sx={{ color: '#F59E0B', fontSize: 36, mb: 1.5 }} />
               <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
@@ -764,8 +843,6 @@ const LandingPage = () => {
           </Grid>
         </Grid>
       </Container>
-
-
 
     </Box>
   );
