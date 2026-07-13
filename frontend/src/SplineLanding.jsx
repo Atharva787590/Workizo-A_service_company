@@ -1638,20 +1638,44 @@ const SplineLanding = () => {
                   inset: 0,
                   opacity: currentSlide === i ? 1 : 0,
                   transition: 'opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1)',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 {src ? (
-                  <Box
-                    component="img"
-                    src={src}
-                    alt={`Project highlight ${i + 1}`}
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                  />
+                  <>
+                    {/* Blurred background fills letterbox sides for portrait photos */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `url(${src})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'blur(24px) brightness(0.3)',
+                        transform: 'scale(1.1)',
+                        zIndex: 0,
+                      }}
+                    />
+                    {/* Actual image — objectFit contain so portrait photos never crop */}
+                    <Box
+                      component="img"
+                      src={src}
+                      alt={`Project highlight ${i + 1}`}
+                      sx={{
+                        position: 'relative',
+                        zIndex: 1,
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        width: 'auto',
+                        height: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
+                      }}
+                    />
+                  </>
                 ) : (
                   <Box
                     sx={{
