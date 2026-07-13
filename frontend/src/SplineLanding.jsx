@@ -113,26 +113,42 @@ const SplineLanding = () => {
       .to('.word-comma-trusted', { opacity: 1, duration: 1.2, ease: 'power1.inOut' })
       .to('.word-professional', { opacity: 1, duration: 1.4, ease: 'power1.inOut' });
 
-    // 2. Set initial hidden states for the timeline steps & safety elements
-    gsap.set('.spline-timeline-step-left', { opacity: 0, x: -60 });
-    gsap.set('.spline-timeline-step-right', { opacity: 0, x: 60 });
+    // 2. Set initial hidden states for headers
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
-    gsap.set('.spline-safety-card', { opacity: 0, y: 40 });
     gsap.set('.spline-team-header', { opacity: 0, y: 35 });
-    gsap.set('.spline-team-card', { opacity: 0, y: 50 });
 
-    // Left slide-ins
-    ScrollTrigger.batch('.spline-timeline-step-left', {
-      onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 1.4, stagger: 0.35, ease: 'power4.out', overwrite: 'auto' }),
-      start: 'top 85%',
-      once: true
+    // Left steps scroll-scrub
+    gsap.utils.toArray('.spline-timeline-step-left').forEach((card) => {
+      gsap.fromTo(card,
+        { opacity: 0.15, x: -60 },
+        {
+          opacity: 1,
+          x: 0,
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 85%',
+            end: 'top 55%',
+            scrub: 1,
+          }
+        }
+      );
     });
 
-    // Right slide-ins
-    ScrollTrigger.batch('.spline-timeline-step-right', {
-      onEnter: batch => gsap.to(batch, { opacity: 1, x: 0, duration: 1.4, stagger: 0.35, ease: 'power4.out', overwrite: 'auto' }),
-      start: 'top 85%',
-      once: true
+    // Right steps scroll-scrub
+    gsap.utils.toArray('.spline-timeline-step-right').forEach((card) => {
+      gsap.fromTo(card,
+        { opacity: 0.15, x: 60 },
+        {
+          opacity: 1,
+          x: 0,
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 85%',
+            end: 'top 55%',
+            scrub: 1,
+          }
+        }
+      );
     });
 
     // Safety Header Reveal
@@ -143,11 +159,21 @@ const SplineLanding = () => {
       once: true
     });
 
-    // Safety Cards Staggered Reveal
-    ScrollTrigger.batch('.spline-safety-card', {
-      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.4, stagger: 0.25, ease: 'power4.out', overwrite: 'auto' }),
-      start: 'top 85%',
-      once: true
+    // Safety points scroll-scrub
+    gsap.utils.toArray('.spline-safety-card').forEach((point) => {
+      gsap.fromTo(point,
+        { opacity: 0.15, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          scrollTrigger: {
+            trigger: point,
+            start: 'top 85%',
+            end: 'top 60%',
+            scrub: 1,
+          }
+        }
+      );
     });
 
     // Team Header Reveal
@@ -158,11 +184,21 @@ const SplineLanding = () => {
       once: true
     });
 
-    // Team Cards Staggered Reveal
-    ScrollTrigger.batch('.spline-team-card', {
-      onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 1.4, stagger: 0.25, ease: 'power4.out', overwrite: 'auto' }),
-      start: 'top 85%',
-      once: true
+    // Team Cards scroll-scrub
+    gsap.utils.toArray('.spline-team-card').forEach((teamCard) => {
+      gsap.fromTo(teamCard,
+        { opacity: 0.15, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
+          scrollTrigger: {
+            trigger: teamCard,
+            start: 'top 85%',
+            end: 'top 60%',
+            scrub: 1,
+          }
+        }
+      );
     });
 
     return () => {
