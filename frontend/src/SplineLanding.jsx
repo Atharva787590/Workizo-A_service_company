@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Link, Container, Grid, Card, Button } from '@mui/material';
+import { Box, Typography, Link, Container, Card } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { gsap } from 'gsap';
@@ -12,6 +12,39 @@ const SplineLanding = () => {
   const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(true);
   const videoRef = useRef(null);
+
+  // Dynamic iframe pointer events state to solve trackpad & touch scroll hijacking
+  const [iframePointerEvents, setIframePointerEvents] = useState('auto');
+  const scrollTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const handleScrollGestureStart = () => {
+      // Temporarily disable pointer events on the iframe so gestures scroll the parent document
+      setIframePointerEvents('none');
+
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      // Restore pointer events 150ms after scroll gesture pauses/stops
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIframePointerEvents('auto');
+      }, 150);
+    };
+
+    window.addEventListener('wheel', handleScrollGestureStart, { passive: true });
+    window.addEventListener('touchstart', handleScrollGestureStart, { passive: true });
+    window.addEventListener('touchmove', handleScrollGestureStart, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleScrollGestureStart);
+      window.removeEventListener('touchstart', handleScrollGestureStart);
+      window.removeEventListener('touchmove', handleScrollGestureStart);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handlePlayVideo = () => {
     if (videoRef.current) {
@@ -123,7 +156,8 @@ const SplineLanding = () => {
           top: 0,
           left: 0,
           zIndex: 1,
-          pointerEvents: 'auto', // Allows hover interaction with canvas
+          pointerEvents: iframePointerEvents, // Dynamically toggled on scrolling/swiping
+          transition: 'pointer-events 0.1s ease',
         }}
       />
 
