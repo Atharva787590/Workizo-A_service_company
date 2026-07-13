@@ -102,21 +102,42 @@ const SplineLanding = () => {
 
   // GSAP ScrollTrigger animations
   useEffect(() => {
-    // 1. Pinned Horizontal text reveal sentence animation
+    // 1. Pinned Horizontal text reveal sentence animation & oval mask slide-in
     const textTl = gsap.timeline({
       scrollTrigger: {
         trigger: '.pinned-text-section',
         start: 'top top',
-        end: '+=150%',
+        end: '+=250%', // Extended scroll trackpad space
         pin: true,
         scrub: true,
         anticipatePin: 1,
       }
     });
 
+    // Set initial offscreen state for the half-oval background mask
+    gsap.set('.pinned-oval-mask', { x: -380, opacity: 0 });
+
     textTl
+      // 1. Fade in trusted
       .to('.word-comma-trusted', { opacity: 1, duration: 1.2, ease: 'power1.inOut' })
-      .to('.word-professional', { opacity: 1, duration: 1.4, ease: 'power1.inOut' });
+      // 2. Fade in professional
+      .to('.word-professional', { opacity: 1, duration: 1.4, ease: 'power1.inOut' })
+      // 3. Pause briefly to showcase the full tagline sentence
+      .to({}, { duration: 0.8 })
+      // 4. Slide up the text and fade it out
+      .to('.reveal-text-line', {
+        y: -150,
+        opacity: 0,
+        duration: 1.5,
+        ease: 'power2.inOut',
+      })
+      // 5. Slowly slide in the half-oval image mask from the left side
+      .to('.pinned-oval-mask', {
+        x: 0,
+        opacity: 1,
+        duration: 2.0,
+        ease: 'power2.out',
+      }, '-=0.5'); // Overlap slightly with text slide-up for premium fluidity
 
     // 2. Set initial hidden states for headers
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
@@ -485,38 +506,16 @@ const SplineLanding = () => {
           zIndex: 10,
           pointerEvents: 'none',
           boxSizing: 'border-box',
+          overflow: 'hidden',
         }}
       >
-        <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
-          <Typography
-            sx={{
-              fontFamily: "'Maltiner Display', Georgia, serif",
-              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
-              fontWeight: 400,
-              lineHeight: 1.25,
-              color: '#ffffff',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              display: 'inline-block',
-              maxWidth: '90%',
-              mx: 'auto',
-            }}
-          >
-            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
-            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
-            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
-          </Typography>
-        </Container>
-      </Box>
-
-      {/* Elegant long empty space showing the Spline particles */}
-      <Box sx={{ height: { xs: '20vh', md: '35vh' }, position: 'relative' }}>
         {/* Left side half-oval image background mask (hides Spline) */}
         <Box
+          className="pinned-oval-mask"
           sx={{
             position: 'absolute',
             left: 0,
-            top: 0,
+            top: '18vh',
             width: { xs: '200px', md: '360px' },
             height: { xs: '350px', md: '580px' },
             bgcolor: '#090d16',
@@ -541,7 +540,32 @@ const SplineLanding = () => {
             }}
           />
         </Box>
+
+        <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
+          <Typography
+            className="reveal-text-line"
+            sx={{
+              fontFamily: "'Maltiner Display', Georgia, serif",
+              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
+              fontWeight: 400,
+              lineHeight: 1.25,
+              color: '#ffffff',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              display: 'inline-block',
+              maxWidth: '90%',
+              mx: 'auto',
+            }}
+          >
+            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
+            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
+            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
+          </Typography>
+        </Container>
       </Box>
+
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
 
       {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box
