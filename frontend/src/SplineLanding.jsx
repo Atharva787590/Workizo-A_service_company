@@ -1013,6 +1013,8 @@ const SplineLanding = () => {
                 sx={{
                   p: 4,
                   width: '100%',
+                  maxWidth: '480px',
+                  mx: 'auto',
                   borderRadius: '24px',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   bgcolor: 'rgba(0, 0, 0, 0.5)',
@@ -1250,6 +1252,8 @@ const SplineLanding = () => {
                 sx={{
                   p: 4,
                   width: '100%',
+                  maxWidth: '480px',
+                  mx: 'auto',
                   borderRadius: '24px',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   bgcolor: 'rgba(0, 0, 0, 0.5)',
