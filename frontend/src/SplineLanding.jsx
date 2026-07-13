@@ -17,6 +17,11 @@ import slide2 from './assets/slide2.jpg';
 import slide3 from './assets/slide3.jpg';
 import slide4 from './assets/slide4.jpg';
 import slide5 from './assets/slide5.jpg';
+import slide6 from './assets/slide6.jpg';
+import slide7 from './assets/slide7.jpg';
+import slide8 from './assets/slide8.jpg';
+import slide9 from './assets/slide9.jpg';
+import slide10 from './assets/slide10.jpg';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -33,7 +38,7 @@ const SplineLanding = () => {
   // Slideshow state
   const [currentSlide, setCurrentSlide] = useState(0);
   const slideIntervalRef = useRef(null);
-  const TOTAL_SLIDES = 8;
+  const TOTAL_SLIDES = 10;
 
   // Auto-advance slideshow every 4 seconds, loops
   useEffect(() => {
@@ -1624,8 +1629,8 @@ const SplineLanding = () => {
               boxShadow: '0 0 60px rgba(0,0,0,0.6)',
             }}
           >
-            {/* Slides — real photos for slides 1-5, placeholders for 6-8 */}
-            {[slide1, slide2, slide3, slide4, slide5, null, null, null].map((src, i) => (
+            {/* Slides — all 10 real project highlight photos */}
+            {[slide1, slide2, slide3, slide4, slide5, slide6, slide7, slide8, slide9, slide10].map((src, i) => (
               <Box
                 key={i}
                 sx={{
