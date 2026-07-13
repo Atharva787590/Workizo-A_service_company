@@ -1001,17 +1001,17 @@ const SplineLanding = () => {
             </Typography>
           </Box>
 
-          {/* Staggered Founder Cards (Glassmorphic dark design) */}
+          {/* Staggered Founder Cards (futuristic neon cyberpunk style matching Workizo) */}
           <Grid container spacing={4} sx={{ width: '100%' }}>
             {/* Card 1: Ambariya Vivek */}
             <Grid item xs={12} md={6} className="spline-team-card">
               <Card
                 sx={{
-                  p: 5,
+                  p: 4,
                   borderRadius: '24px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(26, 115, 232, 0.2)',
+                  bgcolor: 'rgba(9, 13, 22, 0.75)',
+                  backdropFilter: 'blur(16px)',
                   boxShadow: 'none',
                   color: '#ffffff',
                   display: 'flex',
@@ -1019,32 +1019,77 @@ const SplineLanding = () => {
                   alignItems: 'center',
                   textAlign: 'center',
                   height: '100%',
+                  position: 'relative',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-8px)',
+                    borderColor: 'rgba(26, 115, 232, 0.6)',
+                    boxShadow: '0 0 25px rgba(26, 115, 232, 0.25)',
+                  },
                 }}
               >
+                {/* Top Right Verified Intel Badge */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 20,
+                    right: 20,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    bgcolor: 'rgba(26, 115, 232, 0.1)',
+                    border: '1px solid rgba(26, 115, 232, 0.4)',
+                    color: '#60a5fa',
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: '8px',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    fontFamily: "'NewBlack', sans-serif",
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  <VerifiedIcon sx={{ fontSize: 12, color: '#60a5fa' }} />
+                  VERIFIED INTEL
+                </Box>
+
+                {/* Avatar with styled neon scope double-ring */}
                 <Box
                   sx={{
                     display: 'inline-block',
-                    p: '4px',
-                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    p: '8px',
+                    border: '1px dashed rgba(26, 115, 232, 0.4)',
                     borderRadius: '50%',
-                    mb: 3,
+                    mb: 3.5,
+                    mt: 2,
+                    position: 'relative',
                   }}
                 >
-                  <Avatar
+                  <Box
                     sx={{
-                      width: 100,
-                      height: 100,
-                      bgcolor: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      fontFamily: "'NewBlack', sans-serif",
-                      fontSize: '2rem',
-                      fontWeight: 800,
+                      p: '4px',
+                      border: '2px solid rgba(26, 115, 232, 0.7)',
+                      borderRadius: '50%',
                     }}
                   >
-                    AV
-                  </Avatar>
+                    <Avatar
+                      sx={{
+                        width: 96,
+                        height: 96,
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        border: '1px solid rgba(26, 115, 232, 0.3)',
+                        color: '#ffffff',
+                        fontFamily: "'NewBlack', sans-serif",
+                        fontSize: '2rem',
+                        fontWeight: 800,
+                      }}
+                    >
+                      AV
+                    </Avatar>
+                  </Box>
                 </Box>
+
+                {/* Name & Role */}
                 <Typography
                   variant="h5"
                   sx={{
@@ -1052,57 +1097,140 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     color: '#ffffff',
                     mb: 0.5,
+                    fontSize: '1.4rem',
+                    letterSpacing: '0.03em',
+                    textTransform: 'uppercase',
                   }}
                 >
                   Ambariya Vivek
                 </Typography>
-                <Box
+                <Typography
                   sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.08)',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    px: 2,
-                    py: 0.5,
-                    borderRadius: '12px',
-                    fontSize: '0.75rem',
+                    color: '#60a5fa',
+                    fontSize: '0.8rem',
                     fontWeight: 800,
                     fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.04em',
+                    letterSpacing: '0.06em',
                     textTransform: 'uppercase',
-                    mb: 2.5,
+                    mb: 4,
                   }}
                 >
                   Project Leader & Architect
-                </Box>
-                <Typography
-                  variant="body2"
+                </Typography>
+
+                {/* Parameters list (Department, Student, Specialization) */}
+                <Box
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    lineHeight: 1.6,
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.9rem',
-                    mb: 3,
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2.5,
+                    textAlign: 'left',
+                    mb: 4,
                     flexGrow: 1,
                   }}
                 >
-                  Designed the database structures, set up JWT-based custom session flows, developed role permissions, and integrated notifications via SMTP and WebSockets.
-                </Typography>
-                {/* Social links */}
-                <Box sx={{ display: 'flex', gap: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', pt: 2, width: '100%', justifyContent: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <WorkIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
+                        DEPARTMENT
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
+                        Platform Development Unit
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <SchoolIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
+                        STUDENT
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
+                        Computer Engineering (CE)
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <CodeIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
+                        SPECIALIZATION
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
+                        MERN Stack, JWT Auth, WebSockets, Razorpay
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* ID & Clearance Badge bar */}
+                <Box
+                  sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    pt: 2.5,
+                    mb: 3,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      fontWeight: 800,
+                      fontFamily: "'NewBlack', sans-serif",
+                    }}
+                  >
+                    ID: WKZ-001
+                  </Typography>
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(26, 115, 232, 0.1)',
+                      border: '1px solid rgba(26, 115, 232, 0.4)',
+                      color: '#60a5fa',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: '6px',
+                      fontSize: '0.65rem',
+                      fontWeight: 800,
+                      fontFamily: "'NewBlack', sans-serif",
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    CLEARANCE: LEVEL 5 (SCI)
+                  </Box>
+                </Box>
+
+                {/* Social Quick Access Square Buttons */}
+                <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
                   <IconButton
                     component="a"
                     href="https://linkedin.com/in/vivek-ambariya"
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(26, 115, 232, 0.3)',
+                      bgcolor: 'rgba(26, 115, 232, 0.05)',
                       color: 'rgba(255, 255, 255, 0.6)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#0A66C2',
-                        bgcolor: 'rgba(10, 102, 194, 0.1)',
+                        color: '#60a5fa',
+                        borderColor: '#60a5fa',
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        transform: 'scale(1.08)',
                       },
                     }}
                   >
-                    <LinkedInIcon />
+                    <LinkedInIcon sx={{ fontSize: 20 }} />
                   </IconButton>
                   <IconButton
                     component="a"
@@ -1110,29 +1238,43 @@ const SplineLanding = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(26, 115, 232, 0.3)',
+                      bgcolor: 'rgba(26, 115, 232, 0.05)',
                       color: 'rgba(255, 255, 255, 0.6)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#ffffff',
-                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        color: '#60a5fa',
+                        borderColor: '#60a5fa',
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        transform: 'scale(1.08)',
                       },
                     }}
                   >
-                    <GitHubIcon />
+                    <GitHubIcon sx={{ fontSize: 20 }} />
                   </IconButton>
                   <IconButton
                     component="a"
                     href="mailto:ambariyavivek5@gmail.com"
                     sx={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(26, 115, 232, 0.3)',
+                      bgcolor: 'rgba(26, 115, 232, 0.05)',
                       color: 'rgba(255, 255, 255, 0.6)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#DB4437',
-                        bgcolor: 'rgba(219, 68, 55, 0.1)',
+                        color: '#60a5fa',
+                        borderColor: '#60a5fa',
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        transform: 'scale(1.08)',
                       },
                     }}
                   >
-                    <GoogleIcon />
+                    <GoogleIcon sx={{ fontSize: 20 }} />
                   </IconButton>
                 </Box>
               </Card>
@@ -1142,11 +1284,11 @@ const SplineLanding = () => {
             <Grid item xs={12} md={6} className="spline-team-card">
               <Card
                 sx={{
-                  p: 5,
+                  p: 4,
                   borderRadius: '24px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(26, 115, 232, 0.2)',
+                  bgcolor: 'rgba(9, 13, 22, 0.75)',
+                  backdropFilter: 'blur(16px)',
                   boxShadow: 'none',
                   color: '#ffffff',
                   display: 'flex',
@@ -1154,32 +1296,77 @@ const SplineLanding = () => {
                   alignItems: 'center',
                   textAlign: 'center',
                   height: '100%',
+                  position: 'relative',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-8px)',
+                    borderColor: 'rgba(26, 115, 232, 0.6)',
+                    boxShadow: '0 0 25px rgba(26, 115, 232, 0.25)',
+                  },
                 }}
               >
+                {/* Top Right Verified Intel Badge */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 20,
+                    right: 20,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    bgcolor: 'rgba(26, 115, 232, 0.1)',
+                    border: '1px solid rgba(26, 115, 232, 0.4)',
+                    color: '#60a5fa',
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: '8px',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    fontFamily: "'NewBlack', sans-serif",
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  <VerifiedIcon sx={{ fontSize: 12, color: '#60a5fa' }} />
+                  VERIFIED INTEL
+                </Box>
+
+                {/* Avatar with styled neon scope double-ring */}
                 <Box
                   sx={{
                     display: 'inline-block',
-                    p: '4px',
-                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    p: '8px',
+                    border: '1px dashed rgba(26, 115, 232, 0.4)',
                     borderRadius: '50%',
-                    mb: 3,
+                    mb: 3.5,
+                    mt: 2,
+                    position: 'relative',
                   }}
                 >
-                  <Avatar
+                  <Box
                     sx={{
-                      width: 100,
-                      height: 100,
-                      bgcolor: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      fontFamily: "'NewBlack', sans-serif",
-                      fontSize: '2rem',
-                      fontWeight: 800,
+                      p: '4px',
+                      border: '2px solid rgba(26, 115, 232, 0.7)',
+                      borderRadius: '50%',
                     }}
                   >
-                    VG
-                  </Avatar>
+                    <Avatar
+                      sx={{
+                        width: 96,
+                        height: 96,
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        border: '1px solid rgba(26, 115, 232, 0.3)',
+                        color: '#ffffff',
+                        fontFamily: "'NewBlack', sans-serif",
+                        fontSize: '2rem',
+                        fontWeight: 800,
+                      }}
+                    >
+                      VG
+                    </Avatar>
+                  </Box>
                 </Box>
+
+                {/* Name & Role */}
                 <Typography
                   variant="h5"
                   sx={{
@@ -1187,57 +1374,140 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     color: '#ffffff',
                     mb: 0.5,
+                    fontSize: '1.4rem',
+                    letterSpacing: '0.03em',
+                    textTransform: 'uppercase',
                   }}
                 >
                   Ved Goyani
                 </Typography>
-                <Box
+                <Typography
                   sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.08)',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    px: 2,
-                    py: 0.5,
-                    borderRadius: '12px',
-                    fontSize: '0.75rem',
+                    color: '#60a5fa',
+                    fontSize: '0.8rem',
                     fontWeight: 800,
                     fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.04em',
+                    letterSpacing: '0.06em',
                     textTransform: 'uppercase',
-                    mb: 2.5,
+                    mb: 4,
                   }}
                 >
                   Frontend & UI Developer
-                </Box>
-                <Typography
-                  variant="body2"
+                </Typography>
+
+                {/* Parameters list (Department, Student, Specialization) */}
+                <Box
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    lineHeight: 1.6,
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.9rem',
-                    mb: 3,
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2.5,
+                    textAlign: 'left',
+                    mb: 4,
                     flexGrow: 1,
                   }}
                 >
-                  Crafted high-fidelity web views, interactive booking timelines, worker toggle panels, client dashboard lists, and dynamic maps.
-                </Typography>
-                {/* Social links */}
-                <Box sx={{ display: 'flex', gap: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', pt: 2, width: '100%', justifyContent: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <WorkIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
+                        DEPARTMENT
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
+                        Frontend & UI Division
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <SchoolIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
+                        STUDENT
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
+                        Computer Engineering (CE)
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <CodeIcon sx={{ color: '#60a5fa', fontSize: 18, mt: 0.3 }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
+                        SPECIALIZATION
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
+                        React, UI/UX Design, GSAP, Spline, Maps
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* ID & Clearance Badge bar */}
+                <Box
+                  sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    pt: 2.5,
+                    mb: 3,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      fontWeight: 800,
+                      fontFamily: "'NewBlack', sans-serif",
+                    }}
+                  >
+                    ID: WKZ-002
+                  </Typography>
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(26, 115, 232, 0.1)',
+                      border: '1px solid rgba(26, 115, 232, 0.4)',
+                      color: '#60a5fa',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: '6px',
+                      fontSize: '0.65rem',
+                      fontWeight: 800,
+                      fontFamily: "'NewBlack', sans-serif",
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    CLEARANCE: LEVEL 5 (SCI)
+                  </Box>
+                </Box>
+
+                {/* Social Quick Access Square Buttons */}
+                <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
                   <IconButton
                     component="a"
                     href="https://linkedin.com/in/ved-goyani"
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(26, 115, 232, 0.3)',
+                      bgcolor: 'rgba(26, 115, 232, 0.05)',
                       color: 'rgba(255, 255, 255, 0.6)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#0A66C2',
-                        bgcolor: 'rgba(10, 102, 194, 0.1)',
+                        color: '#60a5fa',
+                        borderColor: '#60a5fa',
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        transform: 'scale(1.08)',
                       },
                     }}
                   >
-                    <LinkedInIcon />
+                    <LinkedInIcon sx={{ fontSize: 20 }} />
                   </IconButton>
                   <IconButton
                     component="a"
@@ -1245,29 +1515,43 @@ const SplineLanding = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(26, 115, 232, 0.3)',
+                      bgcolor: 'rgba(26, 115, 232, 0.05)',
                       color: 'rgba(255, 255, 255, 0.6)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#ffffff',
-                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        color: '#60a5fa',
+                        borderColor: '#60a5fa',
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        transform: 'scale(1.08)',
                       },
                     }}
                   >
-                    <GitHubIcon />
+                    <GitHubIcon sx={{ fontSize: 20 }} />
                   </IconButton>
                   <IconButton
                     component="a"
                     href="mailto:goyanived@gmail.com"
                     sx={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(26, 115, 232, 0.3)',
+                      bgcolor: 'rgba(26, 115, 232, 0.05)',
                       color: 'rgba(255, 255, 255, 0.6)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
+                      transition: 'all 0.2s',
                       '&:hover': {
-                        color: '#DB4437',
-                        bgcolor: 'rgba(219, 68, 55, 0.1)',
+                        color: '#60a5fa',
+                        borderColor: '#60a5fa',
+                        bgcolor: 'rgba(26, 115, 232, 0.15)',
+                        transform: 'scale(1.08)',
                       },
                     }}
                   >
-                    <GoogleIcon />
+                    <GoogleIcon sx={{ fontSize: 20 }} />
                   </IconButton>
                 </Box>
               </Card>
