@@ -17,7 +17,7 @@ import AdminLayout from './layouts/AdminLayout';
 // Pages
 import SplineLanding from './SplineLanding';
 import LandingPage from './LandingPage';
-import AboutUs from './AboutUs';
+
 import CustomerLogin from './customer/CustomerLogin';
 import CustomerRegister from './customer/CustomerRegister';
 import WorkerLogin from './captain/WorkerLogin';
@@ -56,7 +56,7 @@ function App() {
               {/* Public and Customer Routes under CustomerLayout */}
               <Route element={<CustomerLayout />}>
                 <Route path="/home" element={<LandingPage />} />
-                <Route path="/about" element={<AboutUs />} />
+
                 <Route path="/customer/login" element={<CustomerLogin />} />
                 <Route path="/customer/register" element={<CustomerRegister />} />
                 <Route path="/captain/login" element={<WorkerLogin />} />

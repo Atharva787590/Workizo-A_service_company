@@ -126,15 +126,7 @@ const CustomerLayout = () => {
               >
                 Home
               </Button>
-              <Button
-                variant="text"
-                color="inherit"
-                className="nav-link-reveal"
-                onClick={() => navigate('/about')}
-                sx={{ color: location.pathname === '/about' ? '#000000' : '#4B5563', fontWeight: 600 }}
-              >
-                About Us
-              </Button>
+
 
               {(!isAuthenticated || user?.role === 'customer') && (
                 <>
@@ -378,7 +370,6 @@ const CustomerLayout = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {[
                   { text: 'Home', path: '/home' },
-                  { text: 'About Us', path: '/about' },
                   {
                     text: 'Book Service', path: '/customer/book', action: () => {
                       if (isAuthenticated) {

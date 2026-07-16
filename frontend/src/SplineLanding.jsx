@@ -444,21 +444,7 @@ const SplineLanding = () => {
                 WORKIZO
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Link
-                  onClick={() => navigate('/about')}
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 500,
-                    fontSize: '0.8rem',
-                    textDecoration: 'none',
-                    letterSpacing: '0.02em',
-                    cursor: 'pointer',
-                    '&:hover': { color: '#ffffff' },
-                  }}
-                >
-                  [ ABOUT US ]
-                </Link>
+
                 <Link
                   onClick={() => navigate('/home')}
                   sx={{
