@@ -89,7 +89,7 @@ const CustomerLayout = () => {
                 sx={{
                   width: 38,
                   height: 38,
-                  bgcolor: '#000000',
+                  bgcolor: '#ffffff',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',

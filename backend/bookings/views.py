@@ -57,20 +57,23 @@ class BookingViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return Booking.objects.none()
+        
+        base_qs = Booking.objects.select_related('customer', 'worker', 'service_category', 'repair_token', 'payment').prefetch_related('major_repairs')
+        
         if user.is_staff or user.role == 'admin':
-            return Booking.objects.all().order_by('-created_at')
+            return base_qs.all().order_by('-created_at')
         elif user.role == 'worker':
             profile = getattr(user, 'worker_profile', None)
             category = profile.service_category if profile else None
             from django.db.models import Q
             if category:
-                return Booking.objects.filter(
+                return base_qs.filter(
                     Q(worker=user) | Q(status='searching', service_category=category)
                 ).order_by('-created_at')
             else:
-                return Booking.objects.filter(worker=user).order_by('-created_at')
+                return base_qs.filter(worker=user).order_by('-created_at')
         else:
-            return Booking.objects.filter(customer=user).order_by('-created_at')
+            return base_qs.filter(customer=user).order_by('-created_at')
 
     def perform_create(self, serializer):
         booking = serializer.save(customer=self.request.user)
@@ -181,7 +184,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         # Exclude rejected bookings
         rejected_booking_ids = BookingRejection.objects.filter(worker=user).values_list('booking_id', flat=True)
 
-        bookings = Booking.objects.filter(
+        bookings = Booking.objects.select_related('customer', 'worker', 'service_category', 'repair_token', 'payment').prefetch_related('major_repairs').filter(
             service_category=category,
             status='searching'
         ).exclude(id__in=rejected_booking_ids).order_by('-created_at')
@@ -244,7 +247,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         create_and_send_notification(
             user=booking.customer,
             title="Captain Assigned",
-            message=f"Captain {user.full_name} has accepted your plumber/electrician service request.",
+            message=f"Captain {user.full_name} has accepted your {booking.service_category.name.lower()} service request.",
             notification_type="booking_update"
         )
         # Notify Worker

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const FALLBACK_API_ORIGIN = 'http://127.0.0.1:8001';
+const FALLBACK_API_ORIGIN = 'http://127.0.0.1:8000';
 const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '');
 
 export const API_ORIGIN = configuredApiOrigin || FALLBACK_API_ORIGIN;
@@ -78,13 +78,13 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
         } catch (refreshError) {
-          // Refresh token expired or invalid: logout user
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
-          
-          // Let client code handle routing or force page reload to trigger login redirect
-          window.location.href = '/';
+          // Only clear session and redirect if the server explicitly rejected the token (400, 401, 403)
+          if (refreshError.response && [400, 401, 403].includes(refreshError.response.status)) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+          }
           return Promise.reject(refreshError);
         }
       }

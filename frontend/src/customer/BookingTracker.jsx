@@ -96,6 +96,8 @@ const getStatusBadgeStyle = (status) => {
       return { color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.08)' };
     case 'repair_completed':
     case 'waiting_approval':
+    case 'WAITING_FOR_CASH_CONFIRMATION':
+    case 'ready_to_complete':
       return { color: '#e11d48', bg: 'rgba(225, 29, 72, 0.08)' };
     case 'completed':
       return { color: '#10b981', bg: 'rgba(16, 185, 129, 0.08)' };
@@ -114,7 +116,9 @@ const getStatusIndex = (status) => {
     case 'inspection':
     case 'repair_started':
     case 'repair_completed':
-    case 'waiting_approval': return 4;
+    case 'waiting_approval':
+    case 'WAITING_FOR_CASH_CONFIRMATION':
+    case 'ready_to_complete': return 4;
     case 'completed': return 5;
     default: return -1;
   }
@@ -145,7 +149,7 @@ function BookingTracker() {
       setBooking(res.data);
 
       // Fetch bill if status matches
-      if (['repair_completed', 'waiting_approval', 'completed'].includes(res.data.status)) {
+      if (['repair_completed', 'waiting_approval', 'WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'completed'].includes(res.data.status)) {
         try {
           const billRes = await api.get(`/api/billing/${id}/get-bill/`);
           setBill(billRes.data);
@@ -190,6 +194,8 @@ function BookingTracker() {
             'work_completed',
             'payment_pending',
             'payment_completed',
+            'payment_failed',
+            'cash_selected',
             'booking_status'
           ];
           if (acceptedTypes.includes(payload.type)) {
@@ -197,7 +203,7 @@ function BookingTracker() {
             if (payload.type === 'booking_accepted') {
               toast.success(`${payload.booking.worker?.full_name || 'Captain'} accepted your booking!`);
             }
-            if (['repair_completed', 'waiting_approval', 'completed'].includes(payload.booking.status)) {
+            if (['repair_completed', 'waiting_approval', 'WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'completed'].includes(payload.booking.status)) {
               api.get(`/api/billing/${id}/get-bill/`)
                 .then(res => setBill(res.data))
                 .catch(() => setBill(null));
@@ -467,8 +473,8 @@ function BookingTracker() {
               {[
                 { label: 'Booking Date', value: new Date(booking.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
                 { label: 'Booking ID', value: `#${booking.id}` },
-                { label: 'Payment Status', value: booking.status === 'completed' ? 'Paid' : 'Pending', color: booking.status === 'completed' ? '#10b981' : '#e11d48' },
-                { label: 'Payment Method', value: bill?.payment?.method ? bill.payment.method.toUpperCase() : 'N/A' },
+                { label: 'Payment Status', value: (booking.status === 'completed' || booking.status === 'ready_to_complete' || booking.payment?.status === 'PAID') ? 'Paid' : 'Pending', color: (booking.status === 'completed' || booking.status === 'ready_to_complete' || booking.payment?.status === 'PAID') ? '#10b981' : '#e11d48' },
+                { label: 'Payment Method', value: booking.payment?.method ? booking.payment.method.toUpperCase() : 'N/A' },
                 { label: 'Requested Time', value: new Date(booking.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) }
               ].map((item, idx) => (
                 <Box key={idx} display="flex" justifyContent="space-between" alignItems="center">
@@ -617,6 +623,8 @@ function BookingTracker() {
                     {['inspection', 'repair_started'].includes(booking.status) && "Service repairs are actively in progress..."}
                     {booking.status === 'repair_completed' && "Repairs done! Invoice pending checkout"}
                     {booking.status === 'waiting_approval' && "Invoice awaiting your checkout approval"}
+                    {booking.status === 'WAITING_FOR_CASH_CONFIRMATION' && "Awaiting Cash Payment Confirmation..."}
+                    {booking.status === 'ready_to_complete' && "Payment verified! Awaiting final checkout..."}
                     {booking.status === 'completed' && "Booking finished and closed!"}
                     {booking.status === 'cancelled' && "Booking request was cancelled."}
                   </Typography>
@@ -629,6 +637,8 @@ function BookingTracker() {
                     {['inspection', 'repair_started'].includes(booking.status) && "The captain is actively implementing the repair tasks. Progress updates will sync here automatically."}
                     {booking.status === 'repair_completed' && "Service job finished successfully. The invoice statement has been built by the partner."}
                     {booking.status === 'waiting_approval' && "Captain is seeking estimate approval for spare parts. Please check details below to proceed."}
+                    {booking.status === 'WAITING_FOR_CASH_CONFIRMATION' && "Please pay cash directly to the captain. The captain will confirm receipt to finish the job."}
+                    {booking.status === 'ready_to_complete' && "Payment received successfully. The captain is performing final documentation checks to complete the job."}
                     {booking.status === 'completed' && "Thank you for using WORKIZO! The billing invoice has been cleared and payment was successful."}
                     {booking.status === 'cancelled' && "This booking request was cancelled and terminated."}
                   </Typography>

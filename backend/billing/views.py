@@ -50,7 +50,8 @@ def compile_bill_pdf(bill):
     story.append(Paragraph(f"<b>Invoice No:</b> WRK-INV-{bill.id}", normal_style))
     story.append(Paragraph(f"<b>Booking Ref:</b> #{bill.booking.id}", normal_style))
     story.append(Paragraph(f"<b>Customer:</b> {bill.booking.customer.full_name} ({bill.booking.customer.phone})", normal_style))
-    story.append(Paragraph(f"<b>Captain:</b> {bill.booking.worker.full_name}", normal_style))
+    worker_name = bill.booking.worker.full_name if bill.booking.worker else "Unassigned"
+    story.append(Paragraph(f"<b>Captain:</b> {worker_name}", normal_style))
     story.append(Paragraph(f"<b>Service Category:</b> {bill.booking.service_category.name}", normal_style))
     story.append(Paragraph(f"<b>Date:</b> {bill.created_at.strftime('%Y-%m-%d %H:%M')}", normal_style))
     story.append(Spacer(1, 20))
@@ -215,7 +216,24 @@ class GenerateBillView(views.APIView):
         compile_bill_pdf(bill)
 
         # Update booking status & broadcast
-        booking.status = 'completed' if bill.grand_total == 0 else 'waiting_approval'
+        if bill.grand_total == 0:
+            from django.utils import timezone
+            import time
+            payment = Payment.objects.create(
+                booking=booking,
+                customer=booking.customer,
+                captain=booking.worker,
+                amount=Decimal('0.00'),
+                currency='INR',
+                receipt_number=f"REC-{booking.id}-{int(time.time())}",
+                method='CASH',
+                status='PAID',
+                payment_time=timezone.now()
+            )
+            compile_receipt_pdf(payment)
+            booking.status = 'ready_to_complete'
+        else:
+            booking.status = 'waiting_approval'
         booking.save()
 
         booking_data = BookingSerializer(booking).data
@@ -319,7 +337,8 @@ def compile_receipt_pdf(payment):
     story.append(Spacer(1, 10))
     
     # Metadata
-    story.append(Paragraph(f"<b>Receipt No:</b> {payment.receipt_number}", normal_style))
+    receipt_no = payment.receipt_number if payment.receipt_number else f"REC-{booking.id}"
+    story.append(Paragraph(f"<b>Receipt No:</b> {receipt_no}", normal_style))
     story.append(Paragraph(f"<b>Booking Ref:</b> #{booking.id}", normal_style))
     story.append(Paragraph(f"<b>Tracking ID:</b> {booking.tracking_id or 'N/A'}", normal_style))
     story.append(Paragraph(f"<b>Customer Name:</b> {booking.customer.full_name}", normal_style))
@@ -749,25 +768,26 @@ class ProcessPaymentView(views.APIView):
                         'payment_time': timezone.now()
                     }
                 )
-                booking.status = 'completed'
+                booking.status = 'ready_to_complete'
                 booking.save()
-
-                worker_payout = (bill.grand_total * Decimal('0.90')).quantize(Decimal('0.01'))
-                wallet, _ = Wallet.objects.get_or_create(worker=booking.worker)
-                wallet.current_balance += worker_payout
-                wallet.save()
-
-                WalletTransaction.objects.create(
-                    wallet=wallet,
-                    amount=worker_payout,
-                    transaction_type='credit',
-                    description=f"Earnings for Booking #{booking.id} ({booking.service_category.name})"
-                )
                 compile_receipt_pdf(payment)
 
             # Broadcast and emails
             booking_data = BookingSerializer(booking).data
             send_booking_update(booking.id, booking_data, 'payment_completed')
+
+            create_and_send_notification(
+                user=booking.customer,
+                title="Payment Successful",
+                message=f"Mock payment of ₹{payment.amount} completed successfully.",
+                notification_type="payment"
+            )
+            create_and_send_notification(
+                user=booking.worker,
+                title="Payment Received",
+                message=f"Payment of ₹{payment.amount} received. You can now mark the job as completed.",
+                notification_type="payment"
+            )
 
             from notifications.email_service import EmailNotificationService
             EmailNotificationService.send_payment_receipt_email(booking, payment)

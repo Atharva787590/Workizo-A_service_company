@@ -67,9 +67,20 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
     cash_confirmation_timestamp = models.DateTimeField(null=True, blank=True)
     payment_time = models.DateTimeField(null=True, blank=True)
-    
     receipt_pdf = models.FileField(upload_to='receipts/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.method:
+            self.method = self.method.upper()
+        if self.status:
+            val_map = {
+                'success': 'PAID',
+                'failed': 'FAILED',
+                'pending': 'PENDING'
+            }
+            self.status = val_map.get(self.status.lower(), self.status.upper())
+        super().save(*args, **kwargs)
 
     @property
     def payment_method(self):

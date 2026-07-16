@@ -57,7 +57,7 @@ class WorkerRegisterProfileView(APIView):
                 'message': 'Worker profile details and documents uploaded successfully.'
             }, status=status.HTTP_200_OK)
             
-        print("WORKER REGISTER PROFILE VALIDATION ERRORS:", serializer.errors)
+        logger.error(f"WORKER REGISTER PROFILE VALIDATION ERRORS: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 from workers.models import Wallet, WalletTransaction

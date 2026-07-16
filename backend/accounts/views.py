@@ -290,12 +290,17 @@ class VerifyEmailView(APIView):
             user_id = signer.unsign(token, max_age=86400)
             user = User.objects.get(pk=user_id)
             
+            from django.conf import settings
+            frontend_url = settings.CORS_ALLOWED_ORIGINS[0] if getattr(settings, 'CORS_ALLOWED_ORIGINS', None) else "http://localhost:5174"
+            if not frontend_url.endswith('/'):
+                frontend_url += '/'
+
             if user.is_email_verified:
                 html = render_html_response(
                     "Already Verified", 
                     "Your email address has already been verified.", 
                     is_success=True,
-                    action_url="http://localhost:5173/",
+                    action_url=frontend_url,
                     action_text="Go to Login"
                 )
                 return HttpResponse(html, content_type='text/html')
@@ -307,7 +312,7 @@ class VerifyEmailView(APIView):
                 "Email Verified", 
                 "Your email has been successfully verified! You can now log in to the WORKIZO application.", 
                 is_success=True,
-                action_url="http://localhost:5173/",
+                action_url=frontend_url,
                 action_text="Log In to WORKIZO"
             )
             return HttpResponse(html, content_type='text/html')
@@ -329,13 +334,12 @@ class ForgotPasswordView(APIView):
             return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # For security reasons, we do not reveal whether the user exists or not.
-        # We look up customer user specifically
-        user = User.objects.filter(email=email, role='customer').first()
+        user = User.objects.filter(email=email).first()
         if user:
             EmailNotificationService.send_password_reset_email(user, request)
             
         return Response({
-            "message": "If the email is associated with a customer account, a password reset link has been sent."
+            "message": "If the email is associated with an account, a password reset link has been sent."
         }, status=status.HTTP_200_OK)
 
 
@@ -434,11 +438,16 @@ class ResetPasswordConfirmView(APIView):
         user.is_email_verified = True
         user.save()
 
+        from django.conf import settings
+        frontend_url = settings.CORS_ALLOWED_ORIGINS[0] if getattr(settings, 'CORS_ALLOWED_ORIGINS', None) else "http://localhost:5174"
+        if not frontend_url.endswith('/'):
+            frontend_url += '/'
+
         html = render_html_response(
             "Password Reset Successful", 
             "Your password has been successfully updated! You can now log in to the WORKIZO application with your new password.", 
             is_success=True,
-            action_url="http://localhost:5173/",
+            action_url=frontend_url,
             action_text="Go to Login"
         )
         return HttpResponse(html, content_type='text/html')
