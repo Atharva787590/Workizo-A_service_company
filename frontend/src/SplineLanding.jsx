@@ -136,12 +136,19 @@ const SplineLanding = () => {
     // 1. Pinned Horizontal text reveal sentence animation & oval mask slide-in
     const textTl = gsap.timeline({
       scrollTrigger: {
+        id: 'text-pin',
         trigger: '.pinned-text-section',
         start: 'top top',
         end: '+=250%', // Extended scroll trackpad space
         pin: true,
         scrub: true,
         anticipatePin: 1,
+        snap: {
+          snapTo: [0, 0.25, 0.5, 0.75, 1],
+          duration: { min: 0.2, max: 0.5 },
+          delay: 0.1,
+          ease: 'power1.inOut',
+        }
       }
     });
 
@@ -253,12 +260,19 @@ const SplineLanding = () => {
     // Pinned scroll team reveal timeline
     const teamTl = gsap.timeline({
       scrollTrigger: {
+        id: 'team-pin',
         trigger: '.pinned-team-section',
         start: 'top top',
         end: '+=180%',
         pin: true,
         scrub: true,
         anticipatePin: 1,
+        snap: {
+          snapTo: [0, 0.5, 1],
+          duration: { min: 0.2, max: 0.5 },
+          delay: 0.1,
+          ease: 'power1.inOut',
+        }
       }
     });
 
@@ -269,6 +283,64 @@ const SplineLanding = () => {
     teamTl
       .to('.spline-team-card-left', { opacity: 1, x: 0, duration: 1.5, ease: 'power2.out' })
       .to('.spline-team-card-right', { opacity: 1, x: 0, duration: 1.5, ease: 'power2.out' }, '+=0.5');
+
+    // 3. Global Section Snapping
+    const getSnapPositions = () => {
+      const scrollPositions = [];
+      scrollPositions.push(0); // Hero starts at 0
+
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const elements = [
+        document.querySelector('.pinned-text-section'),
+        document.querySelector('.how-it-works-section'),
+        document.querySelector('.safety-section'),
+        document.querySelector('.pinned-team-section'),
+        document.querySelector('.gallery-section')
+      ];
+
+      elements.forEach(el => {
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const absoluteTop = rect.top + scrollTop;
+          scrollPositions.push(absoluteTop);
+        }
+      });
+
+      return scrollPositions.map(pos => docHeight > 0 ? pos / docHeight : 0);
+    };
+
+    ScrollTrigger.create({
+      start: 0,
+      end: 'max',
+      snap: {
+        snapTo: (value) => {
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          
+          const textTrigger = ScrollTrigger.getById('text-pin');
+          const teamTrigger = ScrollTrigger.getById('team-pin');
+
+          // Bypass snapping inside active pin ranges to avoid conflicts with timeline scrub
+          if (textTrigger && scrollTop > textTrigger.start + 10 && scrollTop < textTrigger.end - 10) {
+            return value;
+          }
+          if (teamTrigger && scrollTop > teamTrigger.start + 10 && scrollTop < teamTrigger.end - 10) {
+            return value;
+          }
+
+          const snapPoints = getSnapPositions();
+          if (snapPoints.length === 0) return value;
+          
+          const closest = snapPoints.reduce((prev, curr) => 
+            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+          );
+          return closest;
+        },
+        duration: { min: 0.2, max: 0.6 },
+        delay: 0.15,
+        ease: 'power2.out'
+      }
+    });
 
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
@@ -311,6 +383,7 @@ const SplineLanding = () => {
 
       {/* 2. Brand Overlay - Hero Fold (pointerEvents: none to let hover reach iframe) */}
       <Box
+        className="hero-fold"
         sx={{
           position: 'relative',
           zIndex: 10,
@@ -654,6 +727,7 @@ const SplineLanding = () => {
 
       {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box
+        className="how-it-works-section"
         sx={{
           bgcolor: 'transparent',
           py: 12,
@@ -929,6 +1003,7 @@ const SplineLanding = () => {
 
       {/* 4. Safety & Assurance Section (Left aligned, text-only, pointwise) */}
       <Box
+        className="safety-section"
         sx={{
           bgcolor: 'transparent',
           pb: 12,
@@ -1628,6 +1703,7 @@ const SplineLanding = () => {
 
       {/* 6. Project Highlights Slideshow Section */}
       <Box
+        className="gallery-section"
         sx={{
           position: 'relative',
           zIndex: 10,
