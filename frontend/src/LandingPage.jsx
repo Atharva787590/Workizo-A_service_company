@@ -344,10 +344,10 @@ const LandingPage = () => {
 
         .lp-headline {
           font-size: clamp(2.4rem, 4vw, 3.8rem);
-          font-weight: 900;
+          font-weight: 800;
           color: #0f172a;
           line-height: 1.15;
-          letter-spacing: -0.03em;
+          letter-spacing: -0.02em;
           font-family: 'Outfit', 'Inter', sans-serif;
         }
 
