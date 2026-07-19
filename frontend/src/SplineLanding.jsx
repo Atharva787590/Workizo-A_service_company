@@ -22,150 +22,11 @@ import slide7 from './assets/slide7.jpg';
 import slide8 from './assets/slide8.jpg';
 import slide9 from './assets/slide9.jpg';
 import slide10 from './assets/slide10.jpg';
-import { HeroScrollDemo } from './components/ui/demo';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // Register GSAP ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
-
-// ─── SVG Icons for SplineLanding ──────────────────────────────────────────────
-const ElectricianIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="url(#spline-amber-grad)" stroke="url(#spline-amber-grad-stroke)" />
-    <defs>
-      <linearGradient id="spline-amber-grad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#d97706" stopOpacity="0.25" />
-      </linearGradient>
-      <linearGradient id="spline-amber-grad-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#f59e0b" />
-        <stop offset="100%" stopColor="#d97706" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-const PlumberIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22a7 7 0 0 0 7-7c0-4.3-7-11-7-11S5 10.7 5 15a7 7 0 0 0 7 7z" fill="url(#spline-blue-grad)" stroke="url(#spline-blue-grad-stroke)" />
-    <path d="M12 12v6" stroke="url(#spline-blue-grad-stroke)" />
-    <path d="M9 15h6" stroke="url(#spline-blue-grad-stroke)" />
-    <defs>
-      <linearGradient id="spline-blue-grad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.25" />
-      </linearGradient>
-      <linearGradient id="spline-blue-grad-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#3b82f6" />
-        <stop offset="100%" stopColor="#1d4ed8" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-const CarpenterIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 3 3 18v3h3L21 6z" fill="url(#spline-emerald-grad)" stroke="url(#spline-emerald-grad-stroke)" />
-    <path d="M14 7 7 14" stroke="url(#spline-emerald-grad-stroke)" />
-    <path d="M17 10l-3-3" stroke="url(#spline-emerald-grad-stroke)" />
-    <defs>
-      <linearGradient id="spline-emerald-grad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#047857" stopOpacity="0.25" />
-      </linearGradient>
-      <linearGradient id="spline-emerald-grad-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#10b981" />
-        <stop offset="100%" stopColor="#047857" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-const AcTechIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" fill="url(#spline-cyan-grad)" stroke="url(#spline-cyan-grad-stroke)" />
-    <path d="M12 2v20" stroke="url(#spline-cyan-grad-stroke)" />
-    <path d="M2 12h20" stroke="url(#spline-cyan-grad-stroke)" />
-    <path d="m16.2 7.8-8.4 8.4" stroke="url(#spline-cyan-grad-stroke)" />
-    <path d="m7.8 7.8 8.4 8.4" stroke="url(#spline-cyan-grad-stroke)" />
-    <defs>
-      <linearGradient id="spline-cyan-grad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#0891b2" stopOpacity="0.25" />
-      </linearGradient>
-      <linearGradient id="spline-cyan-grad-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#06b6d4" />
-        <stop offset="100%" stopColor="#0891b2" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-const CleaningIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3v3m0 12v3M3 12h3m12 0h3m-14.7-6.3 2.1 2.1m9.2 9.2 2.1 2.1m-13.4 0 2.1-2.1m9.2-9.2 2.1-2.1" fill="url(#spline-violet-grad)" stroke="url(#spline-violet-grad-stroke)" />
-    <circle cx="12" cy="12" r="3" fill="url(#spline-violet-grad)" stroke="url(#spline-violet-grad-stroke)" />
-    <defs>
-      <linearGradient id="spline-violet-grad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#6d28d9" stopOpacity="0.25" />
-      </linearGradient>
-      <linearGradient id="spline-violet-grad-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#8b5cf6" />
-        <stop offset="100%" stopColor="#6d28d9" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-const PaintingIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m14 6-2-2-4 4V10h12V8z" fill="url(#spline-red-grad)" stroke="url(#spline-red-grad-stroke)" />
-    <path d="M6 10v4c0 3.3 2.7 6 6 6s6-2.7 6-6v-4H6Z" stroke="url(#spline-red-grad-stroke)" />
-    <path d="M12 20v2" stroke="url(#spline-red-grad-stroke)" />
-    <defs>
-      <linearGradient id="spline-red-grad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.25" />
-      </linearGradient>
-      <linearGradient id="spline-red-grad-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#ef4444" />
-        <stop offset="100%" stopColor="#b91c1c" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-const SplineShieldCheckIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <path d="m9 11 2 2 4-4" />
-  </svg>
-);
-
-const SplinePricingIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="12" x="2" y="6" rx="2" />
-    <circle cx="12" cy="12" r="2" />
-    <path d="M6 12h.01M18 12h.01" />
-  </svg>
-);
-
-const SplineStarsIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-
-const SPLINE_SERVICES = [
-  { id: '1', name: 'Electrician', desc: 'Fan, lights, switchboard & smart home installations', icon: <ElectricianIcon />, accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.15)' },
-  { id: '2', name: 'Plumber', desc: 'Leakages, pipes, basin, toilet & water pump repairs', icon: <PlumberIcon />, accent: '#3b82f6', glow: 'rgba(59, 130, 246, 0.15)' },
-  { id: '3', name: 'Carpenter', desc: 'Furniture setup, locks, doors & customized wood assembly', icon: <CarpenterIcon />, accent: '#10b981', glow: 'rgba(16, 185, 129, 0.15)' },
-  { id: '4', name: 'AC Tech', desc: 'Filter cleanup, gas topups, coil service & installation', icon: <AcTechIcon />, accent: '#06b6d4', glow: 'rgba(6, 182, 212, 0.15)' },
-  { id: '5', name: 'Cleaning', desc: 'Deep home dusting, kitchen sanitation & bathroom scrubbing', icon: <CleaningIcon />, accent: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.15)' },
-  { id: '6', name: 'Painting', desc: 'Wall scraping, color consulting, texture coating & touchups', icon: <PaintingIcon />, accent: '#ef4444', glow: 'rgba(239, 68, 68, 0.15)' }
-];
 
 const SplineLanding = () => {
   const navigate = useNavigate();
@@ -275,24 +136,19 @@ const SplineLanding = () => {
     // 1. Pinned Horizontal text reveal sentence animation & oval mask slide-in
     const textTl = gsap.timeline({
       scrollTrigger: {
-        id: 'text-pin',
         trigger: '.pinned-text-section',
         start: 'top top',
-        end: '+=200%', // Slightly shortened since we removed video
+        end: '+=250%', // Extended scroll trackpad space
         pin: true,
         scrub: true,
         anticipatePin: 1,
-        snap: {
-          snapTo: [0, 0.33, 0.66, 1], // adjusted for fewer steps
-          duration: { min: 0.2, max: 0.5 },
-          delay: 0.1,
-          ease: 'power1.inOut',
-        }
       }
     });
 
     // Set initial offscreen state for the half-oval background mask
     gsap.set('.pinned-oval-mask', { x: -380, opacity: 0 });
+    // Set initial offscreen state for the right video oval
+    gsap.set('.pinned-oval-mask-right', { x: 380, opacity: 0 });
 
     textTl
       // 1. Fade in trusted
@@ -323,32 +179,14 @@ const SplineLanding = () => {
         opacity: 0,
         duration: 1.6,
         ease: 'power2.inOut',
-      });
-
-    // 1b. Pinned Video Mask Slide-in
-    const videoTl = gsap.timeline({
-      scrollTrigger: {
-        id: 'video-pin',
-        trigger: '.pinned-video-section',
-        start: 'top top',
-        end: '+=150%',
-        pin: true,
-        scrub: true,
-        anticipatePin: 1,
-      }
-    });
-
-    // Set initial offscreen state for the right video oval
-    gsap.set('.pinned-oval-mask-right', { x: 380, opacity: 0 });
-
-    videoTl
+      })
+      // 8. Slide the right video oval in from the right
       .to('.pinned-oval-mask-right', {
         x: 0,
         opacity: 1,
         duration: 2.0,
         ease: 'power2.out',
-      })
-      .to({}, { duration: 1.0 }); // Overlap slightly with handyman exit for smooth crossover
+      }, '-=0.6'); // Overlap slightly with handyman exit for smooth crossover
 
     // 2. Set initial hidden states for headers
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
@@ -415,19 +253,12 @@ const SplineLanding = () => {
     // Pinned scroll team reveal timeline
     const teamTl = gsap.timeline({
       scrollTrigger: {
-        id: 'team-pin',
         trigger: '.pinned-team-section',
         start: 'top top',
         end: '+=180%',
         pin: true,
         scrub: true,
         anticipatePin: 1,
-        snap: {
-          snapTo: [0, 0.5, 1],
-          duration: { min: 0.2, max: 0.5 },
-          delay: 0.1,
-          ease: 'power1.inOut',
-        }
       }
     });
 
@@ -438,65 +269,6 @@ const SplineLanding = () => {
     teamTl
       .to('.spline-team-card-left', { opacity: 1, x: 0, duration: 1.5, ease: 'power2.out' })
       .to('.spline-team-card-right', { opacity: 1, x: 0, duration: 1.5, ease: 'power2.out' }, '+=0.5');
-
-    // 3. Global Section Snapping
-    const getSnapPositions = () => {
-      const scrollPositions = [];
-      scrollPositions.push(0); // Hero starts at 0
-
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const elements = [
-        document.querySelector('.pinned-text-section'),
-        document.querySelector('.spline-services-showcase'),
-        document.querySelector('.how-it-works-section'),
-        document.querySelector('.safety-section'),
-        document.querySelector('.pinned-team-section'),
-        document.querySelector('.gallery-section')
-      ];
-
-      elements.forEach(el => {
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const absoluteTop = rect.top + scrollTop;
-          scrollPositions.push(absoluteTop);
-        }
-      });
-
-      return scrollPositions.map(pos => docHeight > 0 ? pos / docHeight : 0);
-    };
-
-    ScrollTrigger.create({
-      start: 0,
-      end: 'max',
-      snap: {
-        snapTo: (value) => {
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          
-          const textTrigger = ScrollTrigger.getById('text-pin');
-          const teamTrigger = ScrollTrigger.getById('team-pin');
-
-          // Bypass snapping inside active pin ranges to avoid conflicts with timeline scrub
-          if (textTrigger && scrollTop > textTrigger.start + 10 && scrollTop < textTrigger.end - 10) {
-            return value;
-          }
-          if (teamTrigger && scrollTop > teamTrigger.start + 10 && scrollTop < teamTrigger.end - 10) {
-            return value;
-          }
-
-          const snapPoints = getSnapPositions();
-          if (snapPoints.length === 0) return value;
-          
-          const closest = snapPoints.reduce((prev, curr) => 
-            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
-          );
-          return closest;
-        },
-        duration: { min: 0.2, max: 0.6 },
-        delay: 0.15,
-        ease: 'power2.out'
-      }
-    });
 
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
@@ -539,7 +311,6 @@ const SplineLanding = () => {
 
       {/* 2. Brand Overlay - Hero Fold (pointerEvents: none to let hover reach iframe) */}
       <Box
-        className="hero-fold"
         sx={{
           position: 'relative',
           zIndex: 10,
@@ -705,8 +476,8 @@ const SplineLanding = () => {
             width: '100%',
           }}
         >
-          {/* Bottom Left: Huge Luxury serif title + Description */}
-          <Box sx={{ maxWidth: '720px' }}>
+          {/* Bottom Left: Huge Luxury serif title */}
+          <Box sx={{ maxWidth: '650px' }}>
             <Typography
               variant="h2"
               sx={{
@@ -717,7 +488,6 @@ const SplineLanding = () => {
                 color: '#ffffff',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
-                mb: 2,
               }}
             >
               One request,
@@ -726,73 +496,34 @@ const SplineLanding = () => {
               <br />
               live with peace of mind.
             </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: 'rgba(255, 255, 255, 0.55)',
-                fontFamily: "'NewBlack', sans-serif",
-                fontSize: { xs: '0.85rem', md: '0.95rem' },
-                lineHeight: 1.6,
-                maxWidth: '600px',
-              }}
-            >
-              Workizo connects you with background-verified professional captains for electrics, plumbing, carpentry, AC repair, cleaning, and painting tasks instantly.
-            </Typography>
           </Box>
 
-          {/* Bottom Right: Go to Website buttons */}
+          {/* Bottom Right: Go to Website link */}
           <Box
             sx={{
               pointerEvents: 'auto',
               alignSelf: { xs: 'stretch', md: 'auto' },
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 2,
             }}
           >
-            <Button
-              variant="contained"
+            <Link
               onClick={() => navigate('/home')}
               sx={{
-                borderRadius: '30px',
-                px: 4,
-                py: 1.8,
-                bgcolor: '#ffffff',
-                color: '#000000',
-                fontWeight: 800,
-                fontFamily: "'NewBlack', sans-serif",
-                fontSize: '0.8rem',
-                letterSpacing: '0.08em',
-                boxShadow: '0 0 25px rgba(255, 255, 255, 0.25)',
-                '&:hover': {
-                  bgcolor: '#eeeeee',
-                  boxShadow: '0 0 35px rgba(255, 255, 255, 0.45)',
-                },
-              }}
-            >
-              BOOK REPAIR
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/captain/register')}
-              sx={{
-                borderRadius: '30px',
-                px: 4,
-                py: 1.8,
-                borderColor: 'rgba(255, 255, 255, 0.3)',
                 color: '#ffffff',
-                fontWeight: 800,
                 fontFamily: "'NewBlack', sans-serif",
-                fontSize: '0.8rem',
+                fontSize: { xs: '0.9rem', md: '1rem' },
+                fontWeight: 800,
+                textDecoration: 'none',
                 letterSpacing: '0.08em',
+                cursor: 'pointer',
+                display: 'inline-block',
+                transition: 'opacity 0.2s',
                 '&:hover': {
-                  borderColor: '#ffffff',
-                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  opacity: 0.7,
                 },
               }}
             >
-              BECOME CAPTAIN
-            </Button>
+              [ GO TO WEBSITE ]
+            </Link>
           </Box>
         </Box>
       </Box>
@@ -845,54 +576,6 @@ const SplineLanding = () => {
           />
         </Box>
 
-        <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
-          <Typography
-            className="reveal-text-line"
-            sx={{
-              fontFamily: "'Maltiner Display', Georgia, serif",
-              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
-              fontWeight: 400,
-              lineHeight: 1.25,
-              color: '#ffffff',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              display: 'inline-block',
-              maxWidth: '90%',
-              mx: 'auto',
-            }}
-          >
-            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
-            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
-            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
-          </Typography>
-        </Container>
-      </Box>
-
-      {/* Elegant long empty space showing the Spline particles */}
-      <Box sx={{ height: { xs: '10vh', md: '20vh' } }} />
-
-      {/* Hero Scroll Animation Section */}
-      <HeroScrollDemo />
-
-      {/* Elegant spacing before the pinned video section */}
-      <Box sx={{ height: { xs: '10vh', md: '20vh' } }} />
-
-      {/* Pinned Video Section */}
-      <Box
-        className="pinned-video-section"
-        sx={{
-          height: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'transparent',
-          position: 'relative',
-          zIndex: 10,
-          pointerEvents: 'none',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-        }}
-      >
         {/* Right-side reverse-D — flat edge on screen right, curved arc on left, 16:9 video inside */}
         <Box
           className="pinned-oval-mask-right"
@@ -942,21 +625,38 @@ const SplineLanding = () => {
             }}
           />
         </Box>
+
+        <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
+          <Typography
+            className="reveal-text-line"
+            sx={{
+              fontFamily: "'Maltiner Display', Georgia, serif",
+              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
+              fontWeight: 400,
+              lineHeight: 1.25,
+              color: '#ffffff',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              display: 'inline-block',
+              maxWidth: '90%',
+              mx: 'auto',
+            }}
+          >
+            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
+            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
+            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
+          </Typography>
+        </Container>
       </Box>
 
-      {/* Elegant long empty space after the video section */}
+      {/* Elegant long empty space showing the Spline particles */}
       <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
 
       {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box
-        className="how-it-works-section"
         sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
           bgcolor: 'transparent',
-          py: { xs: 8, md: 12 },
+          py: 12,
           position: 'relative',
           zIndex: 10,
           pointerEvents: 'auto',
@@ -1224,17 +924,15 @@ const SplineLanding = () => {
         </Container>
       </Box>
 
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
+
       {/* 4. Safety & Assurance Section (Left aligned, text-only, pointwise) */}
       <Box
-        className="safety-section"
         sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
           bgcolor: 'transparent',
-          pb: { xs: 8, md: 12 },
-          pt: { xs: 8, md: 12 },
+          pb: 12,
+          pt: 4,
           position: 'relative',
           zIndex: 10,
           pointerEvents: 'auto',
@@ -1315,154 +1013,69 @@ const SplineLanding = () => {
             </Button>
           </Box>
 
-          {/* Upgraded Premium Safety Cards */}
-          <Grid container spacing={4} sx={{ width: '100%', mt: 2 }}>
-            <Grid item xs={12} md={4} className="spline-safety-card">
-              <Card
+          {/* Pointwise Text-only guarantees */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              width: '100%',
+              maxWidth: '750px',
+            }}
+          >
+            <Box className="spline-safety-card">
+              <Typography
+                variant="h4"
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  borderRadius: '24px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: 'none',
+                  fontWeight: 800,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' },
+                  letterSpacing: '0.04em',
                   color: '#ffffff',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    borderColor: '#f59e0b',
-                    boxShadow: '0 10px 30px rgba(245, 158, 11, 0.08)',
-                  }
+                  textTransform: 'uppercase',
                 }}
               >
-                <Box sx={{ mb: 3 }}>
-                  <SplineShieldCheckIcon />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 800,
-                    fontSize: '1.25rem',
-                    letterSpacing: '0.02em',
-                    mb: 1.5,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  100% KYC Verified
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontFamily: "'NewBlack', sans-serif",
-                    lineHeight: 1.6,
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  Every Captain undergoes strict government-identity checkups, local police record clearance, and verification before activation.
-                </Typography>
-              </Card>
-            </Grid>
+                100% KYC Verified
+              </Typography>
+            </Box>
 
-            <Grid item xs={12} md={4} className="spline-safety-card">
-              <Card
+            <Box className="spline-safety-card">
+              <Typography
+                variant="h4"
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  borderRadius: '24px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: 'none',
+                  fontWeight: 800,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' },
+                  letterSpacing: '0.04em',
                   color: '#ffffff',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    borderColor: '#3b82f6',
-                    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.08)',
-                  }
+                  textTransform: 'uppercase',
                 }}
               >
-                <Box sx={{ mb: 3 }}>
-                  <SplinePricingIcon />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 800,
-                    fontSize: '1.25rem',
-                    letterSpacing: '0.02em',
-                    mb: 1.5,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Standardized Pricing
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontFamily: "'NewBlack', sans-serif",
-                    lineHeight: 1.6,
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  Clear upfront estimates calculated by our automated service engine. Zero bargaining, zero surprise charges, and complete invoicing transparency.
-                </Typography>
-              </Card>
-            </Grid>
+                Standardized Pricing
+              </Typography>
+            </Box>
 
-            <Grid item xs={12} md={4} className="spline-safety-card">
-              <Card
+            <Box className="spline-safety-card">
+              <Typography
+                variant="h4"
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  borderRadius: '24px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  bgcolor: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: 'none',
+                  fontWeight: 800,
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' },
+                  letterSpacing: '0.04em',
                   color: '#ffffff',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    borderColor: '#10b981',
-                    boxShadow: '0 10px 30px rgba(16, 185, 129, 0.08)',
-                  }
+                  textTransform: 'uppercase',
                 }}
               >
-                <Box sx={{ mb: 3 }}>
-                  <SplineStarsIcon />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 800,
-                    fontSize: '1.25rem',
-                    letterSpacing: '0.02em',
-                    mb: 1.5,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Elite Trained Captains
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontFamily: "'NewBlack', sans-serif",
-                    lineHeight: 1.6,
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  Our technicians are skilled experts who go through rigorous training programs to match the highest industry benchmarks.
-                </Typography>
-              </Card>
-            </Grid>
-          </Grid>
+                Elite Trained Captains
+              </Typography>
+            </Box>
+          </Box>
         </Container>
       </Box>
+
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
 
       {/* 5. Champions of the Startup Idea Section (Founding Team profiles) */}
       <Box
@@ -2015,12 +1628,7 @@ const SplineLanding = () => {
 
       {/* 6. Project Highlights Slideshow Section */}
       <Box
-        className="gallery-section"
         sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
           position: 'relative',
           zIndex: 10,
           py: { xs: 8, md: 12 },
