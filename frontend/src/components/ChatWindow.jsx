@@ -19,11 +19,23 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
   const chatBottomRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
 
+  // Helper to normalize message structure from different sources (REST API vs WebSocket)
+  const normalizeMessage = (msg) => {
+    if (!msg) return msg;
+    const senderVal = msg.sender_id !== undefined ? msg.sender_id : msg.sender;
+    const receiverVal = msg.receiver_id !== undefined ? msg.receiver_id : msg.receiver;
+    return {
+      ...msg,
+      sender: typeof senderVal === 'object' && senderVal !== null ? senderVal.id : senderVal,
+      receiver: typeof receiverVal === 'object' && receiverVal !== null ? receiverVal.id : receiverVal,
+    };
+  };
+
   // 1. Fetch Chat History
   const fetchHistory = async () => {
     try {
       const res = await api.get(`/api/chat/${bookingId}/`);
-      setMessages(res.data);
+      setMessages(res.data.map(normalizeMessage));
     } catch (err) {
       console.error('Failed to load chat history', err);
       toast.error('Failed to load chat history');
@@ -59,23 +71,24 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
       try {
         const payload = JSON.parse(event.data);
         if (payload.type === 'message') {
+          const normalizedMsg = normalizeMessage(payload.message);
           setMessages(prev => {
             // Check for duplicate message ID
-            if (prev.some(m => m.id === payload.message.id)) {
+            if (prev.some(m => m.id === normalizedMsg.id)) {
               return prev;
             }
-            return [...prev, payload.message];
+            return [...prev, normalizedMsg];
           });
           // If the message came from the other user, mark it as read
-          if (payload.message.sender !== currentUser.id) {
+          if (Number(normalizedMsg.sender) !== Number(currentUser.id)) {
             ws.send(JSON.stringify({ type: 'mark_read' }));
           }
         } else if (payload.type === 'messages_read') {
           // If other user read the messages, update is_read of our sent messages to true
           const readerId = payload.reader_id;
-          if (readerId !== currentUser.id) {
+          if (Number(readerId) !== Number(currentUser.id)) {
             setMessages(prev =>
-              prev.map(m => (m.sender === currentUser.id ? { ...m, is_read: true } : m))
+              prev.map(m => (Number(m.sender) === Number(currentUser.id) ? { ...m, is_read: true } : m))
             );
           }
         }
@@ -252,7 +265,7 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
         }}
       >
         {messages.map((msg) => {
-          const isOwnMessage = msg.sender === currentUser.id;
+          const isOwnMessage = Number(msg.sender) === Number(currentUser.id);
           return (
             <Box
               key={msg.id}
