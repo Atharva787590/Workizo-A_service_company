@@ -61,23 +61,31 @@ const WorkerWaiting = () => {
             px: { xs: 3, sm: 4 }
           }}
         >
-          <Box display="flex" flexDirection="column" alignItems="flex-start" gap={0.5}>
-            <Box 
-              component="img" 
-              src="/logo.png" 
-              sx={{ 
-                width: 36, 
-                height: 36, 
-                objectFit: 'contain',
-                flexShrink: 0 
-              }} 
-            />
-            <Typography variant="h6" sx={{ fontFamily: 'Outfit', fontWeight: 900, color: '#ffffff', lineHeight: 1.2 }}>
-              WORKIZO
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#888888', fontWeight: 600 }}>
-              Captain Portal
-            </Typography>
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <Box
+              sx={{
+                width: 38,
+                height: 38,
+                bgcolor: '#ffffff',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
+                overflow: 'hidden',
+                flexShrink: 0
+              }}
+            >
+              <Box component="img" src="/logo.png" sx={{ width: 34, height: 34, objectFit: 'contain' }} />
+            </Box>
+            <Box display="flex" flexDirection="column" alignItems="flex-start">
+              <Typography variant="h6" sx={{ fontFamily: 'Outfit', fontWeight: 900, color: '#ffffff', lineHeight: 1.1, fontSize: '1.25rem', letterSpacing: '.03rem' }}>
+                WORKIZO
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#888888', fontWeight: 600, fontSize: '0.75rem', lineHeight: 1.1 }}>
+                Captain Portal
+              </Typography>
+            </Box>
           </Box>
           <Button
             startIcon={<LogoutIcon />}

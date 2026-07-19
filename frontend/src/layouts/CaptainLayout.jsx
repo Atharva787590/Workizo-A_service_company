@@ -112,16 +112,32 @@ const CaptainLayout = () => {
               onClick={() => navigate('/captain/dashboard')} 
               sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 1.5 }}
             >
-              <Box component="img" src="/logo.png" sx={{ width: 32, height: 32, objectFit: 'contain' }} />
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  bgcolor: '#ffffff',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}
+              >
+                <Box component="img" src="/logo.png" sx={{ width: 34, height: 34, objectFit: 'contain' }} />
+              </Box>
               <Box>
                 <Typography
                   variant="h6"
                   sx={{
                     fontFamily: 'Outfit',
                     fontWeight: 900,
-                    letterSpacing: '.05rem',
+                    letterSpacing: '.03rem',
                     color: '#ffffff',
-                    lineHeight: 1.2
+                    lineHeight: 1.2,
+                    fontSize: '1.3rem'
                   }}
                 >
                   WORKIZO
