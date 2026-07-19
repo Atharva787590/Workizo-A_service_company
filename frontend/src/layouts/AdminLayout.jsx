@@ -103,16 +103,32 @@ const AdminLayout = () => {
               onClick={() => navigate('/admin/dashboard?tab=dashboard')} 
               sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}
             >
-              <Box component="img" src="/logo.png" sx={{ width: 32, height: 32, objectFit: 'contain' }} />
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  bgcolor: '#ffffff',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}
+              >
+                <Box component="img" src="/logo.png" sx={{ width: 34, height: 34, objectFit: 'contain' }} />
+              </Box>
               <Box>
                 <Typography
                   variant="h6"
                   sx={{
                     fontFamily: 'Outfit',
                     fontWeight: 900,
-                    letterSpacing: '.05rem',
+                    letterSpacing: '.03rem',
                     color: '#0F0F14',
-                    lineHeight: 1.2
+                    lineHeight: 1.2,
+                    fontSize: '1.3rem'
                   }}
                 >
                   WORKIZO
