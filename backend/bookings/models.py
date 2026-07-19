@@ -98,3 +98,19 @@ class BookingRejection(models.Model):
     def __str__(self):
         return f"Rejection by {self.worker.email} for Booking #{self.booking.id}"
 
+class ChatMessage(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='chat_messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    message_type = models.CharField(max_length=20, default='text')
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Msg {self.id} from {self.sender.email} to {self.receiver.email} for Booking {self.booking.id}"
+
+

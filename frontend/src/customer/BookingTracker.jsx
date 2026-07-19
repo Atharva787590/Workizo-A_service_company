@@ -9,6 +9,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import api, { buildWsUrl, buildApiUrl } from '../services/api';
 import toast from 'react-hot-toast';
+import ChatWindow from '../components/ChatWindow';
+import Badge from '@mui/material/Badge';
 
 // Icons
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -140,6 +142,14 @@ function BookingTracker() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('upi');
 
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadChats, setUnreadChats] = useState(0);
+  const isChatOpenRef = useRef(false);
+
+  useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
+
   const ws = useRef(null);
 
   // Fetch initial details
@@ -147,6 +157,7 @@ function BookingTracker() {
     try {
       const res = await api.get(`/api/bookings/bookings/${id}/`);
       setBooking(res.data);
+      setUnreadChats(res.data.unread_chats_count || 0);
 
       // Fetch bill if status matches
       if (['repair_completed', 'waiting_approval', 'WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'completed'].includes(res.data.status)) {
@@ -196,17 +207,24 @@ function BookingTracker() {
             'payment_completed',
             'payment_failed',
             'cash_selected',
-            'booking_status'
+            'booking_status',
+            'chat_message_received'
           ];
           if (acceptedTypes.includes(payload.type)) {
-            setBooking(payload.booking);
-            if (payload.type === 'booking_accepted') {
-              toast.success(`${payload.booking.worker?.full_name || 'Captain'} accepted your booking!`);
-            }
-            if (['repair_completed', 'waiting_approval', 'WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'completed'].includes(payload.booking.status)) {
-              api.get(`/api/billing/${id}/get-bill/`)
-                .then(res => setBill(res.data))
-                .catch(() => setBill(null));
+            if (payload.type === 'chat_message_received') {
+              if (!isChatOpenRef.current) {
+                setUnreadChats(prev => prev + 1);
+              }
+            } else {
+              setBooking(payload.booking);
+              if (payload.type === 'booking_accepted') {
+                toast.success(`${payload.booking.worker?.full_name || 'Captain'} accepted your booking!`);
+              }
+              if (['repair_completed', 'waiting_approval', 'WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'completed'].includes(payload.booking.status)) {
+                api.get(`/api/billing/${id}/get-bill/`)
+                  .then(res => setBill(res.data))
+                  .catch(() => setBill(null));
+              }
             }
           }
         } catch (err) {
@@ -948,15 +966,20 @@ function BookingTracker() {
                     >
                       Call
                     </Button>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<ChatIcon />}
-                      onClick={() => toast.success('Chat messaging feature loaded.')}
-                      sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#23232F' } }}
-                    >
-                      Chat
-                    </Button>
+                    <Badge badgeContent={unreadChats} color="error" sx={{ width: '100%' }}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<ChatIcon />}
+                        onClick={() => {
+                          setIsChatOpen(true);
+                          setUnreadChats(0);
+                        }}
+                        sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#23232F' } }}
+                      >
+                        Chat
+                      </Button>
+                    </Badge>
                   </Box>
                 </Box>
               ) : (
@@ -1079,6 +1102,13 @@ function BookingTracker() {
           </DialogActions>
         )}
       </Dialog>
+      <ChatWindow
+        open={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        bookingId={id}
+        currentUser={JSON.parse(localStorage.getItem('user'))}
+        otherUser={booking?.worker}
+      />
 
     </Box>
   );
