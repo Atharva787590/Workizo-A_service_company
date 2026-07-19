@@ -119,24 +119,19 @@ const AdminLayout = () => {
               >
                 <Box component="img" src="/logo.png" sx={{ width: 34, height: 34, objectFit: 'contain' }} />
               </Box>
-              <Box>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontFamily: 'Outfit',
-                    fontWeight: 900,
-                    letterSpacing: '.03rem',
-                    color: '#0F0F14',
-                    lineHeight: 1.2,
-                    fontSize: '1.3rem'
-                  }}
-                >
-                  WORKIZO
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#1A73E8', letterSpacing: '.1rem', fontWeight: 600 }}>
-                  ADMIN PORTAL
-                </Typography>
-              </Box>
+              <Typography
+                variant="h6"
+                noWrap
+                sx={{
+                  fontFamily: 'Outfit',
+                  fontWeight: 900,
+                  letterSpacing: '.03rem',
+                  color: '#0F0F14',
+                  fontSize: '1.3rem'
+                }}
+              >
+                WORKIZO
+              </Typography>
             </Box>
             <IconButton 
               onClick={() => setIsCollapsed(true)} 

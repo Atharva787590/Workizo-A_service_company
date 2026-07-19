@@ -22,6 +22,7 @@ import slide7 from './assets/slide7.jpg';
 import slide8 from './assets/slide8.jpg';
 import slide9 from './assets/slide9.jpg';
 import slide10 from './assets/slide10.jpg';
+import { HeroScrollDemo } from './components/ui/demo';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -724,6 +725,9 @@ const SplineLanding = () => {
 
       {/* Elegant long empty space showing the Spline particles */}
       <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
+
+      {/* Hero Scroll Animation Section */}
+      <HeroScrollDemo />
 
       {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box

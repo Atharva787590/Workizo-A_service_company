@@ -78,14 +78,19 @@ const WorkerWaiting = () => {
             >
               <Box component="img" src="/logo.png" sx={{ width: 34, height: 34, objectFit: 'contain' }} />
             </Box>
-            <Box display="flex" flexDirection="column" alignItems="flex-start">
-              <Typography variant="h6" sx={{ fontFamily: 'Outfit', fontWeight: 900, color: '#ffffff', lineHeight: 1.1, fontSize: '1.25rem', letterSpacing: '.03rem' }}>
-                WORKIZO
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#888888', fontWeight: 600, fontSize: '0.75rem', lineHeight: 1.1 }}>
-                Captain Portal
-              </Typography>
-            </Box>
+            <Typography
+              variant="h6"
+              noWrap
+              sx={{
+                fontFamily: 'Outfit',
+                fontWeight: 900,
+                letterSpacing: '.03rem',
+                color: '#ffffff',
+                fontSize: '1.3rem'
+              }}
+            >
+              WORKIZO
+            </Typography>
           </Box>
           <Button
             startIcon={<LogoutIcon />}
