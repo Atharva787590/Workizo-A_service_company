@@ -18,6 +18,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { gsap } from 'gsap';
+import { buildMediaUrl } from '../services/api';
 
 const CustomerLayout = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -203,7 +204,7 @@ const CustomerLayout = () => {
                   <Tooltip title="Account Settings">
                     <IconButton className="nav-action-reveal" onClick={handleMenuOpen} sx={{ p: 0, ml: 1 }}>
                       <Avatar
-                        src={user.profile_photo ? `http://127.0.0.1:8001${user.profile_photo}` : ''}
+                        src={buildMediaUrl(user.profile_photo)}
                         sx={{ bgcolor: '#000000', width: 36, height: 36 }}
                       >
                         {user.full_name?.charAt(0).toUpperCase()}

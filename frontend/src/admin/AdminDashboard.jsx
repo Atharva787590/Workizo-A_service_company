@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import api, { buildWsUrl } from '../services/api';
+import api, { buildWsUrl, buildMediaUrl } from '../services/api';
 import {
   Container, Typography, Box, Grid, Paper, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Button, Chip,
@@ -689,25 +689,25 @@ const BookingsView = ({ hideHeader }) => {
                   <Grid item xs={6} sm={3}>
                     <Typography variant="caption" display="block" color="text.secondary" fontWeight="700">Before Photo</Typography>
                     {selectedBooking.before_photo ? (
-                      <Box component="img" src={`http://127.0.0.1:8001${selectedBooking.before_photo}`} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
+                      <Box component="img" src={buildMediaUrl(selectedBooking.before_photo)} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
                     ) : <Typography variant="caption" color="text.disabled">None</Typography>}
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Typography variant="caption" display="block" color="text.secondary" fontWeight="700">After Photo</Typography>
                     {selectedBooking.after_photo ? (
-                      <Box component="img" src={`http://127.0.0.1:8001${selectedBooking.after_photo}`} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
+                      <Box component="img" src={buildMediaUrl(selectedBooking.after_photo)} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
                     ) : <Typography variant="caption" color="text.disabled">None</Typography>}
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Typography variant="caption" display="block" color="text.secondary" fontWeight="700">Spare Part Invoice Copy</Typography>
                     {selectedBooking.spare_part_photo ? (
-                      <Box component="img" src={`http://127.0.0.1:8001${selectedBooking.spare_part_photo}`} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
+                      <Box component="img" src={buildMediaUrl(selectedBooking.spare_part_photo)} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
                     ) : <Typography variant="caption" color="text.disabled">None</Typography>}
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Typography variant="caption" display="block" color="text.secondary" fontWeight="700">Offsite Invoice Copy</Typography>
                     {selectedBooking.invoice_photo ? (
-                      <Box component="img" src={`http://127.0.0.1:8001${selectedBooking.invoice_photo}`} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
+                      <Box component="img" src={buildMediaUrl(selectedBooking.invoice_photo)} sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }} />
                     ) : <Typography variant="caption" color="text.disabled">None</Typography>}
                   </Grid>
                 </Grid>
@@ -894,7 +894,7 @@ const WorkersView = ({ hideHeader }) => {
                   <TableRow key={w.user.id} hover>
                     <TableCell>
                       <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar src={w.profile?.profile_photo ? `http://127.0.0.1:8001${w.profile.profile_photo}` : ''} />
+                        <Avatar src={buildMediaUrl(w.profile?.profile_photo)} />
                         <Box>
                           <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'Outfit' }}>{w.user.full_name}</Typography>
                           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>{w.user.email} | {w.user.phone}</Typography>
@@ -1013,13 +1013,13 @@ const WorkersView = ({ hideHeader }) => {
                   <Grid item xs={6}>
                     <Typography variant="caption" display="block" color="text.secondary" fontWeight="700" gutterBottom>Aadhaar Photo</Typography>
                     {selectedWorker.profile?.aadhaar_photo ? (
-                      <Box component="img" src={`http://127.0.0.1:8001${selectedWorker.profile.aadhaar_photo}`} sx={{ width: '100%', height: 200, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
+                      <Box component="img" src={buildMediaUrl(selectedWorker.profile.aadhaar_photo)} sx={{ width: '100%', height: 200, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
                     ) : <Alert severity="warning">No Aadhaar copy uploaded</Alert>}
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="caption" display="block" color="text.secondary" fontWeight="700" gutterBottom>PAN Photo</Typography>
                     {selectedWorker.profile?.pan_photo ? (
-                      <Box component="img" src={`http://127.0.0.1:8001${selectedWorker.profile.pan_photo}`} sx={{ width: '100%', height: 200, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
+                      <Box component="img" src={buildMediaUrl(selectedWorker.profile.pan_photo)} sx={{ width: '100%', height: 200, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
                     ) : <Alert severity="warning">No PAN copy uploaded</Alert>}
                   </Grid>
                 </Grid>
@@ -2064,7 +2064,7 @@ const BillsView = ({ hideHeader }) => {
                 <Divider sx={{ my: 1 }} />
                 <Typography variant="caption" color="text.secondary" display="block" fontWeight="700" uppercase gutterBottom sx={{ mt: 1 }}>Spare Parts Store Receipt Photo</Typography>
                 {selectedBill.booking_detail?.spare_part_photo ? (
-                  <Box component="img" src={`http://127.0.0.1:8001${selectedBill.booking_detail.spare_part_photo}`} sx={{ width: '100%', height: 180, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
+                  <Box component="img" src={buildMediaUrl(selectedBill.booking_detail.spare_part_photo)} sx={{ width: '100%', height: 180, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
                 ) : (
                   <Typography variant="caption" color="text.disabled">No receipt photo uploaded</Typography>
                 )}
@@ -2074,7 +2074,7 @@ const BillsView = ({ hideHeader }) => {
                 <Divider sx={{ my: 1 }} />
                 <Typography variant="caption" color="text.secondary" display="block" fontWeight="700" uppercase gutterBottom sx={{ mt: 1 }}>Offsite Workshop Store Invoice Photo</Typography>
                 {selectedBill.booking_detail?.invoice_photo ? (
-                  <Box component="img" src={`http://127.0.0.1:8001${selectedBill.booking_detail.invoice_photo}`} sx={{ width: '100%', height: 180, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
+                  <Box component="img" src={buildMediaUrl(selectedBill.booking_detail.invoice_photo)} sx={{ width: '100%', height: 180, objectFit: 'contain', border: `1px solid ${tokens.borderColor}`, borderRadius: `${tokens.borderRadiusSm}px` }} />
                 ) : (
                   <Typography variant="caption" color="text.disabled">No workshop invoice photo uploaded</Typography>
                 )}
