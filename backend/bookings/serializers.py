@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Booking, RepairToken, MajorRepairApproval
+from .models import Booking, RepairToken, MajorRepairApproval, ChatMessage
 from accounts.serializers import UserSerializer
 from services.serializers import ServiceCategorySerializer
 from django.contrib.auth import get_user_model
@@ -31,6 +31,7 @@ class BookingSerializer(serializers.ModelSerializer):
     major_repairs = MajorRepairApprovalSerializer(many=True, read_only=True)
     rating = RatingSerializer(read_only=True)
     payment = serializers.SerializerMethodField()
+    unread_chats_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Booking
@@ -39,7 +40,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'problem_type', 'problem_description', 'address', 'city', 'state', 'pincode',
             'status', 'qr_code_value',
             'before_photo', 'after_photo', 'spare_part_photo', 'invoice_photo', 'optional_video',
-            'repair_token', 'major_repairs', 'rating', 'payment', 'created_at', 'updated_at'
+            'repair_token', 'major_repairs', 'rating', 'payment', 'unread_chats_count', 'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'tracking_id', 'customer', 'worker', 'qr_code_value', 'created_at', 'updated_at')
 
@@ -51,6 +52,12 @@ class BookingSerializer(serializers.ModelSerializer):
         except Exception:
             pass
         return None
+
+    def get_unread_chats_count(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return obj.chat_messages.filter(receiver=request.user, is_read=False).count()
+        return 0
 
 
 
@@ -68,4 +75,21 @@ class PublicBookingSerializer(serializers.ModelSerializer):
             'worker_name', 'repair_token', 'major_repairs', 'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'tracking_id', 'status', 'created_at', 'updated_at')
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.CharField(source='sender.full_name', read_only=True)
+    sender_email = serializers.EmailField(source='sender.email', read_only=True)
+    receiver_name = serializers.CharField(source='receiver.full_name', read_only=True)
+    receiver_email = serializers.EmailField(source='receiver.email', read_only=True)
+
+    class Meta:
+        model = ChatMessage
+        fields = (
+            'id', 'booking', 'sender', 'sender_name', 'sender_email',
+            'receiver', 'receiver_name', 'receiver_email',
+            'message', 'created_at', 'is_read', 'message_type'
+        )
+        read_only_fields = ('id', 'sender', 'receiver', 'created_at', 'is_read')
+
 

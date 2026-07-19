@@ -1,5 +1,5 @@
-import json
 from rest_framework import viewsets, permissions, status
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -7,8 +7,8 @@ from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from .models import Booking, RepairToken, MajorRepairApproval, BookingRejection
-from .serializers import BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer, PublicBookingSerializer
+from .models import Booking, RepairToken, MajorRepairApproval, BookingRejection, ChatMessage
+from .serializers import BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer, PublicBookingSerializer, ChatMessageSerializer
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
 
@@ -585,5 +585,26 @@ class BookingViewSet(viewsets.ModelViewSet):
         send_booking_update(booking.id, booking_data)
 
         return Response(RepairTokenSerializer(token).data)
+
+
+class ChatMessagesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, booking_id):
+        booking = get_object_or_404(Booking, id=booking_id)
+
+        # Verify user is customer or worker
+        if request.user.role != 'admin' and not request.user.is_staff:
+            if booking.customer_id != request.user.id and booking.worker_id != request.user.id:
+                return Response({"detail": "You are not authorized to view this chat."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Mark received unread messages as read
+        unread_messages = ChatMessage.objects.filter(booking=booking, receiver=request.user, is_read=False)
+        unread_messages.update(is_read=True)
+
+        messages = ChatMessage.objects.filter(booking=booking).order_by('created_at')
+        serializer = ChatMessageSerializer(messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 

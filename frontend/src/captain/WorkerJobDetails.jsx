@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import api, { buildApiUrl, buildWsUrl } from '../services/api';
 import toast from 'react-hot-toast';
+import ChatWindow from '../components/ChatWindow';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -95,12 +96,21 @@ function WorkerJobDetails() {
   const [confirmCashDialogOpen, setConfirmCashDialogOpen] = useState(false);
   const [confirmingCash, setConfirmingCash] = useState(false);
 
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadChats, setUnreadChats] = useState(0);
+  const isChatOpenRef = useRef(false);
+
+  useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
+
   const ws = useRef(null);
 
   const fetchJobDetails = async () => {
     try {
       const res = await api.get(`/api/bookings/bookings/${id}/`);
       setBooking(res.data);
+      setUnreadChats(res.data.unread_chats_count || 0);
 
       if (['completed', 'waiting_approval', 'repair_completed', 'WAITING_FOR_CASH_CONFIRMATION'].includes(res.data.status)) {
         try {
@@ -139,7 +149,11 @@ function WorkerJobDetails() {
         if (!isActive) return;
         try {
           const payload = JSON.parse(event.data);
-          if (payload.booking) {
+          if (payload.type === 'chat_message_received') {
+            if (!isChatOpenRef.current) {
+              setUnreadChats(prev => prev + 1);
+            }
+          } else if (payload.booking) {
             setBooking(payload.booking);
             if (['completed', 'waiting_approval', 'repair_completed', 'WAITING_FOR_CASH_CONFIRMATION'].includes(payload.booking.status)) {
               api.get(`/api/billing/${id}/get-bill/`)
@@ -831,6 +845,21 @@ function WorkerJobDetails() {
                     Navigate
                   </Button>
                 </Box>
+                {booking && booking.worker && !['searching', 'pending', 'cancelled'].includes(booking.status) && (
+                  <Badge badgeContent={unreadChats} color="error" sx={{ width: '100%', mt: 2 }}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => {
+                        setIsChatOpen(true);
+                        setUnreadChats(0);
+                      }}
+                      sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', textTransform: 'none', borderRadius: `${tokens.borderRadiusSm}px`, fontWeight: 700 }}
+                    >
+                      Chat with Customer
+                    </Button>
+                  </Badge>
+                )}
               </Box>
             </DashboardCard>
 
@@ -996,6 +1025,13 @@ function WorkerJobDetails() {
           </Button>
         </DialogActions>
       </Dialog>
+      <ChatWindow
+        open={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        bookingId={id}
+        currentUser={JSON.parse(localStorage.getItem('user'))}
+        otherUser={booking?.customer}
+      />
     </DashboardPage>
   );
 }

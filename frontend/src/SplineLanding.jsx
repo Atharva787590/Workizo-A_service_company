@@ -22,6 +22,7 @@ import slide7 from './assets/slide7.jpg';
 import slide8 from './assets/slide8.jpg';
 import slide9 from './assets/slide9.jpg';
 import slide10 from './assets/slide10.jpg';
+import { HeroScrollDemo } from './components/ui/demo';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -277,12 +278,12 @@ const SplineLanding = () => {
         id: 'text-pin',
         trigger: '.pinned-text-section',
         start: 'top top',
-        end: '+=250%', // Extended scroll trackpad space
+        end: '+=200%', // Slightly shortened since we removed video
         pin: true,
         scrub: true,
         anticipatePin: 1,
         snap: {
-          snapTo: [0, 0.25, 0.5, 0.75, 1],
+          snapTo: [0, 0.33, 0.66, 1], // adjusted for fewer steps
           duration: { min: 0.2, max: 0.5 },
           delay: 0.1,
           ease: 'power1.inOut',
@@ -292,8 +293,6 @@ const SplineLanding = () => {
 
     // Set initial offscreen state for the half-oval background mask
     gsap.set('.pinned-oval-mask', { x: -380, opacity: 0 });
-    // Set initial offscreen state for the right video oval
-    gsap.set('.pinned-oval-mask-right', { x: 380, opacity: 0 });
 
     textTl
       // 1. Fade in trusted
@@ -324,14 +323,32 @@ const SplineLanding = () => {
         opacity: 0,
         duration: 1.6,
         ease: 'power2.inOut',
-      })
-      // 8. Slide the right video oval in from the right
+      });
+
+    // 1b. Pinned Video Mask Slide-in
+    const videoTl = gsap.timeline({
+      scrollTrigger: {
+        id: 'video-pin',
+        trigger: '.pinned-video-section',
+        start: 'top top',
+        end: '+=150%',
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+      }
+    });
+
+    // Set initial offscreen state for the right video oval
+    gsap.set('.pinned-oval-mask-right', { x: 380, opacity: 0 });
+
+    videoTl
       .to('.pinned-oval-mask-right', {
         x: 0,
         opacity: 1,
         duration: 2.0,
         ease: 'power2.out',
-      }, '-=0.6'); // Overlap slightly with handyman exit for smooth crossover
+      })
+      .to({}, { duration: 1.0 }); // Overlap slightly with handyman exit for smooth crossover
 
     // 2. Set initial hidden states for headers
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
@@ -828,6 +845,54 @@ const SplineLanding = () => {
           />
         </Box>
 
+        <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
+          <Typography
+            className="reveal-text-line"
+            sx={{
+              fontFamily: "'Maltiner Display', Georgia, serif",
+              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
+              fontWeight: 400,
+              lineHeight: 1.25,
+              color: '#ffffff',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              display: 'inline-block',
+              maxWidth: '90%',
+              mx: 'auto',
+            }}
+          >
+            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
+            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
+            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
+          </Typography>
+        </Container>
+      </Box>
+
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '10vh', md: '20vh' } }} />
+
+      {/* Hero Scroll Animation Section */}
+      <HeroScrollDemo />
+
+      {/* Elegant spacing before the pinned video section */}
+      <Box sx={{ height: { xs: '10vh', md: '20vh' } }} />
+
+      {/* Pinned Video Section */}
+      <Box
+        className="pinned-video-section"
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'transparent',
+          position: 'relative',
+          zIndex: 10,
+          pointerEvents: 'none',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+        }}
+      >
         {/* Right-side reverse-D — flat edge on screen right, curved arc on left, 16:9 video inside */}
         <Box
           className="pinned-oval-mask-right"
@@ -877,178 +942,10 @@ const SplineLanding = () => {
             }}
           />
         </Box>
-
-        <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
-          <Typography
-            className="reveal-text-line"
-            sx={{
-              fontFamily: "'Maltiner Display', Georgia, serif",
-              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
-              fontWeight: 400,
-              lineHeight: 1.25,
-              color: '#ffffff',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              display: 'inline-block',
-              maxWidth: '90%',
-              mx: 'auto',
-            }}
-          >
-            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
-            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
-            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
-          </Typography>
-        </Container>
       </Box>
 
-      {/* 2.5 Services Showcase Section */}
-      <Box
-        className="spline-services-showcase"
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          bgcolor: 'transparent',
-          position: 'relative',
-          zIndex: 10,
-          pointerEvents: 'auto',
-          color: '#ffffff',
-          py: { xs: 8, md: 12 },
-          boxSizing: 'border-box',
-        }}
-      >
-        <Container maxWidth="lg">
-          {/* Header */}
-          <Box sx={{ textAlign: 'left', mb: 8, maxWidth: '700px' }}>
-            <Typography
-              variant="caption"
-              sx={{
-                color: 'rgba(255, 255, 255, 0.4)',
-                fontFamily: "'NewBlack', sans-serif",
-                fontWeight: 800,
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                fontSize: '0.75rem',
-                display: 'block',
-                mb: 1.5,
-              }}
-            >
-              SERVICE SPECTRUM
-            </Typography>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 400,
-                mb: 2.5,
-                fontFamily: "'Maltiner Display', Georgia, serif",
-                letterSpacing: '0.03em',
-                fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3.2rem' },
-                textTransform: 'uppercase',
-              }}
-            >
-              Our Service Verticals
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontFamily: "'NewBlack', sans-serif",
-                fontSize: '1rem',
-                lineHeight: 1.6,
-              }}
-            >
-              Select a vertical below to book a pre-screened local professional with standardized rates.
-            </Typography>
-          </Box>
-
-          {/* Grid of Categories */}
-          <Grid container spacing={3}>
-            {SPLINE_SERVICES.map((serv) => (
-              <Grid item xs={12} sm={6} md={4} key={serv.id}>
-                <Card
-                  onClick={() => navigate('/home')}
-                  sx={{
-                    p: 4,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    borderRadius: '24px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    bgcolor: 'rgba(255, 255, 255, 0.02)',
-                    backdropFilter: 'blur(16px)',
-                    boxShadow: 'none',
-                    color: '#ffffff',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'translateY(-6px)',
-                      borderColor: serv.accent,
-                      boxShadow: `0 10px 40px -15px ${serv.glow}`,
-                      '& .serv-icon': {
-                        transform: 'scale(1.1) rotate(5deg)',
-                        filter: `drop-shadow(0 0 12px ${serv.accent})`,
-                      }
-                    },
-                  }}
-                >
-                  <Box>
-                    <Box
-                      className="serv-icon"
-                      sx={{
-                        mb: 3,
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      {serv.icon}
-                    </Box>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontFamily: "'NewBlack', sans-serif",
-                        fontWeight: 800,
-                        fontSize: '1.25rem',
-                        letterSpacing: '0.02em',
-                        mb: 1.5,
-                      }}
-                    >
-                      {serv.name}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: 'rgba(255, 255, 255, 0.5)',
-                        fontFamily: "'NewBlack', sans-serif",
-                        lineHeight: 1.5,
-                        fontSize: '0.85rem',
-                      }}
-                    >
-                      {serv.desc}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    sx={{
-                      mt: 4,
-                      fontSize: '0.75rem',
-                      color: serv.accent,
-                      fontWeight: 800,
-                      fontFamily: "'NewBlack', sans-serif",
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    [ Book Now → ]
-                  </Typography>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
+      {/* Elegant long empty space after the video section */}
+      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
 
       {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box

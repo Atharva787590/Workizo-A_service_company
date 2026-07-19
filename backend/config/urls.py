@@ -7,6 +7,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import GoogleLoginView
 from workers.views import OCRExtractView
+from bookings.views import ChatMessagesView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,6 +19,7 @@ urlpatterns = [
     path('api/bookings/', include('bookings.urls')),
     path('api/billing/', include('billing.urls')),
     path('api/notifications/', include('notifications.urls')),
+    path('api/chat/<int:booking_id>/', ChatMessagesView.as_view(), name='chat-history'),
 ]
 
 if settings.DEBUG:
