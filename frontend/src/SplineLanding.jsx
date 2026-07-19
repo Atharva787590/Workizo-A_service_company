@@ -140,12 +140,12 @@ const SplineLanding = () => {
         id: 'text-pin',
         trigger: '.pinned-text-section',
         start: 'top top',
-        end: '+=250%', // Extended scroll trackpad space
+        end: '+=200%', // Slightly shortened since we removed video
         pin: true,
         scrub: true,
         anticipatePin: 1,
         snap: {
-          snapTo: [0, 0.25, 0.5, 0.75, 1],
+          snapTo: [0, 0.33, 0.66, 1], // adjusted for fewer steps
           duration: { min: 0.2, max: 0.5 },
           delay: 0.1,
           ease: 'power1.inOut',
@@ -155,8 +155,6 @@ const SplineLanding = () => {
 
     // Set initial offscreen state for the half-oval background mask
     gsap.set('.pinned-oval-mask', { x: -380, opacity: 0 });
-    // Set initial offscreen state for the right video oval
-    gsap.set('.pinned-oval-mask-right', { x: 380, opacity: 0 });
 
     textTl
       // 1. Fade in trusted
@@ -187,14 +185,32 @@ const SplineLanding = () => {
         opacity: 0,
         duration: 1.6,
         ease: 'power2.inOut',
-      })
-      // 8. Slide the right video oval in from the right
+      });
+
+    // 1b. Pinned Video Mask Slide-in
+    const videoTl = gsap.timeline({
+      scrollTrigger: {
+        id: 'video-pin',
+        trigger: '.pinned-video-section',
+        start: 'top top',
+        end: '+=150%',
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+      }
+    });
+
+    // Set initial offscreen state for the right video oval
+    gsap.set('.pinned-oval-mask-right', { x: 380, opacity: 0 });
+
+    videoTl
       .to('.pinned-oval-mask-right', {
         x: 0,
         opacity: 1,
         duration: 2.0,
         ease: 'power2.out',
-      }, '-=0.6'); // Overlap slightly with handyman exit for smooth crossover
+      })
+      .to({}, { duration: 1.0 }); // Overlap slightly with handyman exit for smooth crossover
 
     // 2. Set initial hidden states for headers
     gsap.set('.spline-safety-header', { opacity: 0, y: 35 });
@@ -650,6 +666,54 @@ const SplineLanding = () => {
           />
         </Box>
 
+        <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
+          <Typography
+            className="reveal-text-line"
+            sx={{
+              fontFamily: "'Maltiner Display', Georgia, serif",
+              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
+              fontWeight: 400,
+              lineHeight: 1.25,
+              color: '#ffffff',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              display: 'inline-block',
+              maxWidth: '90%',
+              mx: 'auto',
+            }}
+          >
+            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
+            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
+            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
+          </Typography>
+        </Container>
+      </Box>
+
+      {/* Elegant long empty space showing the Spline particles */}
+      <Box sx={{ height: { xs: '10vh', md: '20vh' } }} />
+
+      {/* Hero Scroll Animation Section */}
+      <HeroScrollDemo />
+
+      {/* Elegant spacing before the pinned video section */}
+      <Box sx={{ height: { xs: '10vh', md: '20vh' } }} />
+
+      {/* Pinned Video Section */}
+      <Box
+        className="pinned-video-section"
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'transparent',
+          position: 'relative',
+          zIndex: 10,
+          pointerEvents: 'none',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+        }}
+      >
         {/* Right-side reverse-D — flat edge on screen right, curved arc on left, 16:9 video inside */}
         <Box
           className="pinned-oval-mask-right"
@@ -699,35 +763,10 @@ const SplineLanding = () => {
             }}
           />
         </Box>
-
-        <Container maxWidth="lg" sx={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
-          <Typography
-            className="reveal-text-line"
-            sx={{
-              fontFamily: "'Maltiner Display', Georgia, serif",
-              fontSize: { xs: '1.8rem', sm: '3.2rem', md: '4.8rem' },
-              fontWeight: 400,
-              lineHeight: 1.25,
-              color: '#ffffff',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              display: 'inline-block',
-              maxWidth: '90%',
-              mx: 'auto',
-            }}
-          >
-            <span className="word-fast" style={{ opacity: 1 }}>FAST</span>
-            <span className="word-comma-trusted" style={{ opacity: 0.15 }}>, TRUSTED</span>
-            <span className="word-professional" style={{ opacity: 0.15 }}>, AND PROFESSIONAL HOME SERVICES.</span>
-          </Typography>
-        </Container>
       </Box>
 
-      {/* Elegant long empty space showing the Spline particles */}
+      {/* Elegant long empty space after the video section */}
       <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
-
-      {/* Hero Scroll Animation Section */}
-      <HeroScrollDemo />
 
       {/* 3. How It Works Section (Alternating Transparent Timeline layout) */}
       <Box
