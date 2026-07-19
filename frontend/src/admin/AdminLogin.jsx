@@ -109,7 +109,23 @@ const AdminLogin = () => {
           }}
         >
           <Box sx={{ width: '100%', maxWidth: '340px', textAlign: 'center' }}>
-            <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 40, height: 40, mb: 1, objectFit: 'contain' }} />
+            <Box
+              sx={{
+                mx: 'auto',
+                mb: 2,
+                width: 44,
+                height: 44,
+                bgcolor: '#ffffff',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                overflow: 'hidden'
+              }}
+            >
+              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+            </Box>
             <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
               Admin Panel
             </Typography>
@@ -205,7 +221,23 @@ const AdminLogin = () => {
           }}
         >
           <Box sx={{ width: '100%', maxWidth: '340px', textAlign: 'center' }}>
-            <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 40, height: 40, mb: 1, objectFit: 'contain' }} />
+            <Box
+              sx={{
+                mx: 'auto',
+                mb: 2,
+                width: 44,
+                height: 44,
+                bgcolor: '#ffffff',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                overflow: 'hidden'
+              }}
+            >
+              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+            </Box>
             <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#DC2626', mb: 2 }}>
               Registration Restricted
             </Typography>
