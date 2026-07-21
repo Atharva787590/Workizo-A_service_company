@@ -413,3 +413,10 @@ If you like this project, don't forget to ⭐ star the repository!
 ## WORKIZO
 
 **Connecting Skilled Professionals to Every Home.**
+
+---
+
+## 👥 Contributors
+
+- **Vivek Ambariya** ([@vivek-ambariya](https://github.com/vivek-ambariya))
+- **Antigravity** (AI Coding Assistant by Google DeepMind)
