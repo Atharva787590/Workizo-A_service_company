@@ -927,22 +927,18 @@ function BookingTracker() {
                       Approve Invoice
                     </Button>
                   ) : booking.status === 'ready_to_complete' || booking.payment?.status === 'PAID' ? (
-                    <Box display="flex" alignItems="center" gap={1.5} sx={{ flexWrap: 'wrap' }}>
-                      <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(22,163,74,0.1)', borderRadius: '8px', border: '1px solid rgba(22,163,74,0.3)' }}>
-                        <Typography variant="body2" fontWeight={800} color="success.main">
-                          Payment Verified (PAID) ✓
-                        </Typography>
-                      </Box>
-                      {booking.status !== 'completed' && (
-                        <Button
-                          variant="contained"
-                          color="success"
-                          onClick={handleCompleteBooking}
-                          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
-                        >
-                          Finish & Close Booking
-                        </Button>
-                      )}
+                    <Box sx={{ px: 2.5, py: 1.25, bgcolor: 'rgba(22,163,74,0.1)', borderRadius: '10px', border: '1px solid rgba(22,163,74,0.3)', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                      <CheckCircleIcon sx={{ color: '#16a34a', fontSize: 20 }} />
+                      <Typography variant="body2" fontWeight={800} color="success.main">
+                        Payment Transferred (PAID) ✓ — Awaiting Captain Verification & Job Completion
+                      </Typography>
+                    </Box>
+                  ) : booking.status === 'WAITING_FOR_CASH_CONFIRMATION' ? (
+                    <Box sx={{ px: 2.5, py: 1.25, bgcolor: 'rgba(245,158,11,0.1)', borderRadius: '10px', border: '1px solid rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                      <HourglassEmptyIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
+                      <Typography variant="body2" fontWeight={800} color="warning.main">
+                        Cash Selected — Please pay ₹{bill.grand_total} to Captain. Awaiting Captain Cash Confirmation.
+                      </Typography>
                     </Box>
                   ) : (
                     booking.status !== 'completed' && (

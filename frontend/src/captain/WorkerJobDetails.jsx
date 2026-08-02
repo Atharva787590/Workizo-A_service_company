@@ -613,17 +613,23 @@ function WorkerJobDetails() {
 
                 {booking.status === 'ready_to_complete' && (
                   <Box display="flex" flexDirection="column" gap={2} sx={{ width: '100%' }}>
-                    <Typography variant="body2" color="success.main" fontWeight="700" sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CheckCircleIcon sx={{ mr: 1 }} /> Payment received! Ready to complete job.
-                    </Typography>
+                    <Box sx={{ p: 2, bgcolor: 'rgba(22,163,74,0.08)', borderRadius: '12px', border: '1px solid rgba(22,163,74,0.2)' }}>
+                      <Typography variant="subtitle2" fontWeight={800} color="success.main" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <CheckCircleIcon sx={{ mr: 1, fontSize: 20 }} /> Online Payment Received (₹{existingBill?.grand_total || 'N/A'})
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        The customer has completed payment. Please check/verify the payment received and click below to finish the job and credit earnings to your wallet.
+                      </Typography>
+                    </Box>
                     <Button
                       fullWidth
                       variant="contained"
                       onClick={() => updateJobStatus('completed')}
                       disabled={submitting}
-                      sx={{ bgcolor: tokens.colors.accent, color: '#ffffff', py: 1.5, borderRadius: `${tokens.borderRadiusSm}px`, fontWeight: 700 }}
+                      startIcon={<CheckCircleIcon />}
+                      sx={{ bgcolor: '#16A34A', color: '#ffffff', py: 1.75, borderRadius: `${tokens.borderRadiusSm}px`, fontWeight: 800, fontSize: '0.95rem', '&:hover': { bgcolor: '#15803d' } }}
                     >
-                      Complete Job
+                      Verify Payment Received & Complete Job
                     </Button>
                   </Box>
                 )}
