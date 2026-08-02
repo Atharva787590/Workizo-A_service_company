@@ -273,73 +273,77 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='update-status')
     def update_status(self, request, pk=None):
-        booking = self.get_object()
-        user = request.user
-        new_status = request.data.get('status')
-
-        valid_statuses = [c[0] for c in Booking.STATUS_CHOICES]
-        if new_status not in valid_statuses:
-            return Response({"detail": "Invalid status value."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Define allowed transitions for each status
-        allowed_transitions = {
-            'searching': ['accepted', 'cancelled'],
-            'accepted': ['on_the_way', 'cancelled'],
-            'on_the_way': ['arrived', 'cancelled'],
-            'arrived': ['verified', 'cancelled'],
-            'verified': ['inspection', 'repair_started'],
-            'inspection': ['repair_started'],
-            'repair_started': ['repair_completed'],
-            'repair_completed': ['waiting_approval'],
-            'waiting_approval': [],
-            'WAITING_FOR_CASH_CONFIRMATION': [],
-            'ready_to_complete': ['completed'],
-            'completed': [],
-            'cancelled': []
-        }
-
-        current_status = booking.status
-
-        # Strict role-based & state machine validation
-        if user.role == 'customer':
-            if booking.customer != user:
-                return Response({"detail": "You do not own this booking."}, status=status.HTTP_403_FORBIDDEN)
-            if new_status == 'cancelled':
-                if current_status != 'searching':
-                    return Response({"detail": "You can only cancel a booking while it is searching for a captain."}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({"detail": "Customers can only cancel bookings."}, status=status.HTTP_400_BAD_REQUEST)
-                
-        elif user.role == 'worker':
-            if booking.worker != user:
-                return Response({"detail": "You are not assigned to this job."}, status=status.HTTP_403_FORBIDDEN)
+        from django.db import transaction
+        with transaction.atomic():
+            try:
+                booking = Booking.objects.select_for_update().get(pk=pk)
+            except Booking.DoesNotExist:
+                return Response({"detail": "Booking not found."}, status=status.HTTP_404_NOT_FOUND)
             
-            # Workers cannot manually force verified status (must happen via verify-qr)
-            if new_status == 'verified':
-                return Response({"detail": "Status 'verified' cannot be set manually."}, status=status.HTTP_400_BAD_REQUEST)
+            user = request.user
+            new_status = request.data.get('status')
+
+            valid_statuses = [c[0] for c in Booking.STATUS_CHOICES]
+            if new_status not in valid_statuses:
+                return Response({"detail": "Invalid status value."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Define allowed transitions for each status
+            allowed_transitions = {
+                'searching': ['accepted', 'cancelled'],
+                'accepted': ['on_the_way', 'cancelled'],
+                'on_the_way': ['arrived', 'cancelled'],
+                'arrived': ['verified', 'cancelled'],
+                'verified': ['inspection', 'repair_started'],
+                'inspection': ['repair_started'],
+                'repair_started': ['repair_completed'],
+                'repair_completed': ['waiting_approval'],
+                'waiting_approval': [],
+                'WAITING_FOR_CASH_CONFIRMATION': [],
+                'ready_to_complete': ['completed'],
+                'completed': [],
+                'cancelled': []
+            }
+
+            current_status = booking.status
+
+            # Strict role-based & state machine validation
+            if user.role == 'customer':
+                if booking.customer != user:
+                    return Response({"detail": "You do not own this booking."}, status=status.HTTP_403_FORBIDDEN)
+                if new_status == 'cancelled':
+                    if current_status != 'searching':
+                        return Response({"detail": "You can only cancel a booking while it is searching for a captain."}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"detail": "Customers can only cancel bookings."}, status=status.HTTP_400_BAD_REQUEST)
+                    
+            elif user.role == 'worker':
+                if booking.worker != user:
+                    return Response({"detail": "You are not assigned to this job."}, status=status.HTTP_403_FORBIDDEN)
                 
-            allowed = allowed_transitions.get(current_status, [])
-            if new_status not in allowed:
-                return Response({"detail": f"Invalid status transition from {current_status} to {new_status}."}, status=status.HTTP_400_BAD_REQUEST)
-                
-        elif user.role == 'admin' or user.is_staff:
-            pass
-        else:
-            return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+                # Workers cannot manually force verified status (must happen via verify-qr)
+                if new_status == 'verified':
+                    return Response({"detail": "Status 'verified' cannot be set manually."}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                allowed = allowed_transitions.get(current_status, [])
+                if new_status not in allowed:
+                    return Response({"detail": f"Invalid status transition from {current_status} to {new_status}."}, status=status.HTTP_400_BAD_REQUEST)
+                    
+            elif user.role == 'admin' or user.is_staff:
+                pass
+            else:
+                return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Enforce that no booking can reach COMPLETED status until payment is PAID
-        if new_status == 'completed':
-            payment = getattr(booking, 'payment', None)
-            if not payment or payment.status != 'PAID':
-                return Response({"detail": "Cannot complete job before payment has been verified."}, status=status.HTTP_400_BAD_REQUEST)
+            # Enforce that no booking can reach COMPLETED status until payment is PAID
+            if new_status == 'completed':
+                payment = getattr(booking, 'payment', None)
+                if not payment or payment.status != 'PAID':
+                    return Response({"detail": "Cannot complete job before payment has been verified."}, status=status.HTTP_400_BAD_REQUEST)
 
-            from decimal import Decimal
-            from workers.models import Wallet, WalletTransaction
-            from billing.views import compile_receipt_pdf
-            from django.db import transaction
-            from notifications.email_service import EmailNotificationService
+                from decimal import Decimal
+                from workers.models import Wallet, WalletTransaction
+                from billing.views import compile_receipt_pdf
+                from notifications.email_service import EmailNotificationService
 
-            with transaction.atomic():
                 # Payout Wallet Credit (90% payout)
                 worker_payout = (payment.amount * Decimal('0.90')).quantize(Decimal('0.01'))
                 wallet, _ = Wallet.objects.get_or_create(worker=booking.worker)
@@ -357,51 +361,51 @@ class BookingViewSet(viewsets.ModelViewSet):
                 # Compile Receipt PDF
                 compile_receipt_pdf(payment)
 
-            # Send completion emails
-            try:
-                EmailNotificationService.send_payment_receipt_email(booking, payment)
-                EmailNotificationService.send_captain_payment_confirmation_email(booking, payment)
-            except Exception as e:
-                print(f"Error sending emails on completion: {e}")
+                # Send completion emails
+                try:
+                    EmailNotificationService.send_payment_receipt_email(booking, payment)
+                    EmailNotificationService.send_captain_payment_confirmation_email(booking, payment)
+                except Exception as e:
+                    print(f"Error sending emails on completion: {e}")
 
-            # Notify worker of payment deposit
-            create_and_send_notification(
-                user=booking.worker,
-                title="Earnings Deposited",
-                message=f"₹{worker_payout} deposited to wallet for booking #{booking.id}.",
-                notification_type="payment"
-            )
-
-            # Notify admin
-            channel_layer = get_channel_layer()
-            if channel_layer:
-                from billing.serializers import PaymentSerializer
-                async_to_sync(channel_layer.group_send)(
-                    "admin_updates",
-                    {
-                        "type": "send_notification",
-                        "data": {
-                            "type": "payment_update",
-                            "payment": PaymentSerializer(payment).data
-                        }
-                    }
+                # Notify worker of payment deposit
+                create_and_send_notification(
+                    user=booking.worker,
+                    title="Earnings Deposited",
+                    message=f"₹{worker_payout} deposited to wallet for booking #{booking.id}.",
+                    notification_type="payment"
                 )
 
-        booking.status = new_status
-        
-        # Handle uploaded images if any
-        if 'before_photo' in request.FILES:
-            booking.before_photo = request.FILES['before_photo']
-        if 'after_photo' in request.FILES:
-            booking.after_photo = request.FILES['after_photo']
-        if 'spare_part_photo' in request.FILES:
-            booking.spare_part_photo = request.FILES['spare_part_photo']
-        if 'invoice_photo' in request.FILES:
-            booking.invoice_photo = request.FILES['invoice_photo']
-        if 'optional_video' in request.FILES:
-            booking.optional_video = request.FILES['optional_video']
+                # Notify admin
+                channel_layer = get_channel_layer()
+                if channel_layer:
+                    from billing.serializers import PaymentSerializer
+                    async_to_sync(channel_layer.group_send)(
+                        "admin_updates",
+                        {
+                            "type": "send_notification",
+                            "data": {
+                                "type": "payment_update",
+                                "payment": PaymentSerializer(payment).data
+                            }
+                        }
+                    )
 
-        booking.save()
+            booking.status = new_status
+            
+            # Handle uploaded images if any
+            if 'before_photo' in request.FILES:
+                booking.before_photo = request.FILES['before_photo']
+            if 'after_photo' in request.FILES:
+                booking.after_photo = request.FILES['after_photo']
+            if 'spare_part_photo' in request.FILES:
+                booking.spare_part_photo = request.FILES['spare_part_photo']
+            if 'invoice_photo' in request.FILES:
+                booking.invoice_photo = request.FILES['invoice_photo']
+            if 'optional_video' in request.FILES:
+                booking.optional_video = request.FILES['optional_video']
+
+            booking.save()
 
         # Send status-specific emails
         from notifications.email_service import EmailNotificationService
@@ -446,7 +450,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             
         send_booking_update(booking.id, booking_data, event_type)
 
-
         return Response(booking_data)
 
     @action(detail=True, methods=['post'], url_path='verify-qr')
@@ -456,6 +459,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         
         if user.role != 'worker' or booking.worker != user:
             return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        if booking.status != 'arrived':
+            return Response({"verified": False, "detail": f"Cannot verify QR code when booking status is '{booking.status}'. Must be 'arrived'."}, status=status.HTTP_400_BAD_REQUEST)
         
         qr_value = request.data.get('qr_code_value') or request.data.get('qr_code')
         if not qr_value:

@@ -184,14 +184,26 @@ function BookingTracker() {
     let isActive = true;
     let socket = null;
     let reconnectTimer = null;
+    let pingInterval = null;
 
     const connect = () => {
       if (!isActive) return;
 
       const token = localStorage.getItem('access_token');
+      if (!token) return;
+
       const wsUrl = buildWsUrl(`/ws/bookings/${id}/`, `?token=${token}`);
       socket = new WebSocket(wsUrl);
       ws.current = socket;
+
+      socket.onopen = () => {
+        if (pingInterval) clearInterval(pingInterval);
+        pingInterval = setInterval(() => {
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 25000);
+      };
 
       socket.onmessage = (event) => {
         if (!isActive) return;
@@ -236,9 +248,10 @@ function BookingTracker() {
         socket.close();
       };
 
-      socket.onclose = () => {
+      socket.onclose = (e) => {
+        if (pingInterval) clearInterval(pingInterval);
         ws.current = null;
-        if (isActive) {
+        if (isActive && e.code !== 4003) {
           reconnectTimer = setTimeout(connect, 3000);
         }
       };
@@ -248,6 +261,7 @@ function BookingTracker() {
 
     return () => {
       isActive = false;
+      if (pingInterval) clearInterval(pingInterval);
       clearTimeout(reconnectTimer);
       if (socket) socket.close();
     };

@@ -35,7 +35,7 @@ class AdminListCustomersView(APIView):
     permission_classes = (IsAdminUser,)
     
     def get(self, request):
-        customers = User.objects.filter(role='customer').order_by('-created_at')
+        customers = User.objects.filter(role='customer').select_related('customer_profile').order_by('-created_at')
         data = []
         for customer in customers:
             user_data = UserSerializer(customer).data
@@ -61,7 +61,7 @@ class AdminListWorkersView(APIView):
     permission_classes = (IsAdminUser,)
     
     def get(self, request):
-        workers = User.objects.filter(role='worker').order_by('-created_at')
+        workers = User.objects.filter(role='worker').select_related('worker_profile', 'worker_profile__service_category').order_by('-created_at')
         data = []
         for worker in workers:
             user_data = UserSerializer(worker).data
@@ -609,7 +609,7 @@ class AdminPaymentsView(APIView):
     permission_classes = (IsAdminUser,)
 
     def get(self, request):
-        payments = Payment.objects.all().order_by('-created_at')
+        payments = Payment.objects.select_related('booking', 'booking__customer', 'booking__worker').all().order_by('-created_at')
         
         search_query = request.query_params.get('search')
         if search_query:
