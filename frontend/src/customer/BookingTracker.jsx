@@ -431,6 +431,18 @@ function BookingTracker() {
     }
   };
 
+  const handleCompleteBooking = async () => {
+    try {
+      await api.post(`/api/bookings/bookings/${id}/update-status/`, {
+        status: 'completed'
+      });
+      toast.success('Service booking completed and closed!');
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to complete booking');
+    }
+  };
+
   const handleDownloadInvoice = async () => {
     try {
       const response = await api.get(`/api/billing/${id}/download-invoice/`, {
@@ -914,6 +926,24 @@ function BookingTracker() {
                     >
                       Approve Invoice
                     </Button>
+                  ) : booking.status === 'ready_to_complete' || booking.payment?.status === 'PAID' ? (
+                    <Box display="flex" alignItems="center" gap={1.5} sx={{ flexWrap: 'wrap' }}>
+                      <Box sx={{ px: 2, py: 1, bgcolor: 'rgba(22,163,74,0.1)', borderRadius: '8px', border: '1px solid rgba(22,163,74,0.3)' }}>
+                        <Typography variant="body2" fontWeight={800} color="success.main">
+                          Payment Verified (PAID) ✓
+                        </Typography>
+                      </Box>
+                      {booking.status !== 'completed' && (
+                        <Button
+                          variant="contained"
+                          color="success"
+                          onClick={handleCompleteBooking}
+                          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
+                        >
+                          Finish & Close Booking
+                        </Button>
+                      )}
+                    </Box>
                   ) : (
                     booking.status !== 'completed' && (
                       <Button
@@ -921,7 +951,7 @@ function BookingTracker() {
                         onClick={() => setPaymentModalOpen(true)}
                         sx={{ bgcolor: tokens.colors.success, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#16a34a' } }}
                       >
-                        Process Payout (Pay ₹{bill.grand_total})
+                        Pay Now (₹{bill.grand_total})
                       </Button>
                     )
                   )}
