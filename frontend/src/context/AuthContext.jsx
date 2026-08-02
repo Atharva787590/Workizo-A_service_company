@@ -104,17 +104,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
       
-      // Fetch full profile info right after login
-      const profileRes = await api.get('accounts/me/');
-      const fullUser = {
-        ...loggedUser,
-        profile: profileRes.data.profile
-      };
-      
-      localStorage.setItem('user', JSON.stringify(fullUser));
-      setUser(fullUser);
-      toast.success(`Welcome, ${fullUser.full_name}!`);
-      return fullUser;
+      localStorage.setItem('user', JSON.stringify(loggedUser));
+      setUser(loggedUser);
+      toast.success(`Welcome, ${loggedUser.full_name}!`);
+      return loggedUser;
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Google login failed';
       toast.error(errorMsg);
