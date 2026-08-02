@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import logging
 import ssl
+from validations import validate_aadhaar, validate_pan, validate_document_fields, validate_document_match
 
 # Bypass SSL certificate verification for downloading EasyOCR models on macOS/local
 try:

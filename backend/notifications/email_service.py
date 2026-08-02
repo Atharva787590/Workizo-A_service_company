@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 
 from notifications.utils import send_html_email
+from validations import validate_email
 
 class EmailNotificationService:
     @staticmethod

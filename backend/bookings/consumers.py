@@ -2,18 +2,20 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from bookings.models import Booking
+from validations import (
+    validate_socket_booking,
+    validate_chat_access,
+    validate_message,
+    validate_socket_user
+)
 
 @database_sync_to_async
 def is_authorized_for_booking(user, booking_id):
     try:
-        booking = Booking.objects.get(id=booking_id)
-        if user.is_staff or user.role == 'admin':
-            return True
-        if booking.customer_id == user.id or booking.worker_id == user.id:
-            return True
-    except Booking.DoesNotExist:
-        pass
-    return False
+        validate_socket_booking(booking_id, user)
+        return True
+    except Exception:
+        return False
 
 class BookingConsumer(AsyncWebsocketConsumer):
     async def connect(self):

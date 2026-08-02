@@ -23,6 +23,13 @@ from customers.serializers import CustomerProfileSerializer
 from workers.models import WorkerProfile
 from workers.serializers import WorkerProfileSerializer
 from notifications.email_service import EmailNotificationService
+from validations import (
+    validate_role,
+    validate_password_strength,
+    validate_email,
+    validate_verification_token,
+    validate_reset_token
+)
 
 User = get_user_model()
 
@@ -204,7 +211,9 @@ class GoogleLoginView(APIView):
         is_new_user = False
         if not user:
             is_new_user = True
-            if role not in ['customer', 'worker']:
+            try:
+                validate_role(role, allowed_roles=['customer', 'worker'])
+            except Exception:
                 return Response({"detail": "Invalid role specified"}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
@@ -303,7 +312,9 @@ class VerifyEmailView(APIView):
 
     def get(self, request):
         token = request.query_params.get('token')
-        if not token:
+        try:
+            validate_verification_token(token)
+        except Exception:
             html = render_html_response("Verification Failed", "The verification link is missing a token.", is_success=False)
             return HttpResponse(html, content_type='text/html', status=400)
 
@@ -353,7 +364,9 @@ class ForgotPasswordView(APIView):
 
     def post(self, request):
         email = request.data.get('email')
-        if not email:
+        try:
+            email = validate_email(email)
+        except Exception:
             return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # For security reasons, we do not reveal whether the user exists or not.

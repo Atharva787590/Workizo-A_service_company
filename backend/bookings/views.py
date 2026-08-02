@@ -11,6 +11,15 @@ from .models import Booking, RepairToken, MajorRepairApproval, BookingRejection,
 from .serializers import BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer, PublicBookingSerializer, ChatMessageSerializer
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
+from validations import (
+    validate_booking_exists,
+    validate_booking_status,
+    validate_booking_owner,
+    validate_accept_booking,
+    validate_booking_cancellation,
+    validate_booking_limit,
+    validate_duplicate_booking
+)
 
 User = get_user_model()
 
