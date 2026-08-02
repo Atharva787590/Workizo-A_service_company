@@ -12,6 +12,8 @@ import WorkIcon from '@mui/icons-material/Work';
 import SchoolIcon from '@mui/icons-material/School';
 import CodeIcon from '@mui/icons-material/Code';
 import handymanHero from './assets/handyman_hero.png';
+import vivekProfile from './assets/vivek_profile.jpg';
+import vedProfile from './assets/ved_profile.jpg';
 import slide1 from './assets/slide1.jpg';
 import slide2 from './assets/slide2.jpg';
 import slide3 from './assets/slide3.jpg';
@@ -1194,6 +1196,8 @@ const SplineLanding = () => {
                     }}
                   >
                     <Avatar
+                      src={vivekProfile}
+                      alt="Ambariya Vivek"
                       sx={{
                         width: 96,
                         height: 96,
@@ -1217,26 +1221,13 @@ const SplineLanding = () => {
                     fontFamily: "'NewBlack', sans-serif",
                     fontWeight: 800,
                     color: '#ffffff',
-                    mb: 0.5,
+                    mb: 4,
                     fontSize: '1.4rem',
                     letterSpacing: '0.03em',
                     textTransform: 'uppercase',
                   }}
                 >
                   Ambariya Vivek
-                </Typography>
-                <Typography
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    mb: 4,
-                  }}
-                >
-                  Project Leader & Architect
                 </Typography>
 
                 {/* Parameters list (Department, Student, Specialization) */}
@@ -1255,10 +1246,10 @@ const SplineLanding = () => {
                     <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        DEPARTMENT
+                        BRANCH
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Platform Development Unit
+                        Computer Engineering
                       </Typography>
                     </Box>
                   </Box>
@@ -1270,7 +1261,7 @@ const SplineLanding = () => {
                         STUDENT
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Computer Engineering (CE)
+                        LJ University
                       </Typography>
                     </Box>
                   </Box>
@@ -1282,7 +1273,7 @@ const SplineLanding = () => {
                         SPECIALIZATION
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        MERN Stack, JWT Auth, WebSockets, Razorpay
+                        MERN Stack, Razorpay, SMTP, GSAP, Spline, MySQL, Machine Learning
                       </Typography>
                     </Box>
                   </Box>
@@ -1362,7 +1353,7 @@ const SplineLanding = () => {
                   </IconButton>
                   <IconButton
                     component="a"
-                    href="mailto:ambariyavivek5@gmail.com"
+                    href="mailto:vivekambaria@gmail.com"
                     sx={{
                       width: '40px',
                       height: '40px',
@@ -1432,6 +1423,8 @@ const SplineLanding = () => {
                     }}
                   >
                     <Avatar
+                      src={vedProfile}
+                      alt="Ved Goyani"
                       sx={{
                         width: 96,
                         height: 96,
@@ -1455,26 +1448,13 @@ const SplineLanding = () => {
                     fontFamily: "'NewBlack', sans-serif",
                     fontWeight: 800,
                     color: '#ffffff',
-                    mb: 0.5,
+                    mb: 4,
                     fontSize: '1.4rem',
                     letterSpacing: '0.03em',
                     textTransform: 'uppercase',
                   }}
                 >
                   Ved Goyani
-                </Typography>
-                <Typography
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    mb: 4,
-                  }}
-                >
-                  Frontend & UI Developer
                 </Typography>
 
                 {/* Parameters list (Department, Student, Specialization) */}
@@ -1493,10 +1473,10 @@ const SplineLanding = () => {
                     <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        DEPARTMENT
+                        BRANCH
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Frontend & UI Division
+                        Computer Engineering
                       </Typography>
                     </Box>
                   </Box>
@@ -1508,7 +1488,7 @@ const SplineLanding = () => {
                         STUDENT
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Computer Engineering (CE)
+                        LJ University
                       </Typography>
                     </Box>
                   </Box>
@@ -1520,7 +1500,7 @@ const SplineLanding = () => {
                         SPECIALIZATION
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        React, UI/UX Design, GSAP, Spline, Maps
+                        Python Core, React, MongoDB, PostgreSQL, Bootstrap
                       </Typography>
                     </Box>
                   </Box>
@@ -1554,7 +1534,7 @@ const SplineLanding = () => {
                 <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
                   <IconButton
                     component="a"
-                    href="https://linkedin.com/in/ved-goyani"
+                    href="https://www.linkedin.com/in/ved-goyani-ce?utm_source=share_via&utm_content=profile&utm_medium=member_android"
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
@@ -1577,7 +1557,7 @@ const SplineLanding = () => {
                   </IconButton>
                   <IconButton
                     component="a"
-                    href="https://github.com/ved-goyani"
+                    href="https://github.com/VedGoyaniTech"
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
@@ -1600,7 +1580,7 @@ const SplineLanding = () => {
                   </IconButton>
                   <IconButton
                     component="a"
-                    href="mailto:goyanived@gmail.com"
+                    href="mailto:goyanived001@gmail.com"
                     sx={{
                       width: '40px',
                       height: '40px',
@@ -1874,8 +1854,177 @@ const SplineLanding = () => {
         </Container>
       </Box>
 
+      {/* 7. Discover Platform CTA Section at the End */}
+      <Box
+        sx={{
+          py: { xs: 8, md: 12 },
+          px: 3,
+          position: 'relative',
+          zIndex: 10,
+          textAlign: 'center',
+        }}
+      >
+        <Container maxWidth="md">
+          <Box
+            sx={{
+              p: { xs: 4, sm: 6, md: 8 },
+              borderRadius: '32px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              bgcolor: 'rgba(0, 0, 0, 0.55)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Subtle background glow effect */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '-50%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '300px',
+                height: '300px',
+                background: 'radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 70%)',
+                pointerEvents: 'none',
+              }}
+            />
+
+            <Typography
+              sx={{
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                fontFamily: "'NewBlack', sans-serif",
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+              }}
+            >
+              [ ENTER WORKIZO ECOSYSTEM ]
+            </Typography>
+
+            <Typography
+              variant="h3"
+              sx={{
+                fontFamily: "'Maltiner Display', Georgia, serif",
+                fontSize: { xs: '2rem', sm: '2.8rem', md: '3.5rem' },
+                color: '#ffffff',
+                fontWeight: 400,
+                lineHeight: 1.15,
+                letterSpacing: '0.02em',
+                maxWidth: '700px',
+              }}
+            >
+              Ready to Experience Seamless Home Services?
+            </Typography>
+
+            <Typography
+              sx={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: { xs: '0.95rem', md: '1.1rem' },
+                maxWidth: '560px',
+                lineHeight: 1.6,
+                mb: 1,
+              }}
+            >
+              Step inside Workizo to browse verified service captains, track live bookings, and manage your home with absolute peace of mind.
+            </Typography>
+
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2.5,
+                mt: 2,
+                width: { xs: '100%', sm: 'auto' },
+                justifyContent: 'center',
+              }}
+            >
+              <Button
+                variant="contained"
+                onClick={() => navigate('/home')}
+                sx={{
+                  px: { xs: 4, md: 5 },
+                  py: 1.8,
+                  borderRadius: '50px',
+                  bgcolor: '#ffffff',
+                  color: '#000000',
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  boxShadow: '0 0 30px rgba(255, 255, 255, 0.25)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    bgcolor: '#ffffff',
+                    transform: 'translateY(-4px) scale(1.03)',
+                    boxShadow: '0 0 45px rgba(255, 255, 255, 0.45)',
+                  },
+                }}
+              >
+                DISCOVER THE PLATFORM &nbsp; →
+              </Button>
+
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/captain/register')}
+                sx={{
+                  px: { xs: 4, md: 5 },
+                  py: 1.8,
+                  borderRadius: '50px',
+                  borderColor: 'rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff',
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 255, 255, 0.6)',
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    transform: 'translateY(-4px)',
+                  },
+                }}
+              >
+                BECOME A CAPTAIN
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Footer / Copyright bar */}
+      <Box
+        sx={{
+          py: 4,
+          textAlign: 'center',
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        <Typography
+          sx={{
+            color: 'rgba(255, 255, 255, 0.35)',
+            fontSize: '0.75rem',
+            fontFamily: "'NewBlack', sans-serif",
+            letterSpacing: '0.08em',
+          }}
+        >
+          © {new Date().getFullYear()} WORKIZO PLATFORM INC. ALL RIGHTS RESERVED.
+        </Typography>
+      </Box>
+
       {/* Elegant long empty space showing the Spline particles at the bottom */}
-      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
+      <Box sx={{ height: { xs: '10vh', md: '15vh' } }} />
     </Box>
   );
 };

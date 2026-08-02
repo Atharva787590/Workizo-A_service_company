@@ -314,7 +314,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     if current_status != 'searching':
                         return Response({"detail": "You can only cancel a booking while it is searching for a captain."}, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    return Response({"detail": "Customers can only cancel bookings."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail": "Customers can only cancel bookings while searching for a captain. Job completion must be verified by the captain."}, status=status.HTTP_400_BAD_REQUEST)
                     
             elif user.role == 'worker':
                 if booking.worker != user:

@@ -112,16 +112,16 @@ const WorkerOnboarding = () => {
       
       if (expectedType === 'AADHAAR') {
         setAadhaarData(data);
-        if (data.name) setValue('fullName', data.name);
-        if (data.aadhaar_number) setValue('aadhaarNumber', data.aadhaar_number);
-        if (data.dob) setValue('dob', data.dob);
-        if (data.gender) setValue('gender', data.gender.toUpperCase());
+        if (data.name) setValue('fullName', data.name, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        if (data.aadhaar_number) setValue('aadhaarNumber', data.aadhaar_number, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        if (data.dob) setValue('dob', data.dob, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        if (data.gender) setValue('gender', data.gender.toUpperCase(), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
       } else if (expectedType === 'PAN') {
         setPanData(data);
-        if (data.name) setValue('fullName', data.name);
-        if (data.pan_number) setValue('panNumber', data.pan_number);
-        if (data.dob) setValue('dob', data.dob);
-        if (data.father_name) setValue('fatherName', data.father_name);
+        if (data.name) setValue('fullName', data.name, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        if (data.pan_number) setValue('panNumber', data.pan_number, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        if (data.dob) setValue('dob', data.dob, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        if (data.father_name) setValue('fatherName', data.father_name, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
       }
     } catch (err) {
       console.error(err);
@@ -349,7 +349,9 @@ const WorkerOnboarding = () => {
                   fullWidth
                   label="Full Name"
                   InputLabelProps={{ shrink: true }}
+                  value={watch('fullName') || ''}
                   {...register('fullName', { required: true })}
+                  onChange={(e) => setValue('fullName', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.half}>
@@ -357,7 +359,10 @@ const WorkerOnboarding = () => {
                   required
                   fullWidth
                   label="Phone Number"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('phone') || ''}
                   {...register('phone', { required: true })}
+                  onChange={(e) => setValue('phone', e.target.value, { shouldValidate: true })}
                 />
               </Box>
 
@@ -368,8 +373,10 @@ const WorkerOnboarding = () => {
                   fullWidth
                   select
                   label="Service Category"
-                  defaultValue=""
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('serviceCategoryId') || ''}
                   {...register('serviceCategoryId', { required: true })}
+                  onChange={(e) => setValue('serviceCategoryId', e.target.value, { shouldValidate: true })}
                 >
                   <MenuItem value="">Select Category</MenuItem>
                   {categories.map((cat) => (
@@ -385,7 +392,10 @@ const WorkerOnboarding = () => {
                   fullWidth
                   type="number"
                   label="Years of Experience"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('experience') ?? ''}
                   {...register('experience', { required: true })}
+                  onChange={(e) => setValue('experience', e.target.value, { shouldValidate: true })}
                 />
               </Box>
 
@@ -404,7 +414,10 @@ const WorkerOnboarding = () => {
                   multiline
                   rows={2}
                   label="Street Address"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('address') || ''}
                   {...register('address', { required: true })}
+                  onChange={(e) => setValue('address', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.third}>
@@ -412,7 +425,10 @@ const WorkerOnboarding = () => {
                   required
                   fullWidth
                   label="City"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('city') || ''}
                   {...register('city', { required: true })}
+                  onChange={(e) => setValue('city', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.third}>
@@ -420,7 +436,10 @@ const WorkerOnboarding = () => {
                   required
                   fullWidth
                   label="State"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('state') || ''}
                   {...register('state', { required: true })}
+                  onChange={(e) => setValue('state', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.third}>
@@ -428,7 +447,10 @@ const WorkerOnboarding = () => {
                   required
                   fullWidth
                   label="Pincode"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('pincode') || ''}
                   {...register('pincode', { required: true })}
+                  onChange={(e) => setValue('pincode', e.target.value, { shouldValidate: true })}
                 />
               </Box>
 
@@ -447,7 +469,9 @@ const WorkerOnboarding = () => {
                   label="Aadhaar Card Number (12 digit)"
                   inputProps={{ maxLength: 12 }}
                   InputLabelProps={{ shrink: true }}
+                  value={watch('aadhaarNumber') || ''}
                   {...register('aadhaarNumber', { required: true })}
+                  onChange={(e) => setValue('aadhaarNumber', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.half}>
@@ -457,7 +481,9 @@ const WorkerOnboarding = () => {
                   label="PAN Card Number (10 digit)"
                   inputProps={{ maxLength: 10 }}
                   InputLabelProps={{ shrink: true }}
+                  value={watch('panNumber') || ''}
                   {...register('panNumber', { required: true })}
+                  onChange={(e) => setValue('panNumber', e.target.value, { shouldValidate: true })}
                 />
               </Box>
 
@@ -465,9 +491,10 @@ const WorkerOnboarding = () => {
                 <TextField
                   fullWidth
                   label="Date of Birth"
-                  placeholder="DD/MM/YYYY"
                   InputLabelProps={{ shrink: true }}
+                  value={watch('dob') || ''}
                   {...register('dob')}
+                  onChange={(e) => setValue('dob', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.third}>
@@ -475,8 +502,10 @@ const WorkerOnboarding = () => {
                   fullWidth
                   select
                   label="Gender"
-                  defaultValue=""
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('gender') || ''}
                   {...register('gender')}
+                  onChange={(e) => setValue('gender', e.target.value, { shouldValidate: true })}
                 >
                   <MenuItem value="">Select Gender</MenuItem>
                   <MenuItem value="MALE">MALE</MenuItem>
@@ -489,7 +518,9 @@ const WorkerOnboarding = () => {
                   fullWidth
                   label="Father's Name"
                   InputLabelProps={{ shrink: true }}
+                  value={watch('fatherName') || ''}
                   {...register('fatherName')}
+                  onChange={(e) => setValue('fatherName', e.target.value, { shouldValidate: true })}
                 />
               </Box>
 
@@ -506,7 +537,10 @@ const WorkerOnboarding = () => {
                   required
                   fullWidth
                   label="Bank Account Number"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('bankAccount') || ''}
                   {...register('bankAccount', { required: true })}
+                  onChange={(e) => setValue('bankAccount', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.third}>
@@ -514,7 +548,10 @@ const WorkerOnboarding = () => {
                   required
                   fullWidth
                   label="Bank IFSC Code"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('ifscCode') || ''}
                   {...register('ifscCode', { required: true })}
+                  onChange={(e) => setValue('ifscCode', e.target.value, { shouldValidate: true })}
                 />
               </Box>
               <Box sx={span.third}>
@@ -522,7 +559,10 @@ const WorkerOnboarding = () => {
                   required
                   fullWidth
                   label="Account Holder Name"
+                  InputLabelProps={{ shrink: true }}
+                  value={watch('accountHolderName') || ''}
                   {...register('accountHolderName', { required: true })}
+                  onChange={(e) => setValue('accountHolderName', e.target.value, { shouldValidate: true })}
                 />
               </Box>
 

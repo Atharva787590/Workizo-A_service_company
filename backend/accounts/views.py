@@ -37,20 +37,25 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             
+            profile_data = None
             # Create corresponding empty profile
             if user.role == 'customer':
-                CustomerProfile.objects.create(user=user)
+                cp = CustomerProfile.objects.create(user=user)
+                profile_data = CustomerProfileSerializer(cp).data
                 # Send welcome and email verification
                 EmailNotificationService.send_welcome_verification_email(user, request)
             elif user.role == 'worker':
-                WorkerProfile.objects.create(user=user)
+                wp = WorkerProfile.objects.create(user=user)
+                profile_data = WorkerProfileSerializer(wp).data
                 # Send welcome and email verification to captain
                 EmailNotificationService.send_captain_welcome_verification_email(user, request)
                 
             refresh = RefreshToken.for_user(user)
+            user_data = UserSerializer(user).data
+            user_data['profile'] = profile_data
             
             return Response({
-                'user': UserSerializer(user).data,
+                'user': user_data,
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'message': 'Registration successful'
@@ -228,8 +233,26 @@ class GoogleLoginView(APIView):
         refresh['email'] = user.email
         refresh['full_name'] = user.full_name
 
+        user_data = UserSerializer(user).data
+        profile_data = None
+        if user.role == 'customer':
+            try:
+                profile = getattr(user, 'customer_profile', None)
+                if profile:
+                    profile_data = CustomerProfileSerializer(profile).data
+            except Exception:
+                pass
+        elif user.role == 'worker':
+            try:
+                profile = getattr(user, 'worker_profile', None)
+                if profile:
+                    profile_data = WorkerProfileSerializer(profile).data
+            except Exception:
+                pass
+        user_data['profile'] = profile_data
+
         return Response({
-            'user': UserSerializer(user).data,
+            'user': user_data,
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'message': 'Login successful',

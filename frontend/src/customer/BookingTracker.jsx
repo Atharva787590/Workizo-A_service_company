@@ -36,8 +36,28 @@ import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import RoomIcon from '@mui/icons-material/Room';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import StarIcon from '@mui/icons-material/Star';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import LocalAtmIcon from '@mui/icons-material/LocalAtm';
+import SecurityIcon from '@mui/icons-material/Security';
+import PaymentIcon from '@mui/icons-material/Payment';
 
 import { tokens } from '../design/tokens';
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 import { DashboardPage, DashboardGrid, DashboardCard } from '../components/dashboard';
 
 const STEPPER_STEPS = [
@@ -291,25 +311,136 @@ function BookingTracker() {
     }
   };
 
-  const handleProcessPayment = async () => {
+  const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+
+  const handleInitiateRazorpay = async () => {
     setPaying(true);
-    setTimeout(async () => {
-      try {
-        await api.post(`/api/billing/${id}/process-payment/`, {
-          method: selectedPaymentMethod
-        });
-        setPaymentSuccess(true);
-        setTimeout(() => {
-          setPaymentModalOpen(false);
-          setPaymentSuccess(false);
-          fetchDetails();
-        }, 2000);
-      } catch (err) {
-        toast.error('Payment processing failed');
-      } finally {
+    try {
+      // 1. Ensure Razorpay checkout script is loaded
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        toast.error('Razorpay SDK failed to load. Please check your internet connection.');
         setPaying(false);
+        return;
       }
-    }, 1500);
+
+      // 2. Request backend order creation
+      const initiateRes = await api.post(`/api/billing/${id}/initiate-online-payment/`);
+      const { order_id, amount, currency, key_id } = initiateRes.data;
+
+      // 3. Launch official Razorpay Interactive Checkout Window
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: currency,
+        name: "WORKIZO Services",
+        description: `Invoice Payment for Booking #${id}`,
+        image: "https://cdn.razorpay.com/static/assets/logo/rzp.png",
+        order_id: order_id,
+        handler: async function (response) {
+          try {
+            setPaying(true);
+            await api.post(`/api/billing/${id}/verify-online-payment/`, {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setPaymentSuccess(true);
+            toast.success("Online payment verified via Razorpay!");
+            setTimeout(() => {
+              setPaymentModalOpen(false);
+              setPaymentSuccess(false);
+              fetchDetails();
+            }, 2000);
+          } catch (verifyErr) {
+            toast.error(verifyErr.response?.data?.detail || "Payment verification failed.");
+          } finally {
+            setPaying(false);
+          }
+        },
+        prefill: {
+          name: currentUser?.full_name || '',
+          email: currentUser?.email || '',
+          contact: currentUser?.phone || ''
+        },
+        notes: {
+          booking_id: String(id)
+        },
+        theme: {
+          color: "#1A73E8"
+        },
+        modal: {
+          ondismiss: function () {
+            setPaying(false);
+            toast.info("Razorpay checkout window closed.");
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        setPaying(false);
+        api.post(`/api/billing/${id}/verify-online-payment/`, {
+          status: 'FAILED',
+          razorpay_order_id: order_id
+        }).catch(() => {});
+        toast.error(`Payment Failed: ${response.error?.description || 'Transaction declined.'}`);
+      });
+
+      setPaymentModalOpen(false);
+      rzp.open();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to initiate Razorpay checkout.');
+      setPaying(false);
+    }
+  };
+
+  const handleDevMockVerifyPayment = async (orderId) => {
+    setPaying(true);
+    try {
+      await api.post(`/api/billing/${id}/verify-online-payment/`, {
+        razorpay_payment_id: `pay_mock_${Date.now()}`,
+        razorpay_order_id: orderId || `order_mock_${id}_${Date.now()}`,
+        razorpay_signature: `sig_mock_${Date.now()}`
+      });
+      setPaymentSuccess(true);
+      toast.success("Development Mock Razorpay Payment verified!");
+      setTimeout(() => {
+        setPaymentModalOpen(false);
+        setPaymentSuccess(false);
+        fetchDetails();
+      }, 2000);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Mock payment verification failed');
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleSelectCashPayment = async () => {
+    setPaying(true);
+    try {
+      await api.post(`/api/billing/${id}/select-cash-payment/`);
+      toast.success('Cash payment mode selected! Please pay cash directly to the captain.');
+      setPaymentModalOpen(false);
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to select cash payment');
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleCompleteBooking = async () => {
+    try {
+      await api.post(`/api/bookings/bookings/${id}/update-status/`, {
+        status: 'completed'
+      });
+      toast.success('Service booking completed and closed!');
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to complete booking');
+    }
   };
 
   const handleDownloadInvoice = async () => {
@@ -795,6 +926,20 @@ function BookingTracker() {
                     >
                       Approve Invoice
                     </Button>
+                  ) : booking.status === 'ready_to_complete' || booking.payment?.status === 'PAID' ? (
+                    <Box sx={{ px: 2.5, py: 1.25, bgcolor: 'rgba(22,163,74,0.1)', borderRadius: '10px', border: '1px solid rgba(22,163,74,0.3)', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                      <CheckCircleIcon sx={{ color: '#16a34a', fontSize: 20 }} />
+                      <Typography variant="body2" fontWeight={800} color="success.main">
+                        Payment Transferred (PAID) ✓ — Awaiting Captain Verification & Job Completion
+                      </Typography>
+                    </Box>
+                  ) : booking.status === 'WAITING_FOR_CASH_CONFIRMATION' ? (
+                    <Box sx={{ px: 2.5, py: 1.25, bgcolor: 'rgba(245,158,11,0.1)', borderRadius: '10px', border: '1px solid rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                      <HourglassEmptyIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
+                      <Typography variant="body2" fontWeight={800} color="warning.main">
+                        Cash Selected — Please pay ₹{bill.grand_total} to Captain. Awaiting Captain Cash Confirmation.
+                      </Typography>
+                    </Box>
                   ) : (
                     booking.status !== 'completed' && (
                       <Button
@@ -802,7 +947,7 @@ function BookingTracker() {
                         onClick={() => setPaymentModalOpen(true)}
                         sx={{ bgcolor: tokens.colors.success, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#16a34a' } }}
                       >
-                        Process Payout (Pay ₹{bill.grand_total})
+                        Pay Now (₹{bill.grand_total})
                       </Button>
                     )
                   )}
@@ -1057,64 +1202,142 @@ function BookingTracker() {
       <Dialog
         open={paymentModalOpen}
         onClose={() => !paying && setPaymentModalOpen(false)}
-        PaperProps={{ style: { borderRadius: '16px', padding: '12px' } }}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ style: { borderRadius: '20px', padding: '16px' } }}
       >
-        <DialogTitle sx={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>
-          Select Payment Method
+        <DialogTitle sx={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, textAlign: 'center', pb: 1 }}>
+          Checkout & Payment
         </DialogTitle>
         <DialogContent>
           {paymentSuccess ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <CheckCircleIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
-              <Typography variant="h6" fontWeight="800">Payment Successful!</Typography>
+              <CheckCircleIcon color="success" sx={{ fontSize: 64, mb: 2 }} />
+              <Typography variant="h6" fontWeight="800">Payment Verified!</Typography>
               <Typography variant="body2" color="text.secondary">Earnings deposited to worker's wallet.</Typography>
             </Box>
           ) : (
-            <Box sx={{ py: 2 }}>
+            <Box sx={{ py: 1 }}>
+              <Box sx={{ p: 2, mb: 3, bgcolor: 'rgba(26,115,232,0.06)', borderRadius: '14px', border: '1px solid rgba(26,115,232,0.15)', textAlign: 'center' }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Total Invoice Amount
+                </Typography>
+                <Typography variant="h4" fontWeight={900} color="primary" sx={{ fontFamily: 'Outfit', mt: 0.5 }}>
+                  ₹{bill?.grand_total}
+                </Typography>
+              </Box>
+
               <Box display="flex" flexDirection="column" gap={2}>
-                {['upi', 'card', 'cash'].map((method) => (
-                  <Box key={method}>
+                {/* 1. RAZORPAY ONLINE CHECKOUT */}
+                <Paper
+                  elevation={0}
+                  onClick={!paying ? handleInitiateRazorpay : undefined}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: '16px',
+                    border: `2px solid ${tokens.colors.primary}`,
+                    bgcolor: 'rgba(26,115,232,0.02)',
+                    cursor: paying ? 'wait' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      bgcolor: 'rgba(26,115,232,0.06)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(26,115,232,0.15)'
+                    }
+                  }}
+                >
+                  <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                      <AccountBalanceWalletIcon color="primary" sx={{ fontSize: 28 }} />
+                      <Typography variant="subtitle1" fontWeight={800}>
+                        Razorpay Online Checkout
+                      </Typography>
+                    </Box>
+                    <Box sx={{ bgcolor: '#1A73E8', color: '#ffffff', px: 1.5, py: 0.25, borderRadius: '12px', fontSize: '0.7rem', fontWeight: 800 }}>
+                      RECOMMENDED
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.4 }}>
+                    UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards, Netbanking & Wallets.
+                  </Typography>
+
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
+                      <SecurityIcon sx={{ fontSize: 16, color: '#16a34a' }} />
+                      <Typography variant="caption" fontWeight={700} color="success.main">
+                        Secured by Razorpay • 256-bit SSL
+                      </Typography>
+                    </Box>
                     <Button
-                      fullWidth
-                      variant={selectedPaymentMethod === method ? 'contained' : 'outlined'}
-                      onClick={() => setSelectedPaymentMethod(method)}
-                      sx={{
-                        py: 1.5,
-                        textTransform: 'uppercase',
-                        borderRadius: '8px',
-                        fontWeight: '700',
-                        borderColor: tokens.colors.primary,
-                        color: selectedPaymentMethod === method ? '#ffffff' : tokens.colors.primary,
-                        background: selectedPaymentMethod === method ? tokens.colors.primary : 'transparent',
-                        '&:hover': {
-                          background: selectedPaymentMethod === method ? '#23232F' : 'rgba(0,0,0,0.04)',
-                          borderColor: tokens.colors.primary,
-                        }
-                      }}
+                      variant="contained"
+                      size="small"
+                      disabled={paying}
+                      sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', fontWeight: 800, textTransform: 'none', borderRadius: '8px' }}
                     >
-                      {method}
+                      {paying ? <CircularProgress size={16} color="inherit" /> : 'Pay via Razorpay'}
                     </Button>
                   </Box>
-                ))}
+                </Paper>
+
+                {/* 2. CASH ON DELIVERY */}
+                <Paper
+                  elevation={0}
+                  onClick={!paying ? handleSelectCashPayment : undefined}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: '16px',
+                    border: `1px solid ${tokens.borderColor}`,
+                    bgcolor: tokens.colors.paper,
+                    cursor: paying ? 'wait' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: tokens.colors.primary,
+                      bgcolor: 'rgba(0,0,0,0.02)',
+                      transform: 'translateY(-2px)'
+                    }
+                  }}
+                >
+                  <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 1 }}>
+                    <LocalAtmIcon sx={{ color: '#16a34a', fontSize: 28 }} />
+                    <Typography variant="subtitle1" fontWeight={800}>
+                      Cash on Delivery
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    Pay cash directly to the service captain after work inspection.
+                  </Typography>
+                  <Box display="flex" justifyContent="flex-end">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={paying}
+                      sx={{ borderColor: tokens.colors.primary, color: tokens.colors.primary, fontWeight: 800, textTransform: 'none', borderRadius: '8px' }}
+                    >
+                      Select Cash Mode
+                    </Button>
+                  </Box>
+                </Paper>
+
+                {/* 3. DEV MOCK SIMULATION (For Testing in Dev Mode) */}
+                <Box sx={{ textAlign: 'center', mt: 1 }}>
+                  <Button
+                    size="small"
+                    onClick={() => handleDevMockVerifyPayment()}
+                    disabled={paying}
+                    sx={{ fontSize: '0.75rem', color: 'text.secondary', textTransform: 'none' }}
+                  >
+                    ⚡ Development Test Mode: Simulate Instant Razorpay Success
+                  </Button>
+                </Box>
               </Box>
             </Box>
           )}
         </DialogContent>
-        {!paymentSuccess && (
-          <DialogActions>
-            <Button onClick={() => setPaymentModalOpen(false)} disabled={paying} sx={{ color: tokens.colors.primary }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleProcessPayment}
-              variant="contained"
-              disabled={paying}
-              sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px' }}
-            >
-              {paying ? <CircularProgress size={20} color="inherit" /> : 'Pay Now'}
-            </Button>
-          </DialogActions>
-        )}
+        <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+          <Button onClick={() => setPaymentModalOpen(false)} disabled={paying} sx={{ color: tokens.colors.primary, fontWeight: 700 }}>
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
       <ChatWindow
         open={isChatOpen}
