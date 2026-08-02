@@ -1854,8 +1854,177 @@ const SplineLanding = () => {
         </Container>
       </Box>
 
+      {/* 7. Discover Platform CTA Section at the End */}
+      <Box
+        sx={{
+          py: { xs: 8, md: 12 },
+          px: 3,
+          position: 'relative',
+          zIndex: 10,
+          textAlign: 'center',
+        }}
+      >
+        <Container maxWidth="md">
+          <Box
+            sx={{
+              p: { xs: 4, sm: 6, md: 8 },
+              borderRadius: '32px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              bgcolor: 'rgba(0, 0, 0, 0.55)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Subtle background glow effect */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '-50%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '300px',
+                height: '300px',
+                background: 'radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 70%)',
+                pointerEvents: 'none',
+              }}
+            />
+
+            <Typography
+              sx={{
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                fontFamily: "'NewBlack', sans-serif",
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+              }}
+            >
+              [ ENTER WORKIZO ECOSYSTEM ]
+            </Typography>
+
+            <Typography
+              variant="h3"
+              sx={{
+                fontFamily: "'Maltiner Display', Georgia, serif",
+                fontSize: { xs: '2rem', sm: '2.8rem', md: '3.5rem' },
+                color: '#ffffff',
+                fontWeight: 400,
+                lineHeight: 1.15,
+                letterSpacing: '0.02em',
+                maxWidth: '700px',
+              }}
+            >
+              Ready to Experience Seamless Home Services?
+            </Typography>
+
+            <Typography
+              sx={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: { xs: '0.95rem', md: '1.1rem' },
+                maxWidth: '560px',
+                lineHeight: 1.6,
+                mb: 1,
+              }}
+            >
+              Step inside Workizo to browse verified service captains, track live bookings, and manage your home with absolute peace of mind.
+            </Typography>
+
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2.5,
+                mt: 2,
+                width: { xs: '100%', sm: 'auto' },
+                justifyContent: 'center',
+              }}
+            >
+              <Button
+                variant="contained"
+                onClick={() => navigate('/home')}
+                sx={{
+                  px: { xs: 4, md: 5 },
+                  py: 1.8,
+                  borderRadius: '50px',
+                  bgcolor: '#ffffff',
+                  color: '#000000',
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  boxShadow: '0 0 30px rgba(255, 255, 255, 0.25)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    bgcolor: '#ffffff',
+                    transform: 'translateY(-4px) scale(1.03)',
+                    boxShadow: '0 0 45px rgba(255, 255, 255, 0.45)',
+                  },
+                }}
+              >
+                DISCOVER THE PLATFORM &nbsp; →
+              </Button>
+
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/captain/register')}
+                sx={{
+                  px: { xs: 4, md: 5 },
+                  py: 1.8,
+                  borderRadius: '50px',
+                  borderColor: 'rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff',
+                  fontFamily: "'NewBlack', sans-serif",
+                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 255, 255, 0.6)',
+                    bgcolor: 'rgba(255, 255, 255, 0.08)',
+                    transform: 'translateY(-4px)',
+                  },
+                }}
+              >
+                BECOME A CAPTAIN
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Footer / Copyright bar */}
+      <Box
+        sx={{
+          py: 4,
+          textAlign: 'center',
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        <Typography
+          sx={{
+            color: 'rgba(255, 255, 255, 0.35)',
+            fontSize: '0.75rem',
+            fontFamily: "'NewBlack', sans-serif",
+            letterSpacing: '0.08em',
+          }}
+        >
+          © {new Date().getFullYear()} WORKIZO PLATFORM INC. ALL RIGHTS RESERVED.
+        </Typography>
+      </Box>
+
       {/* Elegant long empty space showing the Spline particles at the bottom */}
-      <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
+      <Box sx={{ height: { xs: '10vh', md: '15vh' } }} />
     </Box>
   );
 };
