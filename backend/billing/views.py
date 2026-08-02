@@ -1,28 +1,16 @@
 import io
 from decimal import Decimal
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.http import FileResponse, Http404
 from django.core.files.base import ContentFile
 from rest_framework import views, permissions, status
 from rest_framework.response import Response
 
 from .models import Bill, BillItem, Payment
-from .serializers import BillSerializer, BillItemSerializer, PaymentSerializer
+from .serializers import BillSerializer, PaymentSerializer
 from bookings.models import Booking
 from bookings.serializers import BookingSerializer
 from bookings.views import send_booking_update, create_and_send_notification
-from workers.models import Wallet, WalletTransaction
-from validations import (
-    validate_payment_amount,
-    validate_payment_status,
-    validate_duplicate_payment,
-    validate_cash_confirmation,
-    validate_razorpay_signature,
-    validate_invoice_payment,
-    validate_labour_charge,
-    validate_spare_part,
-    validate_invoice_total
-)
 
 # ReportLab Invoice Imports
 from reportlab.lib.pagesizes import letter

@@ -2,12 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from bookings.models import Booking
-from validations import (
-    validate_socket_booking,
-    validate_chat_access,
-    validate_message,
-    validate_socket_user
-)
+from validations import validate_socket_booking
 
 @database_sync_to_async
 def is_authorized_for_booking(user, booking_id):

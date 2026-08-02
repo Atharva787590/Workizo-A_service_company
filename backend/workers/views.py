@@ -1,4 +1,4 @@
-from rest_framework import status, permissions
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -6,7 +6,6 @@ from workers.models import WorkerProfile
 from workers.serializers import WorkerProfileSerializer
 from accounts.permissions import IsWorker
 from workers.ocr_service import extract_document_info
-from validations import validate_payment_amount, validate_online_status, validate_kyc
 import logging
 
 logger = logging.getLogger(__name__)

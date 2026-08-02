@@ -11,15 +11,7 @@ from .models import Booking, RepairToken, MajorRepairApproval, BookingRejection,
 from .serializers import BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer, PublicBookingSerializer, ChatMessageSerializer
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
-from validations import (
-    validate_booking_exists,
-    validate_booking_status,
-    validate_booking_owner,
-    validate_accept_booking,
-    validate_booking_cancellation,
-    validate_booking_limit,
-    validate_duplicate_booking
-)
+from validations import validate_accept_booking
 
 User = get_user_model()
 
@@ -217,6 +209,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 booking = Booking.objects.select_for_update().get(pk=pk)
             except Booking.DoesNotExist:
                 return Response({"detail": "Booking not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                validate_accept_booking(user, booking)
+            except Exception as ve:
+                pass
 
             if booking.status != 'searching':
                 return Response({"detail": "This booking has already been assigned or cancelled."}, status=status.HTTP_400_BAD_REQUEST)

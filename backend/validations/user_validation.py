@@ -3,7 +3,7 @@ User authentication and access validation rules for Workizo accounts.
 """
 
 import re
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any
 from rest_framework.exceptions import ValidationError, AuthenticationFailed, PermissionDenied
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -19,7 +19,7 @@ def validate_password_strength(password: str) -> None:
         raise ValidationError({"password": "Password must be at least 6 characters long."})
 
 
-def validate_role(role: str, allowed_roles: List[str] = None) -> None:
+def validate_role(role: str, allowed_roles: Optional[List[str]] = None) -> None:
     """
     Validate user role string.
 

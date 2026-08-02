@@ -7,8 +7,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from accounts.google_auth import verify_google_id_token
 
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.encoding import force_str, force_bytes
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -25,10 +25,8 @@ from workers.serializers import WorkerProfileSerializer
 from notifications.email_service import EmailNotificationService
 from validations import (
     validate_role,
-    validate_password_strength,
     validate_email,
-    validate_verification_token,
-    validate_reset_token
+    validate_verification_token
 )
 
 User = get_user_model()

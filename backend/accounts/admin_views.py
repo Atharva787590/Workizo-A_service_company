@@ -7,7 +7,6 @@ from django.db.models.functions import TruncMonth, TruncDate
 from django.utils import timezone
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,17 +15,17 @@ from accounts.serializers import UserSerializer, ChangePasswordSerializer
 from accounts.permissions import IsAdminUser
 from customers.models import CustomerProfile
 from customers.serializers import CustomerProfileSerializer
-from workers.models import WorkerProfile, Wallet, WalletTransaction
+from workers.models import WorkerProfile
 from workers.serializers import WorkerProfileSerializer, WalletSerializer
-from bookings.models import Booking, RepairToken, MajorRepairApproval
-from bookings.serializers import BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer
+from bookings.models import Booking
+from bookings.serializers import BookingSerializer
 from bookings.views import send_booking_update
 from billing.models import Bill, Payment
 from billing.serializers import BillSerializer, PaymentSerializer
 from services.models import ServiceCategory, Rating, SystemSetting
 from services.serializers import ServiceCategorySerializer, SystemSettingSerializer
 from notifications.models import Notification, Announcement
-from notifications.serializers import NotificationSerializer, AnnouncementSerializer
+from notifications.serializers import AnnouncementSerializer
 
 User = get_user_model()
 

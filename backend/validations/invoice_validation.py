@@ -45,7 +45,7 @@ def validate_unit_price(price: Union[Decimal, float, int, str]) -> Decimal:
     return dec_price
 
 
-def validate_quantity(quantity: int) -> int:
+def validate_quantity(quantity: Union[int, float, str]) -> int:
     """
     Validate item quantity is a positive integer.
 
@@ -53,6 +53,9 @@ def validate_quantity(quantity: int) -> int:
     :return: Validated integer quantity.
     :raises ValidationError: If quantity is less than 1.
     """
+    if isinstance(quantity, bool):
+        raise ValidationError({"quantity": "Quantity must be an integer."})
+
     try:
         int_qty = int(quantity)
     except Exception:

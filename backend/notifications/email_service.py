@@ -1,13 +1,10 @@
-from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner
 from django.conf import settings
-from django.contrib.sites.shortcuts import get_current_site
 
 from notifications.utils import send_html_email
-from validations import validate_email
 
 class EmailNotificationService:
     @staticmethod
