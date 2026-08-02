@@ -881,24 +881,6 @@ const LandingPage = () => {
                   ))}
                 </div>
               </motion.div>
-
-              {/* Stats */}
-              <motion.div className="lp-stats" variants={itemLeftVariants}>
-                <div className="lp-stat">
-                  <div className="lp-stat-icon">⭐</div>
-                  <div>
-                    <div className="lp-stat-value">4.8</div>
-                    <div className="lp-stat-label">Service Rating*</div>
-                  </div>
-                </div>
-                <div className="lp-stat">
-                  <div className="lp-stat-icon">👥</div>
-                  <div>
-                    <div className="lp-stat-value">12M+</div>
-                    <div className="lp-stat-label">Customers Globally*</div>
-                  </div>
-                </div>
-              </motion.div>
             </div>
 
             {/* ── RIGHT — Overlapping Collage ── */}
