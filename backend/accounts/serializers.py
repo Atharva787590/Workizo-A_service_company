@@ -52,5 +52,27 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        data['user'] = UserSerializer(self.user).data
+        user_data = UserSerializer(self.user).data
+        profile_data = None
+        if self.user.role == 'customer':
+            try:
+                from customers.models import CustomerProfile
+                from customers.serializers import CustomerProfileSerializer
+                profile = CustomerProfile.objects.filter(user=self.user).first()
+                if profile:
+                    profile_data = CustomerProfileSerializer(profile).data
+            except Exception:
+                pass
+        elif self.user.role == 'worker':
+            try:
+                from workers.models import WorkerProfile
+                from workers.serializers import WorkerProfileSerializer
+                profile = WorkerProfile.objects.filter(user=self.user).select_related('service_category').first()
+                if profile:
+                    profile_data = WorkerProfileSerializer(profile).data
+            except Exception:
+                pass
+        
+        user_data['profile'] = profile_data
+        data['user'] = user_data
         return data

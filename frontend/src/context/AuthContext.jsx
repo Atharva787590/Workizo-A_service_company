@@ -46,17 +46,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
       
-      // Fetch full profile info right after login
-      const profileRes = await api.get('accounts/me/');
-      const fullUser = {
-        ...loggedUser,
-        profile: profileRes.data.profile
-      };
-      
-      localStorage.setItem('user', JSON.stringify(fullUser));
-      setUser(fullUser);
-      toast.success(`Welcome back, ${fullUser.full_name}!`);
-      return fullUser;
+      localStorage.setItem('user', JSON.stringify(loggedUser));
+      setUser(loggedUser);
+      toast.success(`Welcome back, ${loggedUser.full_name}!`);
+      return loggedUser;
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Invalid email or password';
       toast.error(errorMsg);
