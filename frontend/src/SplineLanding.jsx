@@ -494,9 +494,7 @@ const SplineLanding = () => {
             >
               One request,
               <br />
-              one skilled solution to
-              <br />
-              live with peace of mind.
+              one skilled solution.
             </Typography>
           </Box>
 
