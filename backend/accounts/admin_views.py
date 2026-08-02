@@ -198,7 +198,7 @@ class AdminDashboardStatsView(APIView):
                     daily_bookings_dict[d_str] = item['count']
 
             daily_bookings = []
-            for x in range(30):
+            for x in range(31):
                 d = thirty_days_ago + timedelta(days=x)
                 d_str = d.strftime('%Y-%m-%d')
                 daily_bookings.append({
@@ -253,7 +253,7 @@ class AdminDashboardStatsView(APIView):
                 .annotate(value=Count('id')) \
                 .order_by('-value')
             
-            category_dist = [{'name': item['service_category__name'] or 'General', 'value': item['value']} for item in category_distribution if item.get('service_category__name')]
+            category_dist = [{'name': item['service_category__name'] or 'General', 'value': item['value']} for item in category_distribution]
             if not category_dist:
                 categories = ServiceCategory.objects.all()
                 category_dist = [{'name': cat.name, 'value': 0} for cat in categories]

@@ -223,8 +223,8 @@ const DashboardView = ({ hideHeader }) => {
           <DashboardCard
             title="Daily Bookings (Last 30 Days)"
           >
-            <Box height={300} sx={{ mt: 2 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ width: '100%', height: 300, minHeight: 300, mt: 2 }}>
+              <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={charts.dailyBookings || []}>
                   <defs>
                     <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
@@ -234,7 +234,7 @@ const DashboardView = ({ hideHeader }) => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis dataKey="date" stroke="#9CA3AF" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#9CA3AF" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#9CA3AF" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
                   <Tooltip />
                   <Area type="monotone" dataKey="bookings" stroke="#1A73E8" strokeWidth={2.5} fillOpacity={1} fill="url(#colorBookings)" />
                 </AreaChart>
@@ -249,17 +249,18 @@ const DashboardView = ({ hideHeader }) => {
             title="Service Category Share"
             sx={{ height: '100%' }}
           >
-            <Box height={280} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ width: '100%', height: 280, minHeight: 280, display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={charts.categoryDistribution || []}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius={55}
+                    outerRadius={75}
                     paddingAngle={4}
                     dataKey="value"
+                    nameKey="name"
                   >
                     {(charts.categoryDistribution || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -278,8 +279,8 @@ const DashboardView = ({ hideHeader }) => {
           <DashboardCard
             title="Monthly Revenue Performance"
           >
-            <Box height={280} sx={{ mt: 2 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ width: '100%', height: 280, minHeight: 280, mt: 2 }}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={charts.monthlyRevenue || []}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis dataKey="month" stroke="#9CA3AF" fontSize={11} tickLine={false} />
