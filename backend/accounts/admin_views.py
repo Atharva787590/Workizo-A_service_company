@@ -140,8 +140,9 @@ class AdminDashboardStatsView(APIView):
     permission_classes = (IsAdminUser,)
 
     def get(self, request):
-        today = datetime.now().date()
+        today = timezone.now().date()
         start_of_month = today.replace(day=1)
+        current_year = today.year
 
         # Core Metrics Cards
         total_customers = User.objects.filter(role='customer').count()
@@ -155,13 +156,28 @@ class AdminDashboardStatsView(APIView):
         completed_bookings = Booking.objects.filter(status='completed').count()
         cancelled_bookings = Booking.objects.filter(status='cancelled').count()
         
-        # Revenue
-        today_revenue = Payment.objects.filter(status='success', created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-        monthly_revenue = Payment.objects.filter(status='success', created_at__date__gte=start_of_month).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        # Revenue across all workers in WORKIZO
+        PAID_STATUSES = ['PAID', 'COMPLETED', 'success', 'Paid', 'Completed']
+        
+        # 1. Today's Revenue
+        today_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, payment_time__date=today).aggregate(Sum('amount'))['amount__sum']
+        if not today_payment_sum:
+            today_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        today_bill_sum = Bill.objects.filter(is_approved=True, created_at__date=today, booking__status__in=['ready_to_complete', 'completed']).aggregate(Sum('grand_total'))['grand_total__sum'] or Decimal('0.00')
+        today_revenue = max(today_payment_sum, today_bill_sum)
+
+        # 2. Monthly Revenue
+        monthly_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, payment_time__date__gte=start_of_month).aggregate(Sum('amount'))['amount__sum']
+        if not monthly_payment_sum:
+            monthly_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, created_at__date__gte=start_of_month).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        monthly_bill_sum = Bill.objects.filter(is_approved=True, created_at__date__gte=start_of_month, booking__status__in=['ready_to_complete', 'completed']).aggregate(Sum('grand_total'))['grand_total__sum'] or Decimal('0.00')
+        monthly_revenue = max(monthly_payment_sum, monthly_bill_sum)
 
         # Ratings
         avg_customer_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 0.0
-        avg_captain_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 0.0 # Standard fallback
+        avg_captain_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 0.0
 
         # Charts Data
         # 1. Daily Bookings (Last 30 Days)
@@ -172,40 +188,64 @@ class AdminDashboardStatsView(APIView):
             .annotate(count=Count('id')) \
             .order_by('date')
         
+        daily_bookings_dict = {}
+        for item in daily_bookings_query:
+            d_val = item['date']
+            d_str = d_val.strftime('%Y-%m-%d') if hasattr(d_val, 'strftime') else str(d_val)[:10]
+            daily_bookings_dict[d_str] = item['count']
+
         daily_bookings = []
         for x in range(30):
             d = thirty_days_ago + timedelta(days=x)
-            match = next((item for item in daily_bookings_query if item['date'] == d), None)
+            d_str = d.strftime('%Y-%m-%d')
             daily_bookings.append({
                 'date': d.strftime('%b %d'),
-                'bookings': match['count'] if match else 0
+                'bookings': daily_bookings_dict.get(d_str, 0)
             })
 
-        # 2. Monthly Revenue (Current Year)
-        current_year = today.year
-        monthly_rev_query = Payment.objects.filter(status='success', created_at__year=current_year) \
+        # 2. Monthly Revenue Performance (Current Year)
+        monthly_rev_query = Payment.objects.filter(status__in=PAID_STATUSES, created_at__year=current_year) \
             .annotate(month=TruncMonth('created_at')) \
             .values('month') \
             .annotate(total=Sum('amount')) \
             .order_by('month')
 
+        monthly_rev_dict = {}
+        for item in monthly_rev_query:
+            m_val = item['month']
+            m_idx = m_val.month if hasattr(m_val, 'month') else int(str(m_val)[5:7])
+            monthly_rev_dict[m_idx] = float(item['total'] or 0.00)
+
+        # Incorporate approved bills for current year
+        bill_rev_query = Bill.objects.filter(is_approved=True, created_at__year=current_year, booking__status__in=['ready_to_complete', 'completed']) \
+            .annotate(month=TruncMonth('created_at')) \
+            .values('month') \
+            .annotate(total=Sum('grand_total'))
+        
+        for item in bill_rev_query:
+            m_val = item['month']
+            m_idx = m_val.month if hasattr(m_val, 'month') else int(str(m_val)[5:7])
+            b_total = float(item['total'] or 0.00)
+            if b_total > monthly_rev_dict.get(m_idx, 0.0):
+                monthly_rev_dict[m_idx] = b_total
+
         months_list = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         monthly_revenue_chart = []
-        for m_idx in range(12):
-            total = 0.00
-            for item in monthly_rev_query:
-                if item['month'].month == m_idx + 1:
-                    total = float(item['total'])
+        for m_idx in range(1, 13):
             monthly_revenue_chart.append({
-                'month': months_list[m_idx],
-                'revenue': total
+                'month': months_list[m_idx - 1],
+                'revenue': monthly_rev_dict.get(m_idx, 0.00)
             })
 
         # 3. Service Category Distribution
         category_distribution = Booking.objects.values('service_category__name') \
             .annotate(value=Count('id')) \
             .order_by('-value')
-        category_dist = [{'name': item['service_category__name'] or 'Unknown', 'value': item['value']} for item in category_distribution]
+        
+        category_dist = [{'name': item['service_category__name'] or 'General', 'value': item['value']} for item in category_distribution if item['service_category__name']]
+        if not category_dist:
+            categories = ServiceCategory.objects.all()
+            category_dist = [{'name': cat.name, 'value': 0} for cat in categories]
 
         # 4. Booking Status Distribution
         status_distribution = Booking.objects.values('status') \
@@ -217,23 +257,31 @@ class AdminDashboardStatsView(APIView):
             .annotate(avg_rating=Avg('rating'), jobs=Count('id')) \
             .order_by('-avg_rating', '-jobs')[:5]
         top_captains = [{
-            'name': item['worker__full_name'],
-            'rating': round(item['avg_rating'], 1) if item['avg_rating'] else 0,
+            'name': item['worker__full_name'] or 'Captain',
+            'rating': round(item['avg_rating'], 1) if item['avg_rating'] else 0.0,
             'jobs': item['jobs']
         } for item in top_captains_query]
+        
+        if not top_captains:
+            approved_workers = WorkerProfile.objects.filter(approval_status='approved').select_related('user')[:5]
+            top_captains = [{
+                'name': wp.user.full_name,
+                'rating': 5.0,
+                'jobs': Booking.objects.filter(worker=wp.user, status='completed').count()
+            } for wp in approved_workers]
 
-        # Recent Activities
+        # Recent Activities Feed
         recent_customers = User.objects.filter(role='customer').order_by('-created_at')[:3]
         recent_workers = User.objects.filter(role='worker').order_by('-created_at')[:3]
         recent_bookings = Booking.objects.order_by('-created_at')[:3]
-        recent_payments = Payment.objects.filter(status='success').order_by('-created_at')[:3]
+        recent_payments = Payment.objects.filter(status__in=PAID_STATUSES).order_by('-created_at')[:3]
 
         recent_activities = []
         for c in recent_customers:
             recent_activities.append({
                 'type': 'customer_registered',
-                'title': 'New Customer Registered',
-                'description': f"{c.full_name} ({c.email}) joined the platform.",
+                'title': 'New Customer Registration',
+                'description': f"{c.full_name} ({c.email}) joined.",
                 'time': c.created_at
             })
         for w in recent_workers:
@@ -252,13 +300,14 @@ class AdminDashboardStatsView(APIView):
             })
         for p in recent_payments:
             recent_activities.append({
-                'type': 'payment_completed',
-                'title': 'Payment Completed',
-                'description': f"Payment of ₹{p.amount} success for Booking #{p.booking.id}.",
+                'type': 'payment_received',
+                'title': 'Payment Collected',
+                'description': f"Payment of ₹{p.amount} verified for Booking #{p.booking_id}.",
                 'time': p.created_at
             })
-        
-        recent_activities = sorted(recent_activities, key=lambda x: x['time'], reverse=True)[:6]
+
+        recent_activities.sort(key=lambda x: x['time'], reverse=True)
+        recent_activities = recent_activities[:6]
 
         data = {
             'cards': {
