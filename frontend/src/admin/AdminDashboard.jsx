@@ -174,17 +174,19 @@ const DashboardView = ({ hideHeader }) => {
     );
   }
 
-  const { cards, charts, activities } = data || {};
+  const cards = data?.cards || {};
+  const charts = data?.charts || {};
+  const activities = data?.activities || [];
 
   const cardList = [
-    { title: 'Total Customers', val: cards.totalCustomers, icon: <PeopleIcon />, color: '#1A73E8' },
-    { title: 'Total Captains', val: cards.totalCaptains, icon: <SupervisorAccountIcon />, color: '#34A853' },
-    { title: 'Online Captains', val: cards.onlineCaptains, icon: <CheckCircleIcon />, color: '#34A853' },
-    { title: 'Pending Captains', val: cards.pendingApprovals, icon: <SupervisorAccountIcon />, color: '#FBBC05' },
-    { title: 'Total Bookings', val: cards.totalBookings, icon: <ReceiptLongIcon />, color: '#1A73E8' },
-    { title: 'Active Bookings', val: cards.activeBookings, icon: <ReceiptLongIcon />, color: '#FBBC05' },
-    { title: 'Today\'s Revenue', val: `₹${cards.todayRevenue.toFixed(2)}`, icon: <PaymentIcon />, color: '#34A853' },
-    { title: 'Monthly Revenue', val: `₹${cards.monthlyRevenue.toFixed(2)}`, icon: <PaymentIcon />, color: '#1A73E8' },
+    { title: 'Total Customers', val: cards.totalCustomers ?? 0, icon: <PeopleIcon />, color: '#1A73E8' },
+    { title: 'Total Captains', val: cards.totalCaptains ?? 0, icon: <SupervisorAccountIcon />, color: '#34A853' },
+    { title: 'Online Captains', val: cards.onlineCaptains ?? 0, icon: <CheckCircleIcon />, color: '#34A853' },
+    { title: 'Pending Captains', val: cards.pendingApprovals ?? 0, icon: <SupervisorAccountIcon />, color: '#FBBC05' },
+    { title: 'Total Bookings', val: cards.totalBookings ?? 0, icon: <ReceiptLongIcon />, color: '#1A73E8' },
+    { title: 'Active Bookings', val: cards.activeBookings ?? 0, icon: <ReceiptLongIcon />, color: '#FBBC05' },
+    { title: 'Today\'s Revenue', val: `₹${(cards.todayRevenue || 0).toFixed(2)}`, icon: <PaymentIcon />, color: '#34A853' },
+    { title: 'Monthly Revenue', val: `₹${(cards.monthlyRevenue || 0).toFixed(2)}`, icon: <PaymentIcon />, color: '#1A73E8' },
   ];
 
   return (
@@ -223,7 +225,7 @@ const DashboardView = ({ hideHeader }) => {
           >
             <Box height={300} sx={{ mt: 2 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={charts.dailyBookings}>
+                <AreaChart data={charts.dailyBookings || []}>
                   <defs>
                     <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#1A73E8" stopOpacity={0.2}/>
@@ -251,7 +253,7 @@ const DashboardView = ({ hideHeader }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={charts.categoryDistribution}
+                    data={charts.categoryDistribution || []}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -259,7 +261,7 @@ const DashboardView = ({ hideHeader }) => {
                     paddingAngle={4}
                     dataKey="value"
                   >
-                    {charts.categoryDistribution.map((entry, index) => (
+                    {(charts.categoryDistribution || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -278,7 +280,7 @@ const DashboardView = ({ hideHeader }) => {
           >
             <Box height={280} sx={{ mt: 2 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={charts.monthlyRevenue}>
+                <BarChart data={charts.monthlyRevenue || []}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis dataKey="month" stroke="#9CA3AF" fontSize={11} tickLine={false} />
                   <YAxis stroke="#9CA3AF" fontSize={11} tickLine={false} axisLine={false} />
