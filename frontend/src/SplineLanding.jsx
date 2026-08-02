@@ -1221,26 +1221,13 @@ const SplineLanding = () => {
                     fontFamily: "'NewBlack', sans-serif",
                     fontWeight: 800,
                     color: '#ffffff',
-                    mb: 0.5,
+                    mb: 4,
                     fontSize: '1.4rem',
                     letterSpacing: '0.03em',
                     textTransform: 'uppercase',
                   }}
                 >
                   Ambariya Vivek
-                </Typography>
-                <Typography
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    mb: 4,
-                  }}
-                >
-                  Project Leader & Architect
                 </Typography>
 
                 {/* Parameters list (Department, Student, Specialization) */}
@@ -1461,26 +1448,13 @@ const SplineLanding = () => {
                     fontFamily: "'NewBlack', sans-serif",
                     fontWeight: 800,
                     color: '#ffffff',
-                    mb: 0.5,
+                    mb: 4,
                     fontSize: '1.4rem',
                     letterSpacing: '0.03em',
                     textTransform: 'uppercase',
                   }}
                 >
                   Ved Goyani
-                </Typography>
-                <Typography
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    fontFamily: "'NewBlack', sans-serif",
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    mb: 4,
-                  }}
-                >
-                  Frontend & UI Developer
                 </Typography>
 
                 {/* Parameters list (Department, Student, Specialization) */}
