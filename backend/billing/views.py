@@ -124,6 +124,9 @@ class GenerateBillView(views.APIView):
         if request.user.role != 'worker' or booking.worker != request.user:
             return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
         
+        if booking.status in ['searching', 'cancelled', 'completed']:
+            return Response({"detail": f"Cannot generate bill for booking in '{booking.status}' status."}, status=status.HTTP_400_BAD_REQUEST)
+
         # Check if bill already exists
         if hasattr(booking, 'bill'):
             return Response({"detail": "Bill already generated for this booking."}, status=status.HTTP_400_BAD_REQUEST)
@@ -424,12 +427,15 @@ class InitiateOnlinePaymentView(views.APIView):
         if booking.status == 'completed':
             return Response({"detail": "This booking is already completed and paid."}, status=status.HTTP_400_BAD_REQUEST)
 
+        bill = get_object_or_404(Bill, booking=booking)
+        if bill.grand_total > 0 and not bill.is_approved:
+            return Response({"detail": "Bill invoice must be approved by customer before initiating payment."}, status=status.HTTP_400_BAD_REQUEST)
+
         # Prevent duplicate paid online transactions
         existing_payment = Payment.objects.filter(booking=booking).first()
         if existing_payment and existing_payment.status in ['PAID', 'COMPLETED', 'success']:
             return Response({"detail": "This booking has already been paid."}, status=status.HTTP_400_BAD_REQUEST)
 
-        bill = get_object_or_404(Bill, booking=booking)
         receipt_number = f"REC-{booking.id}-{int(time.time())}"
         amount_in_paise = int(bill.grand_total * 100)
 
@@ -597,12 +603,15 @@ class SelectCashPaymentView(views.APIView):
         if booking.status == 'completed':
             return Response({"detail": "This booking is already completed and paid."}, status=status.HTTP_400_BAD_REQUEST)
 
+        bill = get_object_or_404(Bill, booking=booking)
+        if bill.grand_total > 0 and not bill.is_approved:
+            return Response({"detail": "Bill invoice must be approved by customer before selecting payment method."}, status=status.HTTP_400_BAD_REQUEST)
+
         # Prevent selecting cash if payment is already complete
         existing_payment = Payment.objects.filter(booking=booking).first()
         if existing_payment and existing_payment.status in ['PAID', 'COMPLETED', 'success']:
             return Response({"detail": "This booking has already been paid."}, status=status.HTTP_400_BAD_REQUEST)
 
-        bill = get_object_or_404(Bill, booking=booking)
         receipt_number = f"REC-{booking.id}-{int(time.time())}"
 
         # Create or update Payment
@@ -641,20 +650,20 @@ class ConfirmCashPaymentView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, booking_id):
-        booking = get_object_or_404(Booking, id=booking_id)
-        if request.user.role != 'worker' or booking.worker != request.user:
-            return Response({"detail": "Access denied. Only the assigned captain can confirm cash payment."}, status=status.HTTP_403_FORBIDDEN)
-
-        if booking.status == 'completed':
-            return Response({"detail": "This booking is already completed."}, status=status.HTTP_400_BAD_REQUEST)
-
-        payment = get_object_or_404(Payment, booking=booking)
-        
-        # Prevent duplicate cash confirmation
-        if payment.status in ['PAID', 'COMPLETED', 'success']:
-            return Response(PaymentSerializer(payment).data)
-
         with transaction.atomic():
+            booking = Booking.objects.select_for_update().get(id=booking_id)
+            if request.user.role != 'worker' or booking.worker != request.user:
+                return Response({"detail": "Access denied. Only the assigned captain can confirm cash payment."}, status=status.HTTP_403_FORBIDDEN)
+
+            if booking.status == 'completed':
+                return Response({"detail": "This booking is already completed."}, status=status.HTTP_400_BAD_REQUEST)
+
+            payment = get_object_or_404(Payment.objects.select_for_update(), booking=booking)
+            
+            # Prevent duplicate cash confirmation
+            if payment.status in ['PAID', 'COMPLETED', 'success']:
+                return Response(PaymentSerializer(payment).data)
+
             # Update Payment info
             payment.status = 'PAID'
             payment.payment_time = timezone.now()

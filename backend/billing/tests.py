@@ -298,3 +298,11 @@ class PaymentWorkflowTestCase(TestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("This bill is already approved.", res.data.get("detail", ""))
 
+    def test_unapproved_bill_payment_prevention(self):
+        self.client.force_authenticate(user=self.customer)
+        self.bill.is_approved = False
+        self.bill.save()
+        res = self.client.post(f'/api/billing/{self.booking.id}/initiate-online-payment/')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Bill invoice must be approved by customer before initiating payment.", res.data.get("detail", ""))
+

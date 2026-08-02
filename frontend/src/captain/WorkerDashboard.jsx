@@ -116,22 +116,28 @@ function WorkerDashboard() {
       if (pollingInterval.current) clearInterval(pollingInterval.current);
       pollingInterval.current = setInterval(fetchAvailableBookings, 5000);
 
+      let pingInterval = null;
+
       // StrictMode-safe notification WebSocket with auto-reconnect
       const connect = () => {
         if (!isActive) return;
         const token = localStorage.getItem('access_token');
+        if (!token) return;
         const wsUrl = buildWsUrl('/ws/notifications/', `?token=${token}`);
-        console.log('[WS] Notification socket creating connection to:', wsUrl);
         socket = new WebSocket(wsUrl);
         notiWs.current = socket;
 
         socket.onopen = () => {
-          console.log('[WS] Notification socket connected successfully');
+          if (pingInterval) clearInterval(pingInterval);
+          pingInterval = setInterval(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+              socket.send(JSON.stringify({ type: 'ping' }));
+            }
+          }, 25000);
         };
 
         socket.onmessage = (event) => {
           if (!isActive) return;
-          console.log('[WS] Received Event:', event.data);
           try {
             const payload = JSON.parse(event.data);
             if (payload.type === 'booking_available') {
@@ -152,19 +158,16 @@ function WorkerDashboard() {
         };
 
         socket.onerror = (error) => {
-          console.error('[WS] Socket Error:', error);
           socket.close();
         };
 
         socket.onclose = (event) => {
-          console.log(`[WS] Socket Closed. Code: ${event.code}, Reason: ${event.reason || 'None'}`);
+          if (pingInterval) clearInterval(pingInterval);
           notiWs.current = null;
           if (event.code === 4003) {
-            console.warn('[WS] Connection rejected due to authentication failure (4003). Reconnection aborted.');
             return;
           }
           if (isActive) {
-            console.log('[WS] Reconnecting in 3s…');
             reconnectTimer = setTimeout(connect, 3000);
           }
         };

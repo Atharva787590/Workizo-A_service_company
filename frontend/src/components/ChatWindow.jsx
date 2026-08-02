@@ -16,6 +16,7 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
   
   const socketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const pingIntervalRef = useRef(null);
   const chatBottomRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
 
@@ -52,7 +53,8 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
 
     const wsUrl = buildWsUrl(`/ws/chat/${bookingId}/`, `?token=${token}`);
     
-    // Close existing socket if any
+    // Clear existing intervals & sockets if any
+    if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
     if (socketRef.current) {
       socketRef.current.close();
     }
@@ -65,6 +67,13 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
       reconnectAttemptsRef.current = 0;
       // Mark read automatically when socket establishes
       ws.send(JSON.stringify({ type: 'mark_read' }));
+
+      // Setup Heartbeat Ping (every 25 seconds)
+      pingIntervalRef.current = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping' }));
+        }
+      }, 25000);
     };
 
     ws.onmessage = (event) => {
@@ -97,7 +106,14 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
       }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (e) => {
+      if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
+
+      if (e.code === 4003) {
+        setSocketStatus('disconnected');
+        return;
+      }
+
       if (reconnectAttemptsRef.current < 5) {
         setSocketStatus('reconnecting');
         const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
@@ -126,6 +142,9 @@ function ChatWindow({ open, onClose, bookingId, currentUser, otherUser }) {
 
     return () => {
       // Cleanup WebSocket connection
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+      }
       if (socketRef.current) {
         socketRef.current.close();
       }

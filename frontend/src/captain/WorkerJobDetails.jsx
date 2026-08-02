@@ -134,15 +134,22 @@ function WorkerJobDetails() {
     let isActive = true;
     let socket = null;
     let reconnectTimer = null;
+    let pingInterval = null;
 
     const connect = () => {
       if (!isActive) return;
       const token = localStorage.getItem('access_token');
+      if (!token) return;
       socket = new WebSocket(buildWsUrl(`/ws/bookings/${id}/`, `?token=${token}`));
       ws.current = socket;
 
       socket.onopen = () => {
-        console.log('[WS] Job details connected');
+        if (pingInterval) clearInterval(pingInterval);
+        pingInterval = setInterval(() => {
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 25000);
       };
 
       socket.onmessage = (event) => {
@@ -170,10 +177,10 @@ function WorkerJobDetails() {
         socket.close();
       };
 
-      socket.onclose = () => {
+      socket.onclose = (e) => {
+        if (pingInterval) clearInterval(pingInterval);
         ws.current = null;
-        if (isActive) {
-          console.log('[WS] Job WS disconnected. Reconnecting in 3s…');
+        if (isActive && e.code !== 4003) {
           reconnectTimer = setTimeout(connect, 3000);
         }
       };
@@ -183,6 +190,7 @@ function WorkerJobDetails() {
 
     return () => {
       isActive = false;
+      if (pingInterval) clearInterval(pingInterval);
       clearTimeout(reconnectTimer);
       if (socket) socket.close();
     };

@@ -242,6 +242,15 @@ class OCRExtractView(APIView):
         if not file_obj:
             return Response({"detail": "No document file was provided."}, status=status.HTTP_400_BAD_REQUEST)
             
+        # File size check (max 10MB)
+        if file_obj.size > 10 * 1024 * 1024:
+            return Response({"detail": "File size exceeds the 10MB limit."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # File extension check
+        ext = file_obj.name.split('.')[-1].lower() if '.' in file_obj.name else ''
+        if ext not in ['jpg', 'jpeg', 'png', 'pdf', 'webp', 'gif']:
+            return Response({"detail": "Invalid file format. Please upload a JPG, PNG, GIF, WEBP, or PDF file."}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             image_bytes = file_obj.read()
             extracted_data = extract_document_info(image_bytes, filename=file_obj.name)

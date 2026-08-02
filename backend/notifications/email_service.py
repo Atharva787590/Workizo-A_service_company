@@ -162,11 +162,18 @@ class EmailNotificationService:
         )
 
     @staticmethod
+    def _get_frontend_url(request=None):
+        if getattr(settings, 'CORS_ALLOWED_ORIGINS', None) and len(settings.CORS_ALLOWED_ORIGINS) > 0:
+            return settings.CORS_ALLOWED_ORIGINS[0].rstrip('/')
+        return "http://localhost:5173"
+
+    @staticmethod
     def send_work_completed_email(booking, bill):
         """
         Sends an email notifying the customer that work is completed and includes invoice summary.
         """
         payment_status = "Paid" if bill.grand_total == 0 else "Pending Customer Approval"
+        frontend_base = EmailNotificationService._get_frontend_url()
         
         context = {
             'subject': f"Work Completed & Bill Generated - Booking #{booking.id}",
@@ -175,7 +182,7 @@ class EmailNotificationService:
             'booking_summary': f"{booking.service_category.name} - {booking.problem_type}",
             'bill_amount': bill.grand_total,
             'payment_status': payment_status,
-            'payment_url': "http://localhost:5173/customer/bookings"  # Link to frontend dashboard
+            'payment_url': f"{frontend_base}/customer/booking/{booking.id}"
         }
         
         return send_html_email(
