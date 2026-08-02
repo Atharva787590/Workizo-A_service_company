@@ -105,7 +105,7 @@ const CustomerLayout = () => {
                 variant="h6"
                 noWrap
                 sx={{
-                  fontFamily: 'Outfit',
+                  fontFamily: "'Outfit', 'Plus Jakarta Sans', 'Inter', sans-serif",
                   fontWeight: 900,
                   letterSpacing: '.03rem',
                   color: '#0F0F14',

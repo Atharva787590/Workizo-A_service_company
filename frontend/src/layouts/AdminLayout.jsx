@@ -123,7 +123,7 @@ const AdminLayout = () => {
                 <Typography
                   variant="h6"
                   sx={{
-                    fontFamily: 'Outfit',
+                    fontFamily: "'Outfit', 'Plus Jakarta Sans', 'Inter', sans-serif",
                     fontWeight: 900,
                     letterSpacing: '.03rem',
                     color: '#0F0F14',
