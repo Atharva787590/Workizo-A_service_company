@@ -12,6 +12,8 @@ import WorkIcon from '@mui/icons-material/Work';
 import SchoolIcon from '@mui/icons-material/School';
 import CodeIcon from '@mui/icons-material/Code';
 import handymanHero from './assets/handyman_hero.png';
+import vivekProfile from './assets/vivek_profile.jpg';
+import vedProfile from './assets/ved_profile.jpg';
 import slide1 from './assets/slide1.jpg';
 import slide2 from './assets/slide2.jpg';
 import slide3 from './assets/slide3.jpg';
@@ -1194,6 +1196,8 @@ const SplineLanding = () => {
                     }}
                   >
                     <Avatar
+                      src={vivekProfile}
+                      alt="Ambariya Vivek"
                       sx={{
                         width: 96,
                         height: 96,
@@ -1255,10 +1259,10 @@ const SplineLanding = () => {
                     <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        DEPARTMENT
+                        BRANCH
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Platform Development Unit
+                        Computer Engineering
                       </Typography>
                     </Box>
                   </Box>
@@ -1270,7 +1274,7 @@ const SplineLanding = () => {
                         STUDENT
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Computer Engineering (CE)
+                        LJ University
                       </Typography>
                     </Box>
                   </Box>
@@ -1282,7 +1286,7 @@ const SplineLanding = () => {
                         SPECIALIZATION
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        MERN Stack, JWT Auth, WebSockets, Razorpay
+                        MERN Stack, Razorpay, SMTP, GSAP, Spline, MySQL, Machine Learning
                       </Typography>
                     </Box>
                   </Box>
@@ -1362,7 +1366,7 @@ const SplineLanding = () => {
                   </IconButton>
                   <IconButton
                     component="a"
-                    href="mailto:ambariyavivek5@gmail.com"
+                    href="mailto:vivekambaria@gmail.com"
                     sx={{
                       width: '40px',
                       height: '40px',
@@ -1432,6 +1436,8 @@ const SplineLanding = () => {
                     }}
                   >
                     <Avatar
+                      src={vedProfile}
+                      alt="Ved Goyani"
                       sx={{
                         width: 96,
                         height: 96,
@@ -1493,10 +1499,10 @@ const SplineLanding = () => {
                     <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
                     <Box>
                       <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        DEPARTMENT
+                        BRANCH
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Frontend & UI Division
+                        Computer Engineering
                       </Typography>
                     </Box>
                   </Box>
@@ -1508,7 +1514,7 @@ const SplineLanding = () => {
                         STUDENT
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Computer Engineering (CE)
+                        LJ University
                       </Typography>
                     </Box>
                   </Box>
@@ -1520,7 +1526,7 @@ const SplineLanding = () => {
                         SPECIALIZATION
                       </Typography>
                       <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        React, UI/UX Design, GSAP, Spline, Maps
+                        Python Core, React, MongoDB, PostgreSQL, Bootstrap
                       </Typography>
                     </Box>
                   </Box>
@@ -1554,7 +1560,7 @@ const SplineLanding = () => {
                 <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
                   <IconButton
                     component="a"
-                    href="https://linkedin.com/in/ved-goyani"
+                    href="https://www.linkedin.com/in/ved-goyani-ce?utm_source=share_via&utm_content=profile&utm_medium=member_android"
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
@@ -1577,7 +1583,7 @@ const SplineLanding = () => {
                   </IconButton>
                   <IconButton
                     component="a"
-                    href="https://github.com/ved-goyani"
+                    href="https://github.com/VedGoyaniTech"
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
@@ -1600,7 +1606,7 @@ const SplineLanding = () => {
                   </IconButton>
                   <IconButton
                     component="a"
-                    href="mailto:goyanived@gmail.com"
+                    href="mailto:goyanived001@gmail.com"
                     sx={{
                       width: '40px',
                       height: '40px',
