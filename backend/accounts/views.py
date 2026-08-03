@@ -59,10 +59,15 @@ class RegisterView(APIView):
             user_data = UserSerializer(user).data
             user_data['profile'] = profile_data
             
+            access_token = str(refresh.access_token)
+            print(f"\n================ [DEBUG] ACCESS TOKEN ({user.email}) ================")
+            print(access_token)
+            print("========================================================================\n")
+            
             return Response({
                 'user': user_data,
                 'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'access': access_token,
                 'message': 'Registration successful'
             }, status=status.HTTP_201_CREATED)
             
@@ -258,10 +263,15 @@ class GoogleLoginView(APIView):
                 pass
         user_data['profile'] = profile_data
 
+        access_token = str(refresh.access_token)
+        print(f"\n================ [DEBUG] ACCESS TOKEN ({user.email}) ================")
+        print(access_token)
+        print("========================================================================\n")
+
         return Response({
             'user': user_data,
             'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            'access': access_token,
             'message': 'Login successful',
             'is_new': is_new_user
         }, status=status.HTTP_200_OK if not is_new_user else status.HTTP_201_CREATED)
