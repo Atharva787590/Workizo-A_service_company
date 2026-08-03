@@ -4,9 +4,9 @@ from decimal import Decimal
 from django.db import models
 from django.db.models import Sum, Avg, Count
 from django.db.models.functions import TruncMonth, TruncDate
+from django.utils import timezone
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -15,17 +15,17 @@ from accounts.serializers import UserSerializer, ChangePasswordSerializer
 from accounts.permissions import IsAdminUser
 from customers.models import CustomerProfile
 from customers.serializers import CustomerProfileSerializer
-from workers.models import WorkerProfile, Wallet, WalletTransaction
+from workers.models import WorkerProfile
 from workers.serializers import WorkerProfileSerializer, WalletSerializer
-from bookings.models import Booking, RepairToken, MajorRepairApproval
-from bookings.serializers import BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer
+from bookings.models import Booking
+from bookings.serializers import BookingSerializer
 from bookings.views import send_booking_update
 from billing.models import Bill, Payment
 from billing.serializers import BillSerializer, PaymentSerializer
 from services.models import ServiceCategory, Rating, SystemSetting
 from services.serializers import ServiceCategorySerializer, SystemSettingSerializer
 from notifications.models import Notification, Announcement
-from notifications.serializers import NotificationSerializer, AnnouncementSerializer
+from notifications.serializers import AnnouncementSerializer
 
 User = get_user_model()
 
@@ -140,201 +140,241 @@ class AdminDashboardStatsView(APIView):
     permission_classes = (IsAdminUser,)
 
     def get(self, request):
-        today = timezone.now().date()
-        start_of_month = today.replace(day=1)
-        current_year = today.year
+        try:
+            today = timezone.now().date()
+            start_of_month = today.replace(day=1)
+            current_year = today.year
 
-        # Core Metrics Cards
-        total_customers = User.objects.filter(role='customer').count()
-        total_captains = User.objects.filter(role='worker').count()
-        online_captains = WorkerProfile.objects.filter(online_status=True).count()
-        offline_captains = WorkerProfile.objects.filter(online_status=False).count()
-        pending_approvals = WorkerProfile.objects.filter(approval_status='pending').count()
-        
-        total_bookings = Booking.objects.count()
-        active_bookings = Booking.objects.exclude(status__in=['completed', 'cancelled']).count()
-        completed_bookings = Booking.objects.filter(status='completed').count()
-        cancelled_bookings = Booking.objects.filter(status='cancelled').count()
-        
-        # Revenue across all workers in WORKIZO
-        PAID_STATUSES = ['PAID', 'COMPLETED', 'success', 'Paid', 'Completed']
-        
-        # 1. Today's Revenue
-        today_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, payment_time__date=today).aggregate(Sum('amount'))['amount__sum']
-        if not today_payment_sum:
-            today_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-        
-        today_bill_sum = Bill.objects.filter(is_approved=True, created_at__date=today, booking__status__in=['ready_to_complete', 'completed']).aggregate(Sum('grand_total'))['grand_total__sum'] or Decimal('0.00')
-        today_revenue = max(today_payment_sum, today_bill_sum)
+            # Core Metrics Cards
+            total_customers = User.objects.filter(role='customer').count()
+            total_captains = User.objects.filter(role='worker').count()
+            online_captains = WorkerProfile.objects.filter(online_status=True).count()
+            offline_captains = WorkerProfile.objects.filter(online_status=False).count()
+            pending_approvals = WorkerProfile.objects.filter(approval_status='pending').count()
+            
+            total_bookings = Booking.objects.count()
+            active_bookings = Booking.objects.exclude(status__in=['completed', 'cancelled']).count()
+            completed_bookings = Booking.objects.filter(status='completed').count()
+            cancelled_bookings = Booking.objects.filter(status='cancelled').count()
+            
+            # Revenue across all workers in WORKIZO
+            PAID_STATUSES = ['PAID', 'COMPLETED', 'success', 'Paid', 'Completed']
+            
+            # 1. Today's Revenue
+            today_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, payment_time__date=today).aggregate(Sum('amount'))['amount__sum']
+            if not today_payment_sum:
+                today_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, created_at__date=today).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+            
+            today_bill_sum = Bill.objects.filter(is_approved=True, created_at__date=today, booking__status__in=['ready_to_complete', 'completed']).aggregate(Sum('grand_total'))['grand_total__sum'] or Decimal('0.00')
+            today_revenue = max(today_payment_sum, today_bill_sum)
 
-        # 2. Monthly Revenue
-        monthly_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, payment_time__date__gte=start_of_month).aggregate(Sum('amount'))['amount__sum']
-        if not monthly_payment_sum:
-            monthly_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, created_at__date__gte=start_of_month).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-        
-        monthly_bill_sum = Bill.objects.filter(is_approved=True, created_at__date__gte=start_of_month, booking__status__in=['ready_to_complete', 'completed']).aggregate(Sum('grand_total'))['grand_total__sum'] or Decimal('0.00')
-        monthly_revenue = max(monthly_payment_sum, monthly_bill_sum)
+            # 2. Monthly Revenue
+            monthly_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, payment_time__date__gte=start_of_month).aggregate(Sum('amount'))['amount__sum']
+            if not monthly_payment_sum:
+                monthly_payment_sum = Payment.objects.filter(status__in=PAID_STATUSES, created_at__date__gte=start_of_month).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+            
+            monthly_bill_sum = Bill.objects.filter(is_approved=True, created_at__date__gte=start_of_month, booking__status__in=['ready_to_complete', 'completed']).aggregate(Sum('grand_total'))['grand_total__sum'] or Decimal('0.00')
+            monthly_revenue = max(monthly_payment_sum, monthly_bill_sum)
 
-        # Ratings
-        avg_customer_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 0.0
-        avg_captain_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 0.0
+            # Ratings
+            avg_customer_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 0.0
+            avg_captain_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 0.0
 
-        # Charts Data
-        # 1. Daily Bookings (Last 30 Days)
-        thirty_days_ago = today - timedelta(days=30)
-        daily_bookings_query = Booking.objects.filter(created_at__date__gte=thirty_days_ago) \
-            .annotate(date=TruncDate('created_at')) \
-            .values('date') \
-            .annotate(count=Count('id')) \
-            .order_by('date')
-        
-        daily_bookings_dict = {}
-        for item in daily_bookings_query:
-            d_val = item['date']
-            d_str = d_val.strftime('%Y-%m-%d') if hasattr(d_val, 'strftime') else str(d_val)[:10]
-            daily_bookings_dict[d_str] = item['count']
+            # Charts Data
+            # 1. Daily Bookings (Last 30 Days)
+            thirty_days_ago = today - timedelta(days=30)
+            daily_bookings_query = Booking.objects.filter(created_at__date__gte=thirty_days_ago) \
+                .annotate(date=TruncDate('created_at')) \
+                .values('date') \
+                .annotate(count=Count('id')) \
+                .order_by('date')
+            
+            daily_bookings_dict = {}
+            for item in daily_bookings_query:
+                d_val = item['date']
+                if d_val:
+                    d_str = d_val.strftime('%Y-%m-%d') if hasattr(d_val, 'strftime') else str(d_val)[:10]
+                    daily_bookings_dict[d_str] = item['count']
 
-        daily_bookings = []
-        for x in range(30):
-            d = thirty_days_ago + timedelta(days=x)
-            d_str = d.strftime('%Y-%m-%d')
-            daily_bookings.append({
-                'date': d.strftime('%b %d'),
-                'bookings': daily_bookings_dict.get(d_str, 0)
-            })
+            daily_bookings = []
+            for x in range(31):
+                d = thirty_days_ago + timedelta(days=x)
+                d_str = d.strftime('%Y-%m-%d')
+                daily_bookings.append({
+                    'date': d.strftime('%b %d'),
+                    'bookings': daily_bookings_dict.get(d_str, 0)
+                })
 
-        # 2. Monthly Revenue Performance (Current Year)
-        monthly_rev_query = Payment.objects.filter(status__in=PAID_STATUSES, created_at__year=current_year) \
-            .annotate(month=TruncMonth('created_at')) \
-            .values('month') \
-            .annotate(total=Sum('amount')) \
-            .order_by('month')
+            # 2. Monthly Revenue Performance (Current Year)
+            monthly_rev_query = Payment.objects.filter(status__in=PAID_STATUSES, created_at__year=current_year) \
+                .annotate(month=TruncMonth('created_at')) \
+                .values('month') \
+                .annotate(total=Sum('amount')) \
+                .order_by('month')
 
-        monthly_rev_dict = {}
-        for item in monthly_rev_query:
-            m_val = item['month']
-            m_idx = m_val.month if hasattr(m_val, 'month') else int(str(m_val)[5:7])
-            monthly_rev_dict[m_idx] = float(item['total'] or 0.00)
+            monthly_rev_dict = {}
+            for item in monthly_rev_query:
+                m_val = item['month']
+                if m_val:
+                    try:
+                        m_idx = m_val.month if hasattr(m_val, 'month') else int(str(m_val).split('-')[1])
+                        monthly_rev_dict[m_idx] = float(item['total'] or 0.00)
+                    except Exception:
+                        pass
 
-        # Incorporate approved bills for current year
-        bill_rev_query = Bill.objects.filter(is_approved=True, created_at__year=current_year, booking__status__in=['ready_to_complete', 'completed']) \
-            .annotate(month=TruncMonth('created_at')) \
-            .values('month') \
-            .annotate(total=Sum('grand_total'))
-        
-        for item in bill_rev_query:
-            m_val = item['month']
-            m_idx = m_val.month if hasattr(m_val, 'month') else int(str(m_val)[5:7])
-            b_total = float(item['total'] or 0.00)
-            if b_total > monthly_rev_dict.get(m_idx, 0.0):
-                monthly_rev_dict[m_idx] = b_total
+            # Incorporate approved bills for current year
+            bill_rev_query = Bill.objects.filter(is_approved=True, created_at__year=current_year, booking__status__in=['ready_to_complete', 'completed']) \
+                .annotate(month=TruncMonth('created_at')) \
+                .values('month') \
+                .annotate(total=Sum('grand_total'))
+            
+            for item in bill_rev_query:
+                m_val = item['month']
+                if m_val:
+                    try:
+                        m_idx = m_val.month if hasattr(m_val, 'month') else int(str(m_val).split('-')[1])
+                        b_total = float(item['total'] or 0.00)
+                        if b_total > monthly_rev_dict.get(m_idx, 0.0):
+                            monthly_rev_dict[m_idx] = b_total
+                    except Exception:
+                        pass
 
-        months_list = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        monthly_revenue_chart = []
-        for m_idx in range(1, 13):
-            monthly_revenue_chart.append({
-                'month': months_list[m_idx - 1],
-                'revenue': monthly_rev_dict.get(m_idx, 0.00)
-            })
+            months_list = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            monthly_revenue_chart = []
+            for m_idx in range(1, 13):
+                monthly_revenue_chart.append({
+                    'month': months_list[m_idx - 1],
+                    'revenue': monthly_rev_dict.get(m_idx, 0.00)
+                })
 
-        # 3. Service Category Distribution
-        category_distribution = Booking.objects.values('service_category__name') \
-            .annotate(value=Count('id')) \
-            .order_by('-value')
-        
-        category_dist = [{'name': item['service_category__name'] or 'General', 'value': item['value']} for item in category_distribution if item['service_category__name']]
-        if not category_dist:
-            categories = ServiceCategory.objects.all()
-            category_dist = [{'name': cat.name, 'value': 0} for cat in categories]
+            # 3. Service Category Distribution
+            category_distribution = Booking.objects.values('service_category__name') \
+                .annotate(value=Count('id')) \
+                .order_by('-value')
+            
+            category_dist = [{'name': item['service_category__name'] or 'General', 'value': item['value']} for item in category_distribution]
+            if not category_dist:
+                categories = ServiceCategory.objects.all()
+                category_dist = [{'name': cat.name, 'value': 0} for cat in categories]
 
-        # 4. Booking Status Distribution
-        status_distribution = Booking.objects.values('status') \
-            .annotate(value=Count('id'))
-        status_dist = [{'name': item['status'].replace('_', ' ').capitalize(), 'value': item['value']} for item in status_distribution]
+            # 4. Booking Status Distribution
+            status_distribution = Booking.objects.values('status') \
+                .annotate(value=Count('id'))
+            status_dist = [{'name': item['status'].replace('_', ' ').capitalize(), 'value': item['value']} for item in status_distribution]
 
-        # 5. Top Performing Captains
-        top_captains_query = Rating.objects.values('worker__full_name') \
-            .annotate(avg_rating=Avg('rating'), jobs=Count('id')) \
-            .order_by('-avg_rating', '-jobs')[:5]
-        top_captains = [{
-            'name': item['worker__full_name'] or 'Captain',
-            'rating': round(item['avg_rating'], 1) if item['avg_rating'] else 0.0,
-            'jobs': item['jobs']
-        } for item in top_captains_query]
-        
-        if not top_captains:
-            approved_workers = WorkerProfile.objects.filter(approval_status='approved').select_related('user')[:5]
+            # 5. Top Performing Captains
+            top_captains_query = Rating.objects.values('worker__full_name') \
+                .annotate(avg_rating=Avg('rating'), jobs=Count('id')) \
+                .order_by('-avg_rating', '-jobs')[:5]
             top_captains = [{
-                'name': wp.user.full_name,
-                'rating': 5.0,
-                'jobs': Booking.objects.filter(worker=wp.user, status='completed').count()
-            } for wp in approved_workers]
+                'name': item['worker__full_name'] or 'Captain',
+                'rating': round(float(item['avg_rating']), 1) if item['avg_rating'] else 0.0,
+                'jobs': item['jobs']
+            } for item in top_captains_query]
+            
+            if not top_captains:
+                approved_workers = WorkerProfile.objects.filter(approval_status='approved').select_related('user')[:5]
+                top_captains = [{
+                    'name': wp.user.full_name,
+                    'rating': 5.0,
+                    'jobs': Booking.objects.filter(worker=wp.user, status='completed').count()
+                } for wp in approved_workers]
 
-        # Recent Activities Feed
-        recent_customers = User.objects.filter(role='customer').order_by('-created_at')[:3]
-        recent_workers = User.objects.filter(role='worker').order_by('-created_at')[:3]
-        recent_bookings = Booking.objects.order_by('-created_at')[:3]
-        recent_payments = Payment.objects.filter(status__in=PAID_STATUSES).order_by('-created_at')[:3]
+            # Recent Activities Feed
+            recent_customers = User.objects.filter(role='customer').order_by('-created_at')[:3]
+            recent_workers = User.objects.filter(role='worker').order_by('-created_at')[:3]
+            recent_bookings = Booking.objects.order_by('-created_at')[:3]
+            recent_payments = Payment.objects.filter(status__in=PAID_STATUSES).order_by('-created_at')[:3]
 
-        recent_activities = []
-        for c in recent_customers:
-            recent_activities.append({
-                'type': 'customer_registered',
-                'title': 'New Customer Registration',
-                'description': f"{c.full_name} ({c.email}) joined.",
-                'time': c.created_at
-            })
-        for w in recent_workers:
-            recent_activities.append({
-                'type': 'captain_registered',
-                'title': 'New Captain Registration',
-                'description': f"{w.full_name} applied for verification.",
-                'time': w.created_at
-            })
-        for b in recent_bookings:
-            recent_activities.append({
-                'type': 'booking_created',
-                'title': 'Booking Created',
-                'description': f"Booking #{b.id} ({b.service_category.name}) initiated.",
-                'time': b.created_at
-            })
-        for p in recent_payments:
-            recent_activities.append({
-                'type': 'payment_received',
-                'title': 'Payment Collected',
-                'description': f"Payment of ₹{p.amount} verified for Booking #{p.booking_id}.",
-                'time': p.created_at
-            })
+            recent_activities = []
+            for c in recent_customers:
+                recent_activities.append({
+                    'type': 'customer_registered',
+                    'title': 'New Customer Registration',
+                    'description': f"{c.full_name} ({c.email}) joined.",
+                    'time': c.created_at
+                })
+            for w in recent_workers:
+                recent_activities.append({
+                    'type': 'captain_registered',
+                    'title': 'New Captain Registration',
+                    'description': f"{w.full_name} applied for verification.",
+                    'time': w.created_at
+                })
+            for b in recent_bookings:
+                category_name = b.service_category.name if b.service_category else 'Service'
+                recent_activities.append({
+                    'type': 'booking_created',
+                    'title': 'Booking Created',
+                    'description': f"Booking #{b.id} ({category_name}) initiated.",
+                    'time': b.created_at
+                })
+            for p in recent_payments:
+                recent_activities.append({
+                    'type': 'payment_received',
+                    'title': 'Payment Collected',
+                    'description': f"Payment of ₹{p.amount} verified for Booking #{p.booking_id}.",
+                    'time': p.created_at
+                })
 
-        recent_activities.sort(key=lambda x: x['time'], reverse=True)
-        recent_activities = recent_activities[:6]
+            recent_activities.sort(key=lambda x: x['time'], reverse=True)
+            recent_activities = recent_activities[:6]
 
-        data = {
-            'cards': {
-                'totalCustomers': total_customers,
-                'totalCaptains': total_captains,
-                'onlineCaptains': online_captains,
-                'offlineCaptains': offline_captains,
-                'pendingApprovals': pending_approvals,
-                'totalBookings': total_bookings,
-                'activeBookings': active_bookings,
-                'completedBookings': completed_bookings,
-                'cancelledBookings': cancelled_bookings,
-                'todayRevenue': float(today_revenue),
-                'monthlyRevenue': float(monthly_revenue),
-                'avgCustomerRating': round(float(avg_customer_rating), 1),
-                'avgCaptainRating': round(float(avg_captain_rating), 1)
-            },
-            'charts': {
-                'dailyBookings': daily_bookings,
-                'monthlyRevenue': monthly_revenue_chart,
-                'categoryDistribution': category_dist,
-                'statusDistribution': status_dist,
-                'topCaptains': top_captains
-            },
-            'activities': recent_activities
-        }
-        return Response(data, status=status.HTTP_200_OK)
+            data = {
+                'cards': {
+                    'totalCustomers': total_customers,
+                    'totalCaptains': total_captains,
+                    'onlineCaptains': online_captains,
+                    'offlineCaptains': offline_captains,
+                    'pendingApprovals': pending_approvals,
+                    'totalBookings': total_bookings,
+                    'activeBookings': active_bookings,
+                    'completedBookings': completed_bookings,
+                    'cancelledBookings': cancelled_bookings,
+                    'todayRevenue': float(today_revenue),
+                    'monthlyRevenue': float(monthly_revenue),
+                    'avgCustomerRating': round(float(avg_customer_rating), 1),
+                    'avgCaptainRating': round(float(avg_captain_rating), 1)
+                },
+                'charts': {
+                    'dailyBookings': daily_bookings,
+                    'monthlyRevenue': monthly_revenue_chart,
+                    'categoryDistribution': category_dist,
+                    'statusDistribution': status_dist,
+                    'topCaptains': top_captains
+                },
+                'activities': recent_activities
+            }
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'cards': {
+                    'totalCustomers': User.objects.filter(role='customer').count(),
+                    'totalCaptains': User.objects.filter(role='worker').count(),
+                    'onlineCaptains': WorkerProfile.objects.filter(online_status=True).count(),
+                    'offlineCaptains': WorkerProfile.objects.filter(online_status=False).count(),
+                    'pendingApprovals': WorkerProfile.objects.filter(approval_status='pending').count(),
+                    'totalBookings': Booking.objects.count(),
+                    'activeBookings': Booking.objects.exclude(status__in=['completed', 'cancelled']).count(),
+                    'completedBookings': Booking.objects.filter(status='completed').count(),
+                    'cancelledBookings': Booking.objects.filter(status='cancelled').count(),
+                    'todayRevenue': 0.0,
+                    'monthlyRevenue': 0.0,
+                    'avgCustomerRating': 0.0,
+                    'avgCaptainRating': 0.0
+                },
+                'charts': {
+                    'dailyBookings': [],
+                    'monthlyRevenue': [],
+                    'categoryDistribution': [],
+                    'statusDistribution': [],
+                    'topCaptains': []
+                },
+                'activities': []
+            }, status=status.HTTP_200_OK)
 
 
 class AdminBookingsView(APIView):

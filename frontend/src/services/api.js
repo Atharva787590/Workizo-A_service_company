@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const FALLBACK_API_ORIGIN = 'http://127.0.0.1:8000';
+const defaultHost = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
+const FALLBACK_API_ORIGIN = `http://${defaultHost}:8000`;
 const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '');
 
 export const API_ORIGIN = configuredApiOrigin || FALLBACK_API_ORIGIN;

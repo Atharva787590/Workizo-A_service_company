@@ -881,24 +881,6 @@ const LandingPage = () => {
                   ))}
                 </div>
               </motion.div>
-
-              {/* Stats */}
-              <motion.div className="lp-stats" variants={itemLeftVariants}>
-                <div className="lp-stat">
-                  <div className="lp-stat-icon">⭐</div>
-                  <div>
-                    <div className="lp-stat-value">4.8</div>
-                    <div className="lp-stat-label">Service Rating*</div>
-                  </div>
-                </div>
-                <div className="lp-stat">
-                  <div className="lp-stat-icon">👥</div>
-                  <div>
-                    <div className="lp-stat-value">12M+</div>
-                    <div className="lp-stat-label">Customers Globally*</div>
-                  </div>
-                </div>
-              </motion.div>
             </div>
 
             {/* ── RIGHT — Overlapping Collage ── */}
@@ -958,14 +940,14 @@ const LandingPage = () => {
             viewport={{ once: true, margin: "-100px" }}
             variants={scrollSectionVariants}
           >
-            <p className="lp-section-label">Simple Process</p>
+            <p className="lp-section-label">Book in Minutes. Get Help Instantly.</p>
             <h2 className="lp-section-title">How It Works</h2>
             <p className="lp-section-sub">
-              Get your home services completed in three easy steps. No complications, just results.
+              From booking to completion, WORKIZO keeps every step simple, transparent, and live.
             </p>
           </motion.div>
 
-          <div className="lp-how-grid">
+          <div className="lp-how-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
             <motion.div
               className="lp-how-card"
               initial="hidden"
@@ -975,9 +957,12 @@ const LandingPage = () => {
               whileHover={{ y: -4 }}
             >
               <div className="lp-how-num-wrapper" style={{ color: '#3b82f6', background: 'rgba(59, 130, 246, 0.08)' }}>01</div>
-              <div className="lp-how-title">Choose Category</div>
+              <div className="lp-how-title">① Choose a Service</div>
               <div className="lp-how-desc">
-                Select from our list of vetted experts — plumber, electrician, carpenter, and more — and search local providers.
+                Browse verified professionals across multiple service categories.
+                <div style={{ marginTop: '10px', fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>
+                  📍 Select category → Add address → Describe your issue.
+                </div>
               </div>
             </motion.div>
             
@@ -991,9 +976,12 @@ const LandingPage = () => {
               transition={{ delay: 0.1 }}
             >
               <div className="lp-how-num-wrapper" style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.08)' }}>02</div>
-              <div className="lp-how-title">Match Nearby</div>
+              <div className="lp-how-title">② Get Matched Instantly</div>
               <div className="lp-how-desc">
-                Our live dispatcher alerts all online Captains in your category and pairs you in under 5 minutes.
+                Your request is broadcast in real time to nearby available service partners.
+                <div style={{ marginTop: '10px', fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>
+                  ⚡ Live notifications &bull; 📍 Instant matching
+                </div>
               </div>
             </motion.div>
             
@@ -1007,9 +995,31 @@ const LandingPage = () => {
               transition={{ delay: 0.2 }}
             >
               <div className="lp-how-num-wrapper" style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.08)' }}>03</div>
-              <div className="lp-how-title">Track &amp; Pay</div>
+              <div className="lp-how-title">③ Track Everything Live</div>
               <div className="lp-how-desc">
-                Track the assigned Captain live on the interactive timeline, verify via secure QR, and settle payments.
+                Watch every stage of your booking.
+                <div style={{ marginTop: '10px', fontSize: '0.78rem', color: '#64748b', fontWeight: 500, display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  <span>✓ Accepted</span> &bull; <span>✓ Arrived</span> &bull; <span>✓ Work Started</span> &bull; <span>✓ Completed</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="lp-how-card"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={scrollSectionVariants}
+              whileHover={{ y: -4 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="lp-how-num-wrapper" style={{ color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.08)' }}>04</div>
+              <div className="lp-how-title">④ Pay Securely & Rate</div>
+              <div className="lp-how-desc">
+                Review the invoice, pay online with Razorpay or cash, receive your receipt, and rate your partner.
+                <div style={{ marginTop: '10px', fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>
+                  💳 Online &amp; Cash &bull; ⭐ Ratings &amp; Reviews
+                </div>
               </div>
             </motion.div>
           </div>

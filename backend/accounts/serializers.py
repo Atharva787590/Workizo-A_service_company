@@ -75,4 +75,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         user_data['profile'] = profile_data
         data['user'] = user_data
+        
+        print(f"\n================ [DEBUG] ACCESS TOKEN ({self.user.email}) ================")
+        print(data['access'])
+        print("========================================================================\n")
+        
         return data

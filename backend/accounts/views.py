@@ -7,8 +7,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from accounts.google_auth import verify_google_id_token
 
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.encoding import force_str, force_bytes
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -23,6 +23,11 @@ from customers.serializers import CustomerProfileSerializer
 from workers.models import WorkerProfile
 from workers.serializers import WorkerProfileSerializer
 from notifications.email_service import EmailNotificationService
+from validations import (
+    validate_role,
+    validate_email,
+    validate_verification_token
+)
 
 User = get_user_model()
 
@@ -54,10 +59,15 @@ class RegisterView(APIView):
             user_data = UserSerializer(user).data
             user_data['profile'] = profile_data
             
+            access_token = str(refresh.access_token)
+            print(f"\n================ [DEBUG] ACCESS TOKEN ({user.email}) ================")
+            print(access_token)
+            print("========================================================================\n")
+            
             return Response({
                 'user': user_data,
                 'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'access': access_token,
                 'message': 'Registration successful'
             }, status=status.HTTP_201_CREATED)
             
@@ -204,7 +214,9 @@ class GoogleLoginView(APIView):
         is_new_user = False
         if not user:
             is_new_user = True
-            if role not in ['customer', 'worker']:
+            try:
+                validate_role(role, allowed_roles=['customer', 'worker'])
+            except Exception:
                 return Response({"detail": "Invalid role specified"}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
@@ -251,10 +263,15 @@ class GoogleLoginView(APIView):
                 pass
         user_data['profile'] = profile_data
 
+        access_token = str(refresh.access_token)
+        print(f"\n================ [DEBUG] ACCESS TOKEN ({user.email}) ================")
+        print(access_token)
+        print("========================================================================\n")
+
         return Response({
             'user': user_data,
             'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            'access': access_token,
             'message': 'Login successful',
             'is_new': is_new_user
         }, status=status.HTTP_200_OK if not is_new_user else status.HTTP_201_CREATED)
@@ -303,7 +320,9 @@ class VerifyEmailView(APIView):
 
     def get(self, request):
         token = request.query_params.get('token')
-        if not token:
+        try:
+            validate_verification_token(token)
+        except Exception:
             html = render_html_response("Verification Failed", "The verification link is missing a token.", is_success=False)
             return HttpResponse(html, content_type='text/html', status=400)
 
@@ -353,7 +372,9 @@ class ForgotPasswordView(APIView):
 
     def post(self, request):
         email = request.data.get('email')
-        if not email:
+        try:
+            email = validate_email(email)
+        except Exception:
             return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # For security reasons, we do not reveal whether the user exists or not.

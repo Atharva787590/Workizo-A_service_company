@@ -494,9 +494,7 @@ const SplineLanding = () => {
             >
               One request,
               <br />
-              one skilled solution to
-              <br />
-              live with peace of mind.
+              one skilled solution.
             </Typography>
           </Box>
 
@@ -678,7 +676,7 @@ const SplineLanding = () => {
                 fontSize: '0.75rem',
               }}
             >
-              Platform Core
+              Book in Minutes. Get Help Instantly.
             </Typography>
             <Typography
               variant="h3"
@@ -703,7 +701,7 @@ const SplineLanding = () => {
                 lineHeight: 1.6,
               }}
             >
-              Robust digital architecture ensuring secure, real-time coordination for home services.
+              From booking to completion, WORKIZO keeps every step simple, transparent, and live.
             </Typography>
           </Box>
 
@@ -766,23 +764,38 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '1.1rem',
+                    fontSize: '1.15rem',
                     letterSpacing: '0.02em',
                   }}
                 >
-                  Real-Time Dispatching (WebSockets)
+                  ① Choose a Service
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     lineHeight: 1.6,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.85rem',
+                    fontSize: '0.88rem',
+                    mb: 2.5
                   }}
                 >
-                  WebSocket pathways connect available Captains and Customers instantly. Real-time notifications push booking requests directly based on status and geographical proximity.
+                  Browse verified professionals across multiple service categories.
                 </Typography>
+                <Box
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    p: 1.75,
+                    borderRadius: '12px',
+                    fontSize: '0.82rem',
+                    color: 'rgba(255, 255, 255, 0.85)',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 500
+                  }}
+                >
+                  📍 Select category → Add address → Describe your issue.
+                </Box>
               </Card>
 
               {/* Step 3 */}
@@ -807,23 +820,46 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '1.1rem',
+                    fontSize: '1.15rem',
                     letterSpacing: '0.02em',
                   }}
                 >
-                  Secure Razorpay Payments & Billing
+                  ③ Track Everything Live
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     lineHeight: 1.6,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.85rem',
+                    fontSize: '0.88rem',
+                    mb: 2.5
                   }}
                 >
-                  Built-in transaction flow with Razorpay integration. Auto-generates transactional logs, triggers database payment status transitions, and compiles downloadable billing invoices.
+                  Watch every stage of your booking.
                 </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 1.25 }}>
+                  {['Captain Accepted', 'On the Way', 'Arrived', 'Work Started', 'Bill Generated', 'Payment', 'Completed'].map((stage) => (
+                    <Box
+                      key={stage}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        fontSize: '0.8rem',
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        fontFamily: "'NewBlack', sans-serif",
+                        bgcolor: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        px: 1.25,
+                        py: 0.75,
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <span style={{ color: '#10B981', fontWeight: 800 }}>✓</span> {stage}
+                    </Box>
+                  ))}
+                </Box>
               </Card>
             </Box>
 
@@ -862,23 +898,54 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '1.1rem',
+                    fontSize: '1.15rem',
                     letterSpacing: '0.02em',
                   }}
                 >
-                  Role-Based Dashboard Core
+                  ② Get Matched Instantly
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     lineHeight: 1.6,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.85rem',
+                    fontSize: '0.88rem',
+                    mb: 2.5
                   }}
                 >
-                  Segmented custom control panels. Customers book, track, and pay, while Captains accept bookings, upload work completion metadata, and manage online status.
+                  Your request is broadcast in real time to nearby available service partners.
                 </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      px: 2,
+                      py: 1,
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontFamily: "'NewBlack', sans-serif"
+                    }}
+                  >
+                    ⚡ Live notifications
+                  </Box>
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      px: 2,
+                      py: 1,
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontFamily: "'NewBlack', sans-serif"
+                    }}
+                  >
+                    📍 Instant matching
+                  </Box>
+                </Box>
               </Card>
 
               {/* Step 4 */}
@@ -903,23 +970,54 @@ const SplineLanding = () => {
                     fontWeight: 800,
                     mb: 1.5,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '1.1rem',
+                    fontSize: '1.15rem',
                     letterSpacing: '0.02em',
                   }}
                 >
-                  Automated KYC & Safety Verification
+                  ④ Pay Securely & Rate
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     lineHeight: 1.6,
                     fontFamily: "'NewBlack', sans-serif",
-                    fontSize: '0.85rem',
+                    fontSize: '0.88rem',
+                    mb: 2.5
                   }}
                 >
-                  Specialized onboarding channels for Captains. Captures document uploads, enables admin KYC status reviews, and verifies service credentials to guarantee user protection.
+                  Review the invoice, pay online with Razorpay or cash, receive your receipt, and rate your service partner.
                 </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      px: 2,
+                      py: 1,
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontFamily: "'NewBlack', sans-serif"
+                    }}
+                  >
+                    💳 Online & Cash
+                  </Box>
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      px: 2,
+                      py: 1,
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontFamily: "'NewBlack', sans-serif"
+                    }}
+                  >
+                    ⭐ Ratings & Reviews
+                  </Box>
+                </Box>
               </Card>
             </Box>
           </Box>

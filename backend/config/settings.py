@@ -146,8 +146,11 @@ SIMPLE_JWT = {
 }
 
 # CORS Config
-cors_origins = env('CORS_ALLOWED_ORIGINS', default='http://localhost:5173')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
+cors_origins = env('CORS_ALLOWED_ORIGINS', default='')
+if cors_origins:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
+else:
+    CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Internationalization
