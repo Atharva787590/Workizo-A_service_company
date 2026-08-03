@@ -35,9 +35,11 @@ class WorkerProfileSerializer(serializers.ModelSerializer):
             'pan_photo',
             'is_verified',
             'approval_status',
-            'online_status'
+            'online_status',
+            'availability_status',
+            'is_currently_available'
         )
-        read_only_fields = ('is_verified', 'approval_status')
+        read_only_fields = ('is_verified', 'approval_status', 'availability_status', 'is_currently_available')
 
 class WalletTransactionSerializer(serializers.ModelSerializer):
     class Meta:

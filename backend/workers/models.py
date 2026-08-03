@@ -31,15 +31,29 @@ class WorkerProfile(models.Model):
     aadhaar_photo = models.ImageField(upload_to='worker_photos/aadhaar/', blank=True, null=True)
     pan_photo = models.ImageField(upload_to='worker_photos/pan/', blank=True, null=True)
     
+    AVAILABILITY_CHOICES = (
+        ('AVAILABLE', 'Available'),
+        ('BUSY', 'Busy'),
+    )
+
     is_verified = models.BooleanField(default=False)
     approval_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     online_status = models.BooleanField(default=False)
+    availability_status = models.CharField(max_length=20, choices=AVAILABILITY_CHOICES, default='AVAILABLE')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def is_currently_available(self):
+        return (
+            self.online_status
+            and self.approval_status == 'approved'
+            and self.availability_status == 'AVAILABLE'
+        )
+
     def __str__(self):
-        return f"Worker Profile for {self.user.email}"
+        return f"Worker Profile for {self.user.email} ({self.availability_status})"
 
 class Wallet(models.Model):
     objects = models.Manager()
