@@ -1,0 +1,27 @@
+# UNNATI Cooperative Platform — Production Backend Requirements (SIH 2026)
+
+# Django Core & ASGI Server
+Django>=5.0.0,<5.1.0
+daphne>=4.1.0
+channels>=4.0.0
+channels-redis>=4.2.0
+
+# REST API & Authentication
+djangorestframework>=3.14.0
+djangorestframework-simplejwt>=5.3.0
+django-cors-headers>=4.3.0
+django-environ>=0.11.0
+cryptography>=42.0.0
+
+# Database Connectors (MySQL & PostgreSQL support)
+PyMySQL>=1.1.0
+psycopg2-binary>=2.9.9
+
+# Documents, Media & Receipts
+Pillow>=10.2.0
+reportlab>=4.1.0
+
+# Payment & Social Auth SDKs
+razorpay>=1.4.1
+google-auth>=2.27.0
+requests>=2.31.0

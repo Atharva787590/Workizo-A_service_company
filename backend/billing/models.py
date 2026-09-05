@@ -70,6 +70,32 @@ class Payment(models.Model):
     receipt_pdf = models.FileField(upload_to='receipts/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # UNNATI Direct Payment Extension Fields
+    LIFECYCLE_CHOICES = (
+        ('PAYMENT_PENDING', 'Payment Pending'),
+        ('PAYMENT_INITIATED', 'Payment Initiated'),
+        ('PAYMENT_CONFIRMED', 'Payment Confirmed'),
+        ('PAYMENT_COMPLETED', 'Payment Completed'),
+        ('PAYMENT_FAILED', 'Payment Failed'),
+        ('PAYMENT_CANCELLED', 'Payment Cancelled'),
+        ('REFUND_PENDING', 'Refund Pending'),
+        ('REFUNDED', 'Refunded'),
+    )
+
+    lifecycle_status = models.CharField(max_length=50, choices=LIFECYCLE_CHOICES, default='PAYMENT_PENDING')
+    direct_recipient = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='direct_received_payments')
+    worker_direct_payout = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    cooperative_allocation = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    platform_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) # Always 0.00 in UNNATI direct model
+    platform_escrow_held = models.BooleanField(default=False) # Explicit platform escrow avoidance guarantee
+    is_mock_provider = models.BooleanField(default=False)
+    adapter_type = models.CharField(max_length=50, default='DIRECT_UPI')
+    worker_upi_id = models.CharField(max_length=100, blank=True, null=True)
+    idempotency_key = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    refund_reason = models.TextField(blank=True, null=True)
+    cancellation_compensation = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
     def save(self, *args, **kwargs):
         if self.method:
             self.method = self.method.upper()
@@ -80,6 +106,12 @@ class Payment(models.Model):
                 'pending': 'PENDING'
             }
             self.status = val_map.get(self.status.lower(), self.status.upper())
+        # Sync lifecycle_status with legacy status if unset
+        if not self.lifecycle_status or self.lifecycle_status == 'PAYMENT_PENDING':
+            if self.status in ['PAID', 'COMPLETED']:
+                self.lifecycle_status = 'PAYMENT_COMPLETED'
+            elif self.status == 'FAILED':
+                self.lifecycle_status = 'PAYMENT_FAILED'
         super().save(*args, **kwargs)
 
     @property
@@ -91,5 +123,46 @@ class Payment(models.Model):
         return self.status
 
     def __str__(self):
-        return f"Payment of {self.currency} {self.amount} for Booking #{self.booking.id} via {self.method} ({self.status})"
+        return f"Payment of {self.currency} {self.amount} for Booking #{self.booking.id} via {self.method} ({self.status} / {self.lifecycle_status})"
+
+
+class DirectPaymentTransaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = (
+        ('CUSTOMER_DIRECT_PAYMENT', 'Customer Direct Payment'),
+        ('WORKER_PAYOUT_SHARE', 'Worker Payout Share'),
+        ('COOPERATIVE_ALLOCATION', 'Cooperative Allocation'),
+        ('CANCELLATION_COMPENSATION', 'Cancellation Compensation'),
+        ('REFUND', 'Direct Refund'),
+        ('ADJUSTMENT', 'Direct Adjustment'),
+    )
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('INITIATED', 'Initiated'),
+        ('CONFIRMED', 'Confirmed'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+        ('CANCELLED', 'Cancelled'),
+        ('REFUNDED', 'Refunded'),
+    )
+
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='transactions')
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='payment_transactions')
+    transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPE_CHOICES)
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_transactions')
+    recipient = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_transactions')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, default='INR')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='INITIATED')
+    payment_method = models.CharField(max_length=50, default='DIRECT_UPI')
+    adapter_name = models.CharField(max_length=50, default='DIRECT_UPI_MOCK')
+    is_mock = models.BooleanField(default=False)
+    idempotency_key = models.CharField(max_length=100, blank=True, null=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.transaction_type} of ₹{self.amount} ({self.status}) for Booking #{self.booking.id}"
 

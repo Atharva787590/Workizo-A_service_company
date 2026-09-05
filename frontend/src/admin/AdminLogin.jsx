@@ -124,7 +124,7 @@ const AdminLogin = () => {
                 overflow: 'hidden'
               }}
             >
-              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+              <Box component="img" src="/logo.png" alt="UNNATI" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
               Admin Panel
@@ -236,7 +236,7 @@ const AdminLogin = () => {
                 overflow: 'hidden'
               }}
             >
-              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+              <Box component="img" src="/logo.png" alt="UNNATI" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
             </Box>
             <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#DC2626', mb: 2 }}>
               Registration Restricted

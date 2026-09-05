@@ -40,21 +40,28 @@ import {
   DashboardPage, DashboardGrid, DashboardCard, 
   SummaryCard, SummaryGrid, EmptyState 
 } from '../components/dashboard';
+import CooperativeOperationsCenter from './CooperativeOperationsCenter';
 
 const COLORS = ['#1A73E8', '#34A853', '#FBBC05', '#EA4335', '#8F00FF', '#00C9FF'];
 
 const AdminDashboard = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const activeTab = queryParams.get('tab') || 'dashboard';
+  const activeTab = queryParams.get('tab') || 'operations';
 
   const getTabDetails = () => {
     switch (activeTab) {
+      case 'operations':
+        return {
+          title: 'Cooperative Operations Center',
+          description: 'Live task triaging, worker credentials, non-custodial settlements, and cooperative dividend ledger.'
+        };
       case 'dashboard':
         return {
           title: 'Platform Overview',
           description: 'Real-time analytics and platform performance metrics.'
         };
+
       case 'bookings':
         return {
           title: 'Booking Management',
@@ -126,8 +133,10 @@ const AdminDashboard = () => {
       title={title}
       description={description}
     >
+      {activeTab === 'operations' && <CooperativeOperationsCenter />}
       {activeTab === 'dashboard' && <DashboardView hideHeader />}
       {activeTab === 'bookings' && <BookingsView hideHeader />}
+
       {activeTab === 'workers' && <WorkersView hideHeader />}
       {activeTab === 'customers' && <CustomersView hideHeader />}
       {activeTab === 'categories' && <CategoriesView hideHeader />}
@@ -2265,7 +2274,7 @@ const ReportsView = ({ hideHeader }) => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'workizo_bookings_report.csv');
+      link.setAttribute('download', 'unnati_bookings_report.csv');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -2518,9 +2527,9 @@ const SettingsView = ({ hideHeader }) => {
   const [saving, setSaving] = useState(false);
 
   // Settings state
-  const [companyName, setCompanyName] = useState('Workizo');
+  const [companyName, setCompanyName] = useState('UNNATI');
   const [gstPercentage, setGstPercentage] = useState(18.00);
-  const [supportEmail, setSupportEmail] = useState('support@workizo.com');
+  const [supportEmail, setSupportEmail] = useState('support@unnati.coop');
   const [supportPhone, setSupportPhone] = useState('+919876543210');
   const [contactDetails, setContactDetails] = useState('');
   const [terms, setTerms] = useState('');

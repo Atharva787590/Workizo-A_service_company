@@ -33,16 +33,31 @@ class BookingSerializer(serializers.ModelSerializer):
     payment = serializers.SerializerMethodField()
     unread_chats_count = serializers.SerializerMethodField()
     
+    assigned_workers = UserSerializer(many=True, read_only=True)
+
     class Meta:
         model = Booking
         fields = (
-            'id', 'tracking_id', 'customer', 'worker', 'service_category', 'service_category_detail',
+            'id', 'tracking_id', 'customer', 'worker', 'assigned_workers', 'service_category', 'service_category_detail',
             'problem_type', 'problem_description', 'address', 'city', 'state', 'pincode',
-            'status', 'qr_code_value',
+            'status', 'booking_type', 'scheduled_time', 'required_worker_count',
+            'latitude', 'longitude', 'arrival_radius_meters', 'geofence_verified', 'geofence_verified_at',
+            'cancellation_fee', 'cancellation_reason', 'dispute_reason',
+            'total_contract_value', 'cooperative_allocation', 'idempotency_key',
+            'qr_code_value',
             'before_photo', 'after_photo', 'spare_part_photo', 'invoice_photo', 'optional_video',
             'repair_token', 'major_repairs', 'rating', 'payment', 'unread_chats_count', 'created_at', 'updated_at'
         )
-        read_only_fields = ('id', 'tracking_id', 'customer', 'worker', 'qr_code_value', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'tracking_id', 'customer', 'worker', 'qr_code_value', 'created_at', 'updated_at', 'geofence_verified', 'geofence_verified_at', 'cancellation_fee')
+
+
+class BookingAuditLogSerializer(serializers.ModelSerializer):
+    changed_by_name = serializers.CharField(source='changed_by.full_name', read_only=True)
+
+    class Meta:
+        from .models import BookingAuditLog
+        model = BookingAuditLog
+        fields = ('id', 'booking', 'from_status', 'to_status', 'changed_by', 'changed_by_name', 'reason', 'metadata', 'created_at')
 
     def get_payment(self, obj):
         from billing.serializers import PaymentSerializer

@@ -78,3 +78,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return f"{self.email} ({self.role})"
+
+
+class CooperativeAuditLog(models.Model):
+    """
+    Operations Center Immutable Audit Trail
+    Records admin actions, worker credential changes, booking triages, and governance overrides.
+    """
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='operational_audit_actions')
+    actor_name = models.CharField(max_length=150)
+    action = models.CharField(max_length=100)
+    target_type = models.CharField(max_length=50) # 'WORKER', 'BOOKING', 'PAYMENT', 'GOVERNANCE', 'SYSTEM'
+    target_id = models.CharField(max_length=100)
+    result = models.CharField(max_length=50, default='SUCCESS')
+    notes = models.TextField(blank=True, null=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Audit #{self.id}: {self.actor_name} -> {self.action} on {self.target_type}#{self.target_id}"
+

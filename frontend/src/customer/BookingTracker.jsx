@@ -43,6 +43,22 @@ import SecurityIcon from '@mui/icons-material/Security';
 import PaymentIcon from '@mui/icons-material/Payment';
 
 import { tokens } from '../design/tokens';
+import {
+  BookingLifecycleStepper,
+  GeoFenceArrivalTracker,
+  CancellationModal,
+  DisputeModal,
+} from '../components/booking';
+import {
+  PaymentStatusBadge,
+  PaymentSummaryCard,
+  DirectPaymentModal,
+  TransactionHistoryList,
+  RefundStatusBanner,
+} from '../components/payment';
+import { TwoWayRatingModal } from '../components/trust';
+import ScaleIcon from '@mui/icons-material/Balance';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -164,7 +180,51 @@ function BookingTracker() {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadChats, setUnreadChats] = useState(0);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [directPaymentModalOpen, setDirectPaymentModalOpen] = useState(false);
+  const [directBreakdown, setDirectBreakdown] = useState(null);
+  const [twoWayRatingModalOpen, setTwoWayRatingModalOpen] = useState(false);
+  const [transactions, setTransactions] = useState([]);
   const isChatOpenRef = useRef(false);
+
+  const handleCancelBooking = async (reason) => {
+    try {
+      const res = await api.post(`/api/bookings/bookings/${id}/cancel-booking/`, { reason });
+      toast.success(res.data.fee_explanation || 'Booking cancelled.');
+      setBooking(res.data.booking);
+    } catch (err) {
+      const detail = err.response?.data?.detail || 'Failed to cancel booking';
+      toast.error(detail);
+      throw err;
+    }
+  };
+
+  const handleRaiseDispute = async (reason) => {
+    try {
+      const res = await api.post(`/api/bookings/bookings/${id}/raise-dispute/`, { reason });
+      toast.success('Dispute registered. Cooperative arbitration committee notified.');
+      setBooking(res.data.booking);
+    } catch (err) {
+      const detail = err.response?.data?.detail || 'Failed to raise dispute';
+      toast.error(detail);
+      throw err;
+    }
+  };
+
+  const handleInitiateDirectPayment = async (adapterType, idempotencyKey) => {
+    const res = await api.post(`/api/billing/${id}/initiate-direct-payment/`, {
+      adapter_type: adapterType,
+      idempotency_key: idempotencyKey,
+    });
+    return res.data;
+  };
+
+  const handleVerifyDirectPayment = async (payload) => {
+    await api.post(`/api/billing/${id}/verify-direct-payment/`, payload);
+    toast.success('Direct payment successfully verified!');
+    fetchDetails();
+  };
 
   useEffect(() => {
     isChatOpenRef.current = isChatOpen;
@@ -187,6 +247,22 @@ function BookingTracker() {
         } catch (e) {
           setBill(null);
         }
+      }
+
+      // Fetch UNNATI direct payment breakdown
+      try {
+        const summaryRes = await api.get(`/api/billing/${id}/direct-payment-summary/`);
+        setDirectBreakdown(summaryRes.data);
+      } catch (e) {
+        // Not yet generated
+      }
+
+      // Fetch immutable transactions ledger
+      try {
+        const txRes = await api.get(`/api/billing/${id}/transactions/`);
+        setTransactions(txRes.data);
+      } catch (e) {
+        // No transactions yet
       }
     } catch (err) {
       console.error(err);
@@ -333,7 +409,7 @@ function BookingTracker() {
         key: key_id,
         amount: amount,
         currency: currency,
-        name: "WORKIZO Services",
+        name: "UNNATI Cooperative Services",
         description: `Invoice Payment for Booking #${id}`,
         image: "https://cdn.razorpay.com/static/assets/logo/rzp.png",
         order_id: order_id,
@@ -595,7 +671,7 @@ function BookingTracker() {
           <Button
             variant="outlined"
             startIcon={<HeadsetMicIcon />}
-            onClick={() => toast.success('Connecting with Workizo Support...')}
+            onClick={() => toast.success('Connecting with UNNATI Cooperative Resolution Desk...')}
             sx={{ borderColor: tokens.colors.primary, color: tokens.colors.primary, px: 3, py: 1.25, borderRadius: '8px', textTransform: 'none', fontWeight: 700, fontSize: '0.875rem' }}
           >
             Contact Support
@@ -802,14 +878,74 @@ function BookingTracker() {
                     {booking.status === 'waiting_approval' && "Captain is seeking estimate approval for spare parts. Please check details below to proceed."}
                     {booking.status === 'WAITING_FOR_CASH_CONFIRMATION' && "Please pay cash directly to the captain. The captain will confirm receipt to finish the job."}
                     {booking.status === 'ready_to_complete' && "Payment received successfully. The captain is performing final documentation checks to complete the job."}
-                    {booking.status === 'completed' && "Thank you for using WORKIZO! The billing invoice has been cleared and payment was successful."}
+                    {booking.status === 'completed' && "Thank you for using UNNATI! The billing invoice has been cleared and payment was successful."}
                     {booking.status === 'cancelled' && "This booking request was cancelled and terminated."}
+                    {booking.status === 'disputed' && "This contract is under active review by the UNNATI cooperative resolution committee."}
                   </Typography>
 
+                  {/* UNNATI Scheduled / Collective Details */}
+                  {booking.booking_type === 'scheduled' && booking.scheduled_time && (
+                    <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(26,115,232,0.08)', borderRadius: '10px' }}>
+                      <Typography variant="caption" fontWeight={700} color="primary" display="block">
+                        Scheduled Appointment (निर्धारित समय)
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {new Date(booking.scheduled_time).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' })}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {booking.booking_type === 'collective' && (
+                    <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(147,51,234,0.08)', borderRadius: '10px' }}>
+                      <Typography variant="caption" fontWeight={700} sx={{ color: '#7e22ce' }} display="block">
+                        Collective Group Contract ({booking.required_worker_count} Craftsmen)
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        Unified work order deployed with cooperative fair-share allocation.
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Actions Bar: Cancel / Dispute */}
+                  <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${tokens.borderColor}`, display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                    {!['completed', 'cancelled'].includes(booking.status) && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<CancelOutlinedIcon />}
+                        onClick={() => setCancelModalOpen(true)}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
+                      >
+                        Cancel Booking
+                      </Button>
+                    )}
+                    {!['searching', 'cancelled', 'disputed'].includes(booking.status) && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<ScaleIcon />}
+                        onClick={() => setDisputeModalOpen(true)}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700, color: '#7e22ce', borderColor: '#c084fc' }}
+                      >
+                        Raise Dispute
+                      </Button>
+                    )}
+                  </Box>
 
                 </Box>
               </Box>
             </Paper>
+
+            {/* Geo-Fence Arrival Verification Tracker */}
+            <GeoFenceArrivalTracker
+              isWorker={false}
+              isVerified={booking.geofence_verified}
+              arrivalRadiusMeters={booking.arrival_radius_meters || 300}
+              jobLatitude={booking.latitude}
+              jobLongitude={booking.longitude}
+              onVerifyArrival={async () => {}}
+            />
 
             {/* SECTION 6: OTP VERIFICATION CARD */}
             {booking.status === 'arrived' && (
@@ -942,17 +1078,78 @@ function BookingTracker() {
                     </Box>
                   ) : (
                     booking.status !== 'completed' && (
-                      <Button
-                        variant="contained"
-                        onClick={() => setPaymentModalOpen(true)}
-                        sx={{ bgcolor: tokens.colors.success, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#16a34a' } }}
-                      >
-                        Pay Now (₹{bill.grand_total})
-                      </Button>
+                      <Box display="flex" gap={1.5} flexWrap="wrap">
+                        <Button
+                          variant="contained"
+                          onClick={() => setDirectPaymentModalOpen(true)}
+                          sx={{ bgcolor: '#059669', color: '#ffffff', borderRadius: '10px', textTransform: 'none', fontWeight: 800, '&:hover': { bgcolor: '#047857' } }}
+                        >
+                          Direct Worker Payment (₹{bill.grand_total})
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => setPaymentModalOpen(true)}
+                          sx={{ borderColor: tokens.colors.border, color: tokens.colors.textSecondary, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}
+                        >
+                          Legacy Gateway
+                        </Button>
+                      </Box>
                     )
                   )}
                 </Box>
               </Paper>
+            )}
+
+            {/* SECTION 6.5: UNNATI DIRECT PAYMENT & IMMUTABLE LEDGER */}
+            {directBreakdown && (
+              <Box sx={{ my: 3 }} className="space-y-4">
+                <PaymentSummaryCard
+                  breakdown={{
+                    totalCustomerPaid: Number(directBreakdown.total_customer_paid),
+                    workerDirectPayout: Number(directBreakdown.worker_direct_payout),
+                    cooperativeAllocation: Number(directBreakdown.cooperative_allocation),
+                    cooperativeRatePercentage: Number(directBreakdown.cooperative_rate_percentage),
+                    platformFee: 0,
+                    platformEscrowBalance: 0,
+                    platformHoldsEscrow: false,
+                    workerCount: directBreakdown.required_worker_count || 1,
+                    perWorkerShare: Number(directBreakdown.worker_direct_payout) / (directBreakdown.required_worker_count || 1),
+                    workerName: directBreakdown.worker_name,
+                    workerVpa: directBreakdown.worker_vpa,
+                    isCollective: directBreakdown.booking_type === 'collective',
+                  }}
+                />
+
+                {transactions && transactions.length > 0 && (
+                  <TransactionHistoryList
+                    transactions={transactions.map((t) => ({
+                      id: t.id,
+                      bookingId: t.booking,
+                      transactionType: t.transaction_type,
+                      amount: Number(t.amount),
+                      currency: t.currency || 'INR',
+                      status: t.status,
+                      senderName: t.sender_name,
+                      recipientName: t.recipient_name,
+                      paymentMethod: t.payment_method,
+                      adapterName: t.adapter_name,
+                      isMock: t.is_mock,
+                      createdAt: t.created_at,
+                    }))}
+                  />
+                )}
+              </Box>
+            )}
+
+            {/* Cancellation Refund Banner if applicable */}
+            {booking.status === 'cancelled' && (
+              <Box sx={{ my: 3 }}>
+                <RefundStatusBanner
+                  refundAmount={Number(booking.payment?.refund_amount || Math.max(0, (booking.payment?.amount || 0) - (booking.cancellation_fee || 0)))}
+                  workerCompensation={Number(booking.cancellation_fee || booking.payment?.cancellation_compensation || 0)}
+                  reason={booking.cancellation_reason || booking.payment?.refund_reason || 'Booking cancelled.'}
+                />
+              </Box>
             )}
 
             {/* SECTION 7: LIVE STATUS EVENTS FEED */}
@@ -1032,14 +1229,23 @@ function BookingTracker() {
                   sx={{ mb: 3 }}
                 />
 
-                <Button
-                  variant="contained"
-                  onClick={handleSubmitRating}
-                  disabled={submittingRating}
-                  sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#23232F' } }}
-                >
-                  Submit Feedback
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="contained"
+                    onClick={handleSubmitRating}
+                    disabled={submittingRating}
+                    sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', borderRadius: '8px', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#23232F' } }}
+                  >
+                    Submit Feedback
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setTwoWayRatingModalOpen(true)}
+                    sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
+                  >
+                    ⭐ Cooperative Detailed Rating (विस्तृत समीक्षा)
+                  </Button>
+                </Box>
               </Paper>
             )}
 
@@ -1346,6 +1552,62 @@ function BookingTracker() {
         currentUser={JSON.parse(localStorage.getItem('user'))}
         otherUser={booking?.worker}
       />
+
+      {/* UNNATI Cancellation & Dispute Modals */}
+      {booking && (
+        <>
+          <CancellationModal
+            isOpen={cancelModalOpen}
+            onClose={() => setCancelModalOpen(false)}
+            onConfirm={handleCancelBooking}
+            bookingCreatedAt={booking.created_at}
+            scheduledTime={booking.scheduled_time}
+            currentStatus={booking.status}
+            baseLabourCharge={booking.service_category_detail?.base_labour_charge || 250}
+          />
+          <DisputeModal
+            isOpen={disputeModalOpen}
+            onClose={() => setDisputeModalOpen(false)}
+            onConfirm={handleRaiseDispute}
+            bookingId={booking.id}
+          />
+          {directBreakdown && (
+            <DirectPaymentModal
+              isOpen={directPaymentModalOpen}
+              onClose={() => setDirectPaymentModalOpen(false)}
+              bookingId={Number(id)}
+              breakdown={{
+                totalCustomerPaid: Number(directBreakdown.total_customer_paid),
+                workerDirectPayout: Number(directBreakdown.worker_direct_payout),
+                cooperativeAllocation: Number(directBreakdown.cooperative_allocation),
+                cooperativeRatePercentage: Number(directBreakdown.cooperative_rate_percentage),
+                platformFee: 0,
+                platformEscrowBalance: 0,
+                platformHoldsEscrow: false,
+                workerCount: directBreakdown.required_worker_count || 1,
+                perWorkerShare: Number(directBreakdown.worker_direct_payout) / (directBreakdown.required_worker_count || 1),
+                workerName: directBreakdown.worker_name,
+                workerVpa: directBreakdown.worker_vpa,
+                isCollective: directBreakdown.booking_type === 'collective',
+              }}
+              onInitiatePayment={handleInitiateDirectPayment}
+              onVerifyPayment={handleVerifyDirectPayment}
+            />
+          )}
+
+          <TwoWayRatingModal
+            isOpen={twoWayRatingModalOpen}
+            onClose={() => setTwoWayRatingModalOpen(false)}
+            bookingId={Number(id)}
+            ratingType="CUSTOMER_TO_WORKER"
+            targetName={booking.worker?.name || 'Craftsman'}
+            onSuccess={() => {
+              setTwoWayRatingModalOpen(false);
+              fetchBookingDetails();
+            }}
+          />
+        </>
+      )}
 
     </Box>
   );

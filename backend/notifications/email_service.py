@@ -27,7 +27,7 @@ class EmailNotificationService:
         verification_url = f"{base_url}/api/accounts/verify-email/?token={token}"
         
         context = {
-            'subject': 'Welcome to WORKIZO! Verify your email address',
+            'subject': 'Welcome to UNNATI! Verify your email address',
             'user_name': user.full_name,
             'verification_url': verification_url,
             'expire_hours': 24
@@ -52,7 +52,7 @@ class EmailNotificationService:
         reset_url = f"{base_url}/api/accounts/reset-password/{uidb64}/{token}/"
         
         context = {
-            'subject': 'Reset your WORKIZO Password',
+            'subject': 'Reset your UNNATI Password',
             'user_name': user.full_name,
             'reset_url': reset_url
         }
@@ -243,7 +243,7 @@ class EmailNotificationService:
         verification_url = f"{base_url}/api/accounts/verify-email/?token={token}"
         
         context = {
-            'subject': 'Welcome to WORKIZO! Verify your Captain account',
+            'subject': 'Welcome to UNNATI! Verify your Worker account',
             'user_name': user.full_name,
             'verification_url': verification_url,
             'expire_hours': 24

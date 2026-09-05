@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 body {
   margin: 0;
   padding: 0;
@@ -41,3 +43,182 @@ input, button, select, textarea {
 .pulse-dot {
   animation: pulse-dot 1.5s ease-in-out infinite;
 }
+
+/* ─── WCAG 2.1 AA Focus & Accessibility Baseline ──────────────────────────────── */
+
+/* Enhanced Keyboard Focus Indicators */
+:focus-visible {
+  outline: 2px solid #1A73E8 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25) !important;
+}
+
+/* High Contrast Mode (WCAG AAA >= 7:1) */
+.high-contrast {
+  color-scheme: dark;
+}
+
+.high-contrast body,
+.high-contrast #root {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+.high-contrast :focus-visible {
+  outline: 3px solid #FFFF00 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px #000000 !important;
+}
+
+.high-contrast .MuiPaper-root,
+.high-contrast .MuiCard-root,
+.high-contrast [class*="card"],
+.high-contrast [class*="Card"],
+.high-contrast [class*="paper"],
+.high-contrast [class*="Paper"] {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.high-contrast .MuiTypography-root,
+.high-contrast p,
+.high-contrast span,
+.high-contrast h1,
+.high-contrast h2,
+.high-contrast h3,
+.high-contrast h4,
+.high-contrast h5,
+.high-contrast h6 {
+  color: #FFFFFF !important;
+}
+
+.high-contrast .MuiTypography-colorTextSecondary,
+.high-contrast [class*="textSecondary"],
+.high-contrast [class*="text-muted"],
+.high-contrast [class*="text-gray"] {
+  color: #E0E0E0 !important;
+}
+
+.high-contrast .MuiButton-root,
+.high-contrast button {
+  border: 2px solid #FFFFFF !important;
+  color: #FFFFFF !important;
+  background-color: #1A1A1A !important;
+}
+
+.high-contrast .MuiButton-contained,
+.high-contrast button[class*="bg-"] {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border-color: #FFFF00 !important;
+}
+
+.high-contrast hr,
+.high-contrast .MuiDivider-root {
+  border-color: #FFFFFF !important;
+  opacity: 0.8 !important;
+}
+
+/* Text Scaling */
+.text-scale-normal {
+  font-size: 100%;
+}
+
+.text-scale-large {
+  font-size: 115% !important;
+}
+
+.text-scale-large body {
+  font-size: 1.15rem !important;
+}
+
+.text-scale-xlarge {
+  font-size: 130% !important;
+}
+
+.text-scale-xlarge body {
+  font-size: 1.3rem !important;
+}
+
+/* Reduced Motion Mode */
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Low-Bandwidth Mode */
+.low-bandwidth-mode .decorative-media,
+.low-bandwidth-mode [data-decorative="true"] {
+  display: none !important;
+}
+
+.low-bandwidth-mode [class*="gradient"],
+.low-bandwidth-mode [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  background-image: none !important;
+}
+
+/* UNNATI Design System Utility Tokens */
+.unnati-touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+.unnati-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Micro-interactions (respects reduced-motion) */
+.unnati-card-interactive {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+}
+
+.unnati-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+}
+
+.unnati-btn-interactive {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s ease;
+}
+
+.unnati-btn-interactive:active {
+  transform: scale(0.98);
+}
+
+/* Safe Shimmer Skeleton */
+@keyframes unnati-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.unnati-skeleton-shimmer {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: unnati-shimmer 1.8s infinite;
+}
+
+.reduced-motion .unnati-card-interactive:hover,
+.reduced-motion .unnati-btn-interactive:active {
+  transform: none !important;
+}
+
+.reduced-motion .unnati-skeleton-shimmer {
+  animation: none !important;
+}
+
+

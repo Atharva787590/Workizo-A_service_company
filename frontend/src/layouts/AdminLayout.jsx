@@ -66,6 +66,7 @@ const AdminLayout = () => {
   };
 
   const menuItems = [
+    { text: 'Operations Center', tab: 'operations', icon: <AdminPanelSettingsIcon /> },
     { text: 'Dashboard', tab: 'dashboard', icon: <DashboardIcon /> },
     { text: 'Bookings', tab: 'bookings', icon: <ReceiptLongIcon /> },
     { text: 'Workers', tab: 'workers', icon: <SupervisorAccountIcon /> },
@@ -79,6 +80,7 @@ const AdminLayout = () => {
     { text: 'System Settings', tab: 'settings', icon: <SettingsIcon /> },
     { text: 'Profile', tab: 'profile', icon: <PersonIcon /> },
   ];
+
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#ffffff', color: '#0F0F14' }}>
@@ -131,13 +133,14 @@ const AdminLayout = () => {
                     fontSize: '1.3rem'
                   }}
                 >
-                  WORKIZO
+                  UNNATI • उन्नति
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#1A73E8', letterSpacing: '.1rem', fontWeight: 600 }}>
-                  ADMIN PORTAL
+                <Typography variant="caption" sx={{ color: '#0284C7', letterSpacing: '.05rem', fontWeight: 700 }}>
+                  OPERATIONS DESK
                 </Typography>
               </Box>
             </Box>
+
             <IconButton 
               onClick={() => setIsCollapsed(true)} 
               sx={{ 
@@ -282,7 +285,7 @@ const AdminLayout = () => {
             </IconButton>
             <AdminPanelSettingsIcon sx={{ color: '#1A73E8', mr: 1, display: { xs: 'none', sm: 'block' } }} />
             <Typography variant="subtitle1" fontWeight="700" sx={{ letterSpacing: '0.02em', display: { xs: 'none', sm: 'block' } }}>
-              Workizo Administrative Panel
+              UNNATI Cooperative Operations & Administration
             </Typography>
           </Box>
 

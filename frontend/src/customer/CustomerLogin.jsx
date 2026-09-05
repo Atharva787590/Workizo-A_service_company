@@ -124,7 +124,7 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
   const handleMockGoogleLogin = async () => {
     setLoading(true);
     try {
-      const email = prompt("Enter mock Google email:", "googletest@workizo.com");
+      const email = prompt("Enter mock Google email:", "googletest@unnati.coop");
       if (!email) {
         setLoading(false);
         return;
@@ -221,13 +221,13 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
                 overflow: 'hidden'
               }}
             >
-              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+              <Box component="img" src="/logo.png" alt="UNNATI" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
               Sign In
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Access your Workizo marketplace account
+              Access your UNNATI member account
             </Typography>
 
             <Box component="form" onSubmit={handleSubmitLogin(onLoginSubmit)} noValidate sx={{ width: '100%' }}>
@@ -376,7 +376,7 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
                 overflow: 'hidden'
               }}
             >
-              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+              <Box component="img" src="/logo.png" alt="UNNATI" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
               Create Account

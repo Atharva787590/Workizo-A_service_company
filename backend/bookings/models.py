@@ -5,20 +5,29 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class Booking(models.Model):
+    BOOKING_TYPE_CHOICES = (
+        ('instant', 'Instant Booking'),
+        ('scheduled', 'Scheduled Booking'),
+        ('collective', 'Collective Multi-Worker Booking'),
+    )
+
     STATUS_CHOICES = (
-        ('searching', 'Searching For Worker'),
+        ('searching', 'Searching For Worker (REQUESTED)'),
+        ('MATCHING', 'Matching Workers'),
         ('accepted', 'Worker Accepted'),
-        ('on_the_way', 'Worker On The Way'),
+        ('SCHEDULED', 'Scheduled in Advance'),
+        ('on_the_way', 'Worker On The Way (WORKER_ARRIVING)'),
         ('arrived', 'Worker Arrived'),
-        ('verified', 'QR Verified'),
+        ('verified', 'QR / Geofence Verified'),
         ('inspection', 'Inspection'),
-        ('repair_started', 'Repair Started'),
+        ('repair_started', 'Repair Started (IN_PROGRESS)'),
         ('repair_completed', 'Repair Completed'),
         ('waiting_approval', 'Waiting For Customer Approval'),
         ('WAITING_FOR_CASH_CONFIRMATION', 'Waiting For Cash Confirmation'),
-        ('ready_to_complete', 'Ready To Complete'),
+        ('ready_to_complete', 'Ready To Complete (PAYMENT_RELEASED)'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
+        ('disputed', 'Disputed'),
     )
 
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
@@ -31,6 +40,30 @@ class Booking(models.Model):
     state = models.CharField(max_length=100)
     pincode = models.CharField(max_length=10)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='searching')
+    
+    # UNNATI Extensions
+    booking_type = models.CharField(max_length=20, choices=BOOKING_TYPE_CHOICES, default='instant')
+    scheduled_time = models.DateTimeField(null=True, blank=True)
+    required_worker_count = models.PositiveIntegerField(default=1)
+    assigned_workers = models.ManyToManyField(User, related_name='collective_jobs', blank=True)
+    
+    # Geo-fencing
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    arrival_radius_meters = models.PositiveIntegerField(default=300)
+    geofence_verified = models.BooleanField(default=False)
+    geofence_verified_at = models.DateTimeField(null=True, blank=True)
+    
+    # Cancellation & Disputes
+    cancellation_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    cancellation_reason = models.TextField(blank=True, null=True)
+    dispute_reason = models.TextField(blank=True, null=True)
+    
+    # Cooperative Economics
+    total_contract_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    cooperative_allocation = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    idempotency_key = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+
     qr_code_value = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     tracking_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
     before_photo = models.ImageField(upload_to='bookings/before/', null=True, blank=True)
@@ -112,5 +145,45 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"Msg {self.id} from {self.sender.email} to {self.receiver.email} for Booking {self.booking.id}"
+
+
+class BookingAuditLog(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='audit_logs')
+    from_status = models.CharField(max_length=50)
+    to_status = models.CharField(max_length=50)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    reason = models.TextField(blank=True, null=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Audit #{self.id} on Booking #{self.booking.id}: {self.from_status} -> {self.to_status}"
+
+
+class BookingWorkerAllocation(models.Model):
+    STATUS_CHOICES = (
+        ('assigned', 'Assigned'),
+        ('arrived', 'Arrived'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('disputed', 'Disputed'),
+    )
+
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='worker_allocations')
+    worker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cooperative_allocations')
+    allocated_payout = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    cooperative_dividend_share = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='assigned')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('booking', 'worker')
+
+    def __str__(self):
+        return f"Allocation for {self.worker.email} on Booking #{self.booking.id} (₹{self.allocated_payout})"
+
 
 

@@ -340,14 +340,14 @@ const SplineLanding = () => {
             <Typography
               variant="caption"
               sx={{
-                color: 'rgba(255, 255, 255, 0.4)',
+                color: '#F59E0B',
                 fontFamily: "'NewBlack', sans-serif",
                 fontSize: '0.75rem',
                 fontWeight: 800,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.12em',
               }}
             >
-              [ EN ] &nbsp; [ HI ]
+              [ SIH 2026 ] &nbsp; UNNATI • उन्नति
             </Typography>
             <Typography
               onClick={() => navigate('/home')}
@@ -366,7 +366,7 @@ const SplineLanding = () => {
                 },
               }}
             >
-              WORKIZO
+              UNNATI
             </Typography>
           </Box>
 
@@ -393,38 +393,53 @@ const SplineLanding = () => {
                   mb: 1.5,
                 }}
               >
-                SERVICES
+                PLATFORM
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Link
-                  onClick={() => navigate('/home')}
+                  onClick={() => navigate('/services')}
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    color: 'rgba(255, 255, 255, 0.8)',
                     fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 500,
+                    fontWeight: 600,
                     fontSize: '0.8rem',
                     textDecoration: 'none',
                     letterSpacing: '0.02em',
                     cursor: 'pointer',
-                    '&:hover': { color: '#ffffff' },
+                    '&:hover': { color: '#38BDF8' },
                   }}
                 >
-                  [ BOOK REPAIR ]
+                  [ SERVICES CATALOG ]
                 </Link>
                 <Link
-                  onClick={() => navigate('/captain/register')}
+                  onClick={() => navigate('/transparency')}
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    color: 'rgba(255, 255, 255, 0.8)',
                     fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 500,
+                    fontWeight: 600,
                     fontSize: '0.8rem',
                     textDecoration: 'none',
                     letterSpacing: '0.02em',
                     cursor: 'pointer',
-                    '&:hover': { color: '#ffffff' },
+                    '&:hover': { color: '#38BDF8' },
                   }}
                 >
-                  [ BECOME A CAPTAIN ]
+                  [ TRANSPARENCY HUB ]
+                </Link>
+                <Link
+                  onClick={() => navigate('/governance')}
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    textDecoration: 'none',
+                    letterSpacing: '0.02em',
+                    cursor: 'pointer',
+                    '&:hover': { color: '#38BDF8' },
+                  }}
+                >
+                  [ DEMOCRATIC GOVERNANCE ]
                 </Link>
               </Box>
             </Box>
@@ -443,24 +458,38 @@ const SplineLanding = () => {
                   mb: 1.5,
                 }}
               >
-                WORKIZO
+                DEMO PORTALS
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-
                 <Link
-                  onClick={() => navigate('/home')}
+                  onClick={() => navigate('/customer/login')}
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    color: 'rgba(255, 255, 255, 0.8)',
                     fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 500,
+                    fontWeight: 600,
                     fontSize: '0.8rem',
                     textDecoration: 'none',
                     letterSpacing: '0.02em',
                     cursor: 'pointer',
-                    '&:hover': { color: '#ffffff' },
+                    '&:hover': { color: '#34D399' },
                   }}
                 >
-                  [ GO TO PORTAL ]
+                  [ CUSTOMER PORTAL ]
+                </Link>
+                <Link
+                  onClick={() => navigate('/captain/login')}
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    textDecoration: 'none',
+                    letterSpacing: '0.02em',
+                    cursor: 'pointer',
+                    '&:hover': { color: '#FBBF24' },
+                  }}
+                >
+                  [ WORKER GUILD ]
                 </Link>
               </Box>
             </Box>
@@ -478,52 +507,124 @@ const SplineLanding = () => {
             width: '100%',
           }}
         >
-          {/* Bottom Left: Huge Luxury serif title */}
-          <Box sx={{ maxWidth: '650px' }}>
+          {/* Bottom Left: Value Proposition */}
+          <Box sx={{ maxWidth: '680px' }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 2, py: 0.5, mb: 2, bgcolor: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '9999px' }}>
+              <Typography sx={{ color: '#F59E0B', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                SIH 2026 • DIGITAL WORKER COOPERATIVE PLATFORM
+              </Typography>
+            </Box>
             <Typography
               variant="h2"
               sx={{
                 fontFamily: "'Maltiner Display', Georgia, serif",
                 fontWeight: 400,
-                fontSize: { xs: '1.8rem', sm: '2.8rem', md: '3.6rem' },
+                fontSize: { xs: '1.8rem', sm: '2.4rem', md: '3.2rem' },
                 lineHeight: 1.15,
                 color: '#ffffff',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
+                mb: 1.5,
               }}
             >
-              One request,
+              Zero Platform Commission.
               <br />
-              one skilled solution.
+              100% Direct To Workers.
+            </Typography>
+            <Typography
+              sx={{
+                color: 'rgba(255, 255, 255, 0.75)',
+                fontSize: { xs: '0.9rem', md: '1rem' },
+                lineHeight: 1.6,
+                maxWidth: '620px',
+              }}
+            >
+              UNNATI ends corporate aggregator middleman cuts. Customers pay craftsmen directly via UPI with 0% platform extraction, fair wage guarantees, and democratic one-member-one-vote cooperative governance.
             </Typography>
           </Box>
 
-          {/* Bottom Right: Go to Website link */}
+          {/* Bottom Right: Quick SIH Jury Demo Launchpad */}
           <Box
             sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)', lg: 'repeat(2, 1fr)' },
+              gap: 1.5,
+              width: { xs: '100%', lg: '400px' },
               pointerEvents: 'auto',
-              alignSelf: { xs: 'stretch', md: 'auto' },
             }}
           >
-            <Link
-              onClick={() => navigate('/home')}
+            <Button
+              onClick={() => navigate('/services')}
+              variant="contained"
               sx={{
-                color: '#ffffff',
-                fontFamily: "'NewBlack', sans-serif",
-                fontSize: { xs: '0.9rem', md: '1rem' },
+                bgcolor: '#0284C7',
+                color: '#FFFFFF',
                 fontWeight: 800,
-                textDecoration: 'none',
-                letterSpacing: '0.08em',
-                cursor: 'pointer',
-                display: 'inline-block',
-                transition: 'opacity 0.2s',
-                '&:hover': {
-                  opacity: 0.7,
-                },
+                fontSize: '0.8rem',
+                py: 1.25,
+                px: 2,
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+                '&:hover': { bgcolor: '#0369A1' },
               }}
             >
-              [ GO TO WEBSITE ]
-            </Link>
+              Customer Demo
+            </Button>
+            <Button
+              onClick={() => navigate('/captain/login')}
+              variant="contained"
+              sx={{
+                bgcolor: '#D97706',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                py: 1.25,
+                px: 2,
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: '0 4px 14px rgba(217, 119, 6, 0.4)',
+                '&:hover': { bgcolor: '#B45309' },
+              }}
+            >
+              Worker Demo
+            </Button>
+            <Button
+              onClick={() => navigate('/governance')}
+              variant="contained"
+              sx={{
+                bgcolor: '#059669',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                py: 1.25,
+                px: 2,
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.4)',
+                '&:hover': { bgcolor: '#047857' },
+              }}
+            >
+              Democratic Vote
+            </Button>
+            <Button
+              onClick={() => navigate('/transparency')}
+              variant="contained"
+              sx={{
+                bgcolor: '#475569',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                py: 1.25,
+                px: 2,
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: '0 4px 14px rgba(71, 85, 105, 0.4)',
+                '&:hover': { bgcolor: '#334155' },
+              }}
+            >
+              Transparency Hub
+            </Button>
           </Box>
         </Box>
       </Box>
@@ -701,7 +802,7 @@ const SplineLanding = () => {
                 lineHeight: 1.6,
               }}
             >
-              From booking to completion, WORKIZO keeps every step simple, transparent, and live.
+              From booking to completion, UNNATI keeps every step simple, transparent, and live.
             </Typography>
           </Box>
 
@@ -1076,7 +1177,7 @@ const SplineLanding = () => {
                 textTransform: 'uppercase',
               }}
             >
-              Workizo Quality & Safety Assurance
+              UNNATI Cooperative Quality & Safety Assurance
             </Typography>
             <Typography
               variant="body1"
@@ -1242,7 +1343,7 @@ const SplineLanding = () => {
                 lineHeight: 1.6,
               }}
             >
-              The minds behind Workizo, dedicated to bridging local home services with modern web architecture.
+              The minds behind UNNATI, dedicated to transforming blue-collar gig work through worker cooperative governance.
             </Typography>
           </Box>
 
@@ -2004,7 +2105,7 @@ const SplineLanding = () => {
                 textTransform: 'uppercase',
               }}
             >
-              [ ENTER WORKIZO ECOSYSTEM ]
+              [ ENTER UNNATI COOPERATIVE ]
             </Typography>
 
             <Typography
@@ -2031,7 +2132,7 @@ const SplineLanding = () => {
                 mb: 1,
               }}
             >
-              Step inside Workizo to browse verified service captains, track live bookings, and manage your home with absolute peace of mind.
+              Step inside UNNATI to browse verified trade professionals, track live bookings, and support fair worker cooperatives.
             </Typography>
 
             <Box
@@ -2117,7 +2218,7 @@ const SplineLanding = () => {
             letterSpacing: '0.08em',
           }}
         >
-          © {new Date().getFullYear()} WORKIZO PLATFORM INC. ALL RIGHTS RESERVED.
+          © {new Date().getFullYear()} UNNATI (उन्नति) WORKER COOPERATIVE PLATFORM • SIH 2026. ALL RIGHTS RESERVED.
         </Typography>
       </Box>
 

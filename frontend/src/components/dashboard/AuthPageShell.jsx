@@ -29,7 +29,7 @@ const AuthPageShell = ({ title, subtitle, children, maxWidth = 440 }) => (
         <Box
           component="img"
           src="/logo.png"
-          alt="Workizo"
+          alt="UNNATI"
           sx={{ width: 40, height: 40, mb: 2, objectFit: 'contain' }}
         />
         <Typography variant="h5" fontWeight={700} gutterBottom>

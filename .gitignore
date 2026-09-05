@@ -31,3 +31,8 @@ dist/
 
 # Media uploads
 backend/media/
+backend/venv/
+backend/staticfiles/
+backend/db.sqlite3
+scripts/logs/
+*.log

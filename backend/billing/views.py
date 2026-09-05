@@ -42,8 +42,9 @@ def compile_bill_pdf(bill):
     normal_style = styles['Normal']
     
     story = []
-    story.append(Paragraph("WORKIZO OFFICIAL INVOICE", title_style))
+    story.append(Paragraph("UNNATI OFFICIAL INVOICE (उन्नति चालान)", title_style))
     story.append(Spacer(1, 10))
+
     
     # Metadata
     story.append(Paragraph(f"<b>Invoice No:</b> WRK-INV-{bill.id}", normal_style))
@@ -106,7 +107,7 @@ def compile_bill_pdf(bill):
     
     story.append(t)
     story.append(Spacer(1, 30))
-    story.append(Paragraph("Thank you for choosing WORKIZO. For queries, contact support@workizo.com", normal_style))
+    story.append(Paragraph("Thank you for choosing UNNATI Cooperative. For queries, contact support@unnati.coop", normal_style))
     
     doc.build(story)
     
@@ -335,7 +336,7 @@ def compile_receipt_pdf(payment):
     normal_style = styles['Normal']
     
     story = []
-    story.append(Paragraph("WORKIZO OFFICIAL RECEIPT", title_style))
+    story.append(Paragraph("UNNATI COOPERATIVE OFFICIAL RECEIPT", title_style))
     story.append(Spacer(1, 10))
     
     # Metadata
@@ -406,7 +407,7 @@ def compile_receipt_pdf(payment):
     
     story.append(t)
     story.append(Spacer(1, 30))
-    story.append(Paragraph("Thank you for choosing WORKIZO. For queries, contact support@workizo.com", normal_style))
+    story.append(Paragraph("Thank you for choosing UNNATI Cooperative. For queries, contact support@unnati.coop", normal_style))
     
     doc.build(story)
     buffer.seek(0)
@@ -819,4 +820,443 @@ class ProcessPaymentView(views.APIView):
             return Response(PaymentSerializer(payment).data)
 
 
+# =============================================================================
+# UNNATI DIRECT PEER-TO-PEER PAYMENT & COOPERATIVE ECONOMICS ENDPOINTS
+# =============================================================================
+from .payment_engine import (
+    calculate_direct_payment_breakdown,
+    validate_payment_state_transition,
+    calculate_cancellation_refund,
+    ensure_no_platform_escrow,
+    COOPERATIVE_RATE_DEFAULT
+)
+from .payment_adapters import PaymentAdapterFactory
+from .serializers import DirectPaymentTransactionSerializer
 
+
+class DirectPaymentSummaryView(views.APIView):
+    """
+    Returns transparent server-side pricing breakdown for direct service-provider payment.
+    Ensures 100% transparency with zero platform escrow / zero middleman deduction.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, booking_id):
+        booking = get_object_or_404(Booking, id=booking_id)
+        
+        # Access control
+        is_participant = (
+            request.user == booking.customer or
+            request.user == booking.worker or
+            request.user.role == 'admin' or
+            request.user.is_staff or
+            booking.assigned_workers.filter(id=request.user.id).exists()
+        )
+        if not is_participant:
+            return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Resolve total payable amount
+        bill = getattr(booking, 'bill', None)
+        if bill and bill.grand_total > 0:
+            total_amount = bill.grand_total
+        elif booking.total_contract_value and booking.total_contract_value > 0:
+            total_amount = booking.total_contract_value
+        else:
+            base_labour = getattr(booking.service_category, 'base_price', Decimal('250.00')) if booking.service_category else Decimal('250.00')
+            total_amount = base_labour * Decimal(booking.required_worker_count or 1)
+
+        worker_count = max(1, booking.required_worker_count or 1)
+        breakdown = calculate_direct_payment_breakdown(
+            amount=total_amount,
+            worker_count=worker_count,
+            cooperative_rate=COOPERATIVE_RATE_DEFAULT
+        )
+
+        # Worker UPI & details
+        primary_worker = booking.worker or booking.assigned_workers.first()
+        worker_name = primary_worker.full_name if primary_worker else "Assigned Craftsman"
+        worker_vpa = f"{primary_worker.phone}@upi" if (primary_worker and primary_worker.phone) else f"worker.{primary_worker.id if primary_worker else '0'}@coop.upi"
+
+        # Worker allocation shares for collective bookings
+        worker_shares = []
+        allocations = booking.worker_allocations.all()
+        if allocations.exists():
+            for alloc in allocations:
+                worker_shares.append({
+                    'worker_id': alloc.worker.id,
+                    'worker_name': alloc.worker.full_name,
+                    'allocated_payout': str(alloc.allocated_payout),
+                    'cooperative_dividend_share': str(alloc.cooperative_dividend_share),
+                    'status': alloc.status
+                })
+        else:
+            worker_shares.append({
+                'worker_id': primary_worker.id if primary_worker else None,
+                'worker_name': worker_name,
+                'allocated_payout': str(breakdown['worker_direct_payout']),
+                'cooperative_dividend_share': str(breakdown['cooperative_allocation']),
+                'status': 'assigned'
+            })
+
+        existing_payment = Payment.objects.filter(booking=booking).first()
+
+        return Response({
+            'booking_id': booking.id,
+            'booking_type': getattr(booking, 'booking_type', 'instant'),
+            'required_worker_count': worker_count,
+            'total_customer_paid': str(breakdown['total_customer_paid']),
+            'worker_direct_payout': str(breakdown['worker_direct_payout']),
+            'cooperative_allocation': str(breakdown['cooperative_allocation']),
+            'cooperative_rate_percentage': breakdown['cooperative_rate_percentage'],
+            'platform_fee': str(breakdown['platform_fee']),
+            'platform_escrow_balance': str(breakdown['platform_escrow_balance']),
+            'platform_holds_escrow': False,
+            'worker_name': worker_name,
+            'worker_vpa': worker_vpa,
+            'worker_shares': worker_shares,
+            'current_payment_status': existing_payment.lifecycle_status if existing_payment else 'PAYMENT_PENDING',
+            'is_paid': existing_payment.status in ['PAID', 'COMPLETED'] if existing_payment else False
+        })
+
+
+class InitiateDirectPaymentView(views.APIView):
+    """
+    Initiates direct customer-to-worker payment using provider-independent adapters.
+    Validates idempotency, verifies amounts server-side, and records immutable transaction.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, booking_id):
+        booking = get_object_or_404(Booking, id=booking_id)
+        if booking.customer != request.user and request.user.role != 'admin':
+            return Response({"detail": "Access denied. Only the customer can initiate payment."}, status=status.HTTP_403_FORBIDDEN)
+
+        if booking.status == 'completed':
+            return Response({"detail": "Booking is already completed and settled."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Idempotency check
+        idempotency_key = request.data.get('idempotency_key')
+        if idempotency_key:
+            existing_payment = Payment.objects.filter(idempotency_key=idempotency_key).first()
+            if existing_payment:
+                adapter = PaymentAdapterFactory.get_adapter(existing_payment.adapter_type)
+                return Response({
+                    'payment': PaymentSerializer(existing_payment).data,
+                    'replayed': True,
+                    'message': 'Idempotent request returning existing payment.'
+                })
+
+        # Calculate amount strictly server-side
+        bill = getattr(booking, 'bill', None)
+        if bill and bill.grand_total > 0:
+            total_amount = bill.grand_total
+        elif booking.total_contract_value and booking.total_contract_value > 0:
+            total_amount = booking.total_contract_value
+        else:
+            base_price = getattr(booking.service_category, 'base_price', Decimal('250.00')) if booking.service_category else Decimal('250.00')
+            total_amount = base_price * Decimal(booking.required_worker_count or 1)
+
+        worker_count = max(1, booking.required_worker_count or 1)
+        breakdown = calculate_direct_payment_breakdown(
+            amount=total_amount,
+            worker_count=worker_count,
+            cooperative_rate=COOPERATIVE_RATE_DEFAULT
+        )
+
+        adapter_type = request.data.get('adapter_type', 'DIRECT_UPI')
+        adapter = PaymentAdapterFactory.get_adapter(adapter_type)
+
+        primary_worker = booking.worker or booking.assigned_workers.first()
+        if not primary_worker:
+            return Response({"detail": "No worker assigned to receive direct payment."}, status=status.HTTP_400_BAD_REQUEST)
+
+        receipt_number = f"REC-UNN-{booking.id}-{int(time.time())}"
+
+        with transaction.atomic():
+            payment, created = Payment.objects.update_or_create(
+                booking=booking,
+                defaults={
+                    'customer': booking.customer,
+                    'captain': primary_worker,
+                    'direct_recipient': primary_worker,
+                    'amount': breakdown['total_customer_paid'],
+                    'worker_direct_payout': breakdown['worker_direct_payout'],
+                    'cooperative_allocation': breakdown['cooperative_allocation'],
+                    'platform_fee': Decimal('0.00'),
+                    'platform_escrow_held': False,
+                    'currency': 'INR',
+                    'receipt_number': receipt_number,
+                    'method': 'UPI' if 'UPI' in adapter.adapter_name else 'CASH',
+                    'adapter_type': adapter.adapter_name,
+                    'is_mock_provider': adapter.is_mock,
+                    'worker_upi_id': f"{primary_worker.phone}@upi" if primary_worker.phone else f"worker.{primary_worker.id}@coop.upi",
+                    'idempotency_key': idempotency_key or f"idemp_{booking.id}_{int(time.time())}",
+                    'status': 'PENDING',
+                    'lifecycle_status': 'PAYMENT_INITIATED',
+                }
+            )
+
+            # Record immutable transaction
+            DirectPaymentTransaction.objects.create(
+                payment=payment,
+                booking=booking,
+                transaction_type='CUSTOMER_DIRECT_PAYMENT',
+                sender=booking.customer,
+                recipient=primary_worker,
+                amount=breakdown['total_customer_paid'],
+                currency='INR',
+                status='INITIATED',
+                payment_method=adapter.adapter_name,
+                adapter_name=adapter.adapter_name,
+                is_mock=adapter.is_mock,
+                idempotency_key=payment.idempotency_key,
+                metadata={'breakdown': {k: str(v) for k, v in breakdown.items()}}
+            )
+
+        adapter_response = adapter.initiate_payment(
+            booking=booking,
+            amount=breakdown['total_customer_paid'],
+            recipient_user=primary_worker,
+            idempotency_key=payment.idempotency_key
+        )
+
+        return Response({
+            'payment': PaymentSerializer(payment).data,
+            'adapter_details': adapter_response,
+            'breakdown': {k: str(v) for k, v in breakdown.items()}
+        }, status=status.HTTP_201_CREATED)
+
+
+class VerifyDirectPaymentView(views.APIView):
+    """
+    Verifies direct service-provider payment server-side.
+    Validates state machine transitions, records worker payout and cooperative allocation transactions.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, booking_id):
+        booking = get_object_or_404(Booking, id=booking_id)
+        payment = get_object_or_404(Payment, booking=booking)
+
+        # State transition validation
+        target_state = 'PAYMENT_COMPLETED'
+        is_worker = (request.user == booking.worker or booking.assigned_workers.filter(id=request.user.id).exists())
+        is_admin = request.user.role == 'admin' or request.user.is_staff
+        is_worker_confirmed = is_worker or is_admin
+
+        valid, err = validate_payment_state_transition(
+            current_state=payment.lifecycle_status,
+            next_state=target_state,
+            user_role=request.user.role,
+            is_worker_confirmed=is_worker_confirmed
+        )
+        if not valid:
+            return Response({"detail": err}, status=status.HTTP_400_BAD_REQUEST)
+
+        adapter = PaymentAdapterFactory.get_adapter(payment.adapter_type)
+        verify_res = adapter.verify_payment(payment, request.data)
+
+        if not verify_res.get('verified'):
+            payment.lifecycle_status = 'PAYMENT_FAILED'
+            payment.status = 'FAILED'
+            payment.save()
+            return Response({"detail": verify_res.get('detail', 'Verification failed.')}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            payment.lifecycle_status = 'PAYMENT_COMPLETED'
+            payment.status = 'PAID'
+            payment.payment_time = timezone.now()
+            if payment.adapter_type == 'DIRECT_CASH':
+                payment.cash_confirmation_timestamp = timezone.now()
+            payment.save()
+
+            booking.status = 'ready_to_complete'
+            booking.save()
+
+            # Record worker payout transaction
+            DirectPaymentTransaction.objects.create(
+                payment=payment,
+                booking=booking,
+                transaction_type='WORKER_PAYOUT_SHARE',
+                sender=booking.customer,
+                recipient=payment.direct_recipient,
+                amount=payment.worker_direct_payout,
+                currency='INR',
+                status='COMPLETED',
+                payment_method=payment.adapter_type,
+                adapter_name=adapter.adapter_name,
+                is_mock=adapter.is_mock,
+                metadata={'direct_recipient_id': payment.direct_recipient.id if payment.direct_recipient else None}
+            )
+
+            # Record cooperative allocation transaction
+            if payment.cooperative_allocation > 0:
+                DirectPaymentTransaction.objects.create(
+                    payment=payment,
+                    booking=booking,
+                    transaction_type='COOPERATIVE_ALLOCATION',
+                    sender=payment.direct_recipient,
+                    recipient=None,
+                    amount=payment.cooperative_allocation,
+                    currency='INR',
+                    status='COMPLETED',
+                    payment_method=payment.adapter_type,
+                    adapter_name=adapter.adapter_name,
+                    is_mock=adapter.is_mock,
+                    metadata={'purpose': 'UNNATI Cooperative Member Patronage Dividend Reserve'}
+                )
+
+        # Broadcast update
+        booking_data = BookingSerializer(booking).data
+        send_booking_update(booking.id, booking_data, 'payment_completed')
+
+        # Push notification
+        create_and_send_notification(
+            user=booking.customer,
+            title="Payment Confirmed",
+            message=f"Direct payment of ₹{payment.amount} to {payment.captain.full_name if payment.captain else 'worker'} confirmed.",
+            notification_type="payment"
+        )
+        if booking.worker:
+            create_and_send_notification(
+                user=booking.worker,
+                title="Payment Received",
+                message=f"Direct payout of ₹{payment.worker_direct_payout} confirmed. (Coop reserve: ₹{payment.cooperative_allocation})",
+                notification_type="payment"
+            )
+
+        return Response(PaymentSerializer(payment).data)
+
+
+class ProcessDirectRefundView(views.APIView):
+    """
+    Processes direct provider-side refund and cancellation compensation according to safeguards.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, booking_id):
+        booking = get_object_or_404(Booking, id=booking_id)
+        payment = get_object_or_404(Payment, booking=booking)
+
+        # Authorization: customer, worker or admin
+        is_authorized = (
+            request.user == booking.customer or
+            request.user == booking.worker or
+            request.user.role == 'admin'
+        )
+        if not is_authorized:
+            return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        if payment.lifecycle_status in ['REFUNDED', 'PAYMENT_CANCELLED']:
+            return Response({"detail": "Payment has already been refunded or cancelled."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Calculate refund and worker compensation based on booking cancellation stage
+        refund_calc = calculate_cancellation_refund(
+            total_amount=payment.amount,
+            booking_status=booking.status,
+            created_at=booking.created_at,
+            scheduled_time=booking.scheduled_time
+        )
+
+        with transaction.atomic():
+            payment.lifecycle_status = 'REFUNDED'
+            payment.refund_amount = refund_calc['refund_amount']
+            payment.cancellation_compensation = refund_calc['cancellation_compensation']
+            payment.refund_reason = request.data.get('reason', refund_calc['reason'])
+            payment.save()
+
+            # Record refund transaction
+            if refund_calc['refund_amount'] > 0:
+                DirectPaymentTransaction.objects.create(
+                    payment=payment,
+                    booking=booking,
+                    transaction_type='REFUND',
+                    sender=payment.direct_recipient,
+                    recipient=booking.customer,
+                    amount=refund_calc['refund_amount'],
+                    currency='INR',
+                    status='REFUNDED',
+                    payment_method=payment.adapter_type,
+                    adapter_name=payment.adapter_type,
+                    is_mock=payment.is_mock_provider,
+                    metadata={'reason': payment.refund_reason}
+                )
+
+            # Record compensation transaction if applicable
+            if refund_calc['cancellation_compensation'] > 0:
+                DirectPaymentTransaction.objects.create(
+                    payment=payment,
+                    booking=booking,
+                    transaction_type='CANCELLATION_COMPENSATION',
+                    sender=booking.customer,
+                    recipient=payment.direct_recipient,
+                    amount=refund_calc['cancellation_compensation'],
+                    currency='INR',
+                    status='COMPLETED',
+                    payment_method=payment.adapter_type,
+                    adapter_name=payment.adapter_type,
+                    is_mock=payment.is_mock_provider,
+                    metadata={'reason': 'Worker dispatch compensation for late cancellation'}
+                )
+
+        return Response({
+            'payment': PaymentSerializer(payment).data,
+            'refund_details': {k: str(v) if isinstance(v, Decimal) else v for k, v in refund_calc.items()}
+        })
+
+
+class PaymentTransactionsView(views.APIView):
+    """
+    Returns immutable transaction ledger records for a booking.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, booking_id):
+        booking = get_object_or_404(Booking, id=booking_id)
+        is_participant = (
+            request.user == booking.customer or
+            request.user == booking.worker or
+            request.user.role == 'admin' or
+            request.user.is_staff or
+            booking.assigned_workers.filter(id=request.user.id).exists()
+        )
+        if not is_participant:
+            return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        transactions = DirectPaymentTransaction.objects.filter(booking=booking).order_by('-created_at')
+        return Response(DirectPaymentTransactionSerializer(transactions, many=True).data)
+
+
+class WorkerEarningsSummaryView(views.APIView):
+    """
+    Returns worker's direct earnings, cooperative dividend accumulations, and zero platform deductions.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'worker' and not (request.user.role == 'admin' or request.user.is_staff):
+            return Response({"detail": "Access denied. Worker credentials required."}, status=status.HTTP_403_FORBIDDEN)
+
+        worker = request.user
+        payments = Payment.objects.filter(
+            direct_recipient=worker,
+            lifecycle_status='PAYMENT_COMPLETED'
+        )
+
+        total_direct_earned = sum((p.worker_direct_payout for p in payments), Decimal('0.00'))
+        total_coop_contribution = sum((p.cooperative_allocation for p in payments), Decimal('0.00'))
+        total_jobs_completed = payments.count()
+
+        recent_txs = DirectPaymentTransaction.objects.filter(
+            recipient=worker
+        ).order_by('-created_at')[:20]
+
+        return Response({
+            'worker_id': worker.id,
+            'worker_name': worker.full_name,
+            'total_direct_earned': str(total_direct_earned),
+            'total_cooperative_contribution': str(total_coop_contribution),
+            'total_platform_fees_deducted': "0.00", # Explicit confirmation: 0.00 platform rake
+            'completed_jobs_count': total_jobs_completed,
+            'recent_transactions': DirectPaymentTransactionSerializer(recent_txs, many=True).data
+        })

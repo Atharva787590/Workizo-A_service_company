@@ -6,12 +6,14 @@ import {
   InputBase, Grid, Chip, CircularProgress, Paper, Divider,
   Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Select, FormControl, LinearProgress,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  IconButton, Badge, Tooltip
 } from '@mui/material';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import DownloadIcon from '@mui/icons-material/Download';
-
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import HandymanIcon from '@mui/icons-material/Handyman';
 import RoomIcon from '@mui/icons-material/Room';
@@ -30,6 +32,7 @@ import { tokens, span } from '../design/tokens';
 import {
   DashboardPage, DashboardGrid, DashboardCard
 } from '../components/dashboard';
+import { NotificationCenterModal } from '../components/notification';
 
 // ─── Category styles ──────────────────────────────────────────────────────────
 const CATEGORY_STYLES = {
@@ -159,6 +162,7 @@ function CustomerDashboard() {
   const [categories,  setCategories]  = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
 
   const handleViewDetails = (bookingId) => {
     navigate(`/customer/booking/${bookingId}`);
@@ -214,7 +218,7 @@ function CustomerDashboard() {
 
   // ─── Location: init from localStorage or profile ─────────────────────────
   useEffect(() => {
-    const stored = localStorage.getItem('workizo_location');
+    const stored = localStorage.getItem('unnati_location');
     if (stored) {
       setLocationLabel(stored);
     } else if (user?.profile?.city) {
@@ -246,7 +250,7 @@ function CustomerDashboard() {
           const state = data.address?.state || '';
           const label = state ? `${city}, ${state}` : city;
           setLocationLabel(label);
-          localStorage.setItem('workizo_location', label);
+          localStorage.setItem('unnati_location', label);
         } catch {
           setLocationLabel('Location detected');
         } finally {
@@ -267,7 +271,7 @@ function CustomerDashboard() {
     if (!manualCity) return;
     const label = `${manualCity}, India`;
     setLocationLabel(label);
-    localStorage.setItem('workizo_location', label);
+    localStorage.setItem('unnati_location', label);
     setLocationDenied(false);
     setChangeOpen(false);
   };
@@ -289,27 +293,215 @@ function CustomerDashboard() {
       description="What service do you need today?"
       loading={loading}
       actions={
-        <Button
-          variant="contained"
-          onClick={() => navigate('/customer/book')}
-          sx={{
-            bgcolor: tokens.colors.primary,
-            color: '#ffffff',
-            px: 3,
-            py: 1,
-            borderRadius: `${tokens.borderRadiusSm}px`,
-            textTransform: 'none',
-            fontWeight: 700,
-            '&:hover': { bgcolor: '#23232F' }
-          }}
-        >
-          Book a Partner
-        </Button>
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Tooltip title="UNNATI Notifications (सूचना केंद्र)">
+            <IconButton
+              onClick={() => setIsNotificationCenterOpen(true)}
+              sx={{
+                bgcolor: 'background.paper',
+                border: `1px solid ${tokens.borderColor}`,
+                borderRadius: '12px',
+                p: 1
+              }}
+              aria-label="Open notifications"
+            >
+              <Badge color="error" variant="dot">
+                <NotificationsIcon sx={{ fontSize: 20, color: tokens.colors.primary }} />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/customer/book')}
+            sx={{
+              bgcolor: tokens.colors.primary,
+              color: '#ffffff',
+              px: 3,
+              py: 1,
+              borderRadius: `${tokens.borderRadiusSm}px`,
+              textTransform: 'none',
+              fontWeight: 700,
+              '&:hover': { bgcolor: '#23232F' }
+            }}
+          >
+            Book a Partner
+          </Button>
+        </Box>
       }
     >
       <DashboardGrid sx={{ gap: `${tokens.sectionGap}px` }}>
 
-        {/* ── 1. LOCATION CARD ─────────────────────────────────────────── */}
+        {/* ── 1. PRIORITY: ACTIVE BOOKINGS (Immediate awareness) ───────── */}
+        {activeBookings.length > 0 && (
+          <Box sx={span.full}>
+            <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'Outfit, sans-serif', color: tokens.colors.primary }}>
+                  Active Bookings
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Live tracking for your ongoing service requests
+                </Typography>
+              </Box>
+              <Chip
+                label={`${activeBookings.length} active`}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(26,115,232,0.08)',
+                  color: '#1A73E8',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  border: '1px solid rgba(26,115,232,0.15)',
+                  px: 1
+                }}
+              />
+            </Box>
+
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  md: activeBookings.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(360px, 1fr))',
+                },
+                gap: `${tokens.cardGap}px`,
+                width: '100%',
+              }}
+            >
+              {activeBookings.map((bk) => {
+                const catStyle = CATEGORY_STYLES[bk.service_category_detail?.name];
+                
+                // Calculate expected arrival text
+                let arrivalText = "";
+                if (bk.status === 'searching') {
+                  arrivalText = "Finding nearest Captain...";
+                } else if (['accepted', 'on_the_way'].includes(bk.status)) {
+                  arrivalText = "Captain arriving in ~15 mins";
+                } else {
+                  arrivalText = "Captain arrived at premises";
+                }
+
+                return (
+                  <Paper
+                    key={bk.id}
+                    elevation={0}
+                    sx={{
+                      p: `${tokens.cardPadding}px`,
+                      border: '2px solid #0284C7',
+                      borderRadius: `${tokens.borderRadius}px`,
+                      bgcolor: tokens.colors.paper,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: 2.5,
+                      height: '100%',
+                      boxShadow: '0 8px 24px -4px rgba(2, 132, 199, 0.12)',
+                      transition: tokens.transition,
+                      '&:hover': {
+                        borderColor: '#0284C7',
+                        boxShadow: tokens.shadowHover
+                      }
+                    }}
+                  >
+                    {/* Header */}
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box sx={{
+                          width: 44, height: 44, borderRadius: '10px',
+                          bgcolor: catStyle?.bgColor || '#F4F6F9',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                        }}>
+                          {catStyle?.icon || <HandymanIcon sx={{ fontSize: 22, color: '#6B7280' }} />}
+                        </Box>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700} sx={{ color: tokens.colors.primary }}>
+                            {bk.service_category_detail?.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                            #{bk.tracking_id || bk.id}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <StatusBadge status={bk.status} />
+                    </Box>
+
+                    <Divider sx={{ borderColor: tokens.borderColor }} />
+
+                    {/* Booking Details Grid */}
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Assigned Captain
+                        </Typography>
+                        <Typography variant="body2" fontWeight={700} sx={{ mt: 0.5, color: tokens.colors.primary }}>
+                          {bk.worker ? bk.worker.full_name : 'Finding Captain...'}
+                        </Typography>
+                      </Box>
+
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          ETA / Schedule
+                        </Typography>
+                        <Typography variant="body2" fontWeight={700} sx={{ mt: 0.5, color: bk.status !== 'searching' ? 'primary.main' : 'text.primary' }}>
+                          {arrivalText}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Divider sx={{ borderColor: tokens.borderColor }} />
+
+                    {/* Progress Timeline bar */}
+                    <Box>
+                      <Box display="flex" justifyContent="space-between" mb={1}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                          Progress Timeline
+                        </Typography>
+                        <Typography variant="caption" fontWeight={700} sx={{ color: tokens.colors.accent }}>
+                          {getCardProgressLabel(bk.status)}
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={getCardTimelineProgress(bk.status)}
+                        sx={{
+                          height: 6,
+                          borderRadius: 3,
+                          bgcolor: '#E5E7EB',
+                          '& .MuiLinearProgress-bar': {
+                            bgcolor: '#1A73E8',
+                            borderRadius: 3
+                          }
+                        }}
+                      />
+                    </Box>
+
+                    {/* CTA */}
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      endIcon={<ArrowForwardIcon />}
+                      onClick={() => handleViewDetails(bk.id)}
+                      sx={{
+                        bgcolor: tokens.colors.primary,
+                        color: '#ffffff',
+                        borderRadius: `${tokens.borderRadiusSm}px`,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        py: 1.2,
+                        minHeight: 48,
+                        '&:hover': { bgcolor: '#23232F' }
+                      }}
+                    >
+                      Track Service Live
+                    </Button>
+                  </Paper>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+
+        {/* ── 2. LOCATION CARD ─────────────────────────────────────────── */}
         <Box sx={span.full}>
           <Paper
             elevation={0}
@@ -530,173 +722,64 @@ function CustomerDashboard() {
           )}
         </Box>
 
-        {/* ── 4. ACTIVE BOOKINGS ───────────────────────────────────────── */}
-        {activeBookings.length > 0 && (
-          <Box sx={span.full}>
-            <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* ── 4. UNNATI COOPERATIVE PROMISE ───────────────────────────────── */}
+        <Box sx={span.full}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: `${tokens.borderRadius}px`,
+              border: '1px solid #E2E8F0',
+              bgcolor: '#FFFFFF',
+              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+              gap: 3
+            }}
+          >
+            <Box display="flex" alignItems="flex-start" gap={1.75}>
+              <Box sx={{ p: 1.25, borderRadius: '10px', bgcolor: '#ECFDF5', color: '#059669', flexShrink: 0 }}>
+                <CheckCircleIcon fontSize="small" />
+              </Box>
               <Box>
-                <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'Outfit, sans-serif', color: tokens.colors.primary }}>
-                  Active Bookings
+                <Typography variant="subtitle2" fontWeight={800} color="#0F172A">
+                  Direct Worker Payment
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Live tracking for your ongoing service requests
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.82rem', lineHeight: 1.5 }}>
+                  100% of your service payment goes directly to your craftsperson. The platform never locks funds in escrow or extracts commissions.
                 </Typography>
               </Box>
-              <Chip
-                label={`${activeBookings.length} active`}
-                size="small"
-                sx={{
-                  bgcolor: 'rgba(26,115,232,0.08)',
-                  color: '#1A73E8',
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  border: '1px solid rgba(26,115,232,0.15)',
-                  px: 1
-                }}
-              />
             </Box>
 
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  md: activeBookings.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(360px, 1fr))',
-                },
-                gap: `${tokens.cardGap}px`,
-                width: '100%',
-              }}
-            >
-              {activeBookings.map((bk) => {
-                const catStyle = CATEGORY_STYLES[bk.service_category_detail?.name];
-                
-                // Calculate expected arrival text
-                let arrivalText = "";
-                if (bk.status === 'searching') {
-                  arrivalText = "Finding nearest Captain...";
-                } else if (['accepted', 'on_the_way'].includes(bk.status)) {
-                  arrivalText = "Captain arriving in ~15 mins";
-                } else {
-                  arrivalText = "Captain arrived at premises";
-                }
-
-                return (
-                  <Paper
-                    key={bk.id}
-                    elevation={0}
-                    sx={{
-                      p: `${tokens.cardPadding}px`,
-                      border: `1px solid ${tokens.borderColor}`,
-                      borderRadius: `${tokens.borderRadius}px`,
-                      bgcolor: tokens.colors.paper,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: 2.5,
-                      height: '100%',
-                      transition: tokens.transition,
-                      '&:hover': {
-                        borderColor: '#1A73E8',
-                        boxShadow: tokens.shadowHover
-                      }
-                    }}
-                  >
-                    {/* Header */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{
-                          width: 44, height: 44, borderRadius: '10px',
-                          bgcolor: catStyle?.bgColor || '#F4F6F9',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                        }}>
-                          {catStyle?.icon || <HandymanIcon sx={{ fontSize: 22, color: '#6B7280' }} />}
-                        </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700} sx={{ color: tokens.colors.primary }}>
-                            {bk.service_category_detail?.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                            #{bk.tracking_id || bk.id}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <StatusBadge status={bk.status} />
-                    </Box>
-
-                    <Divider sx={{ borderColor: tokens.borderColor }} />
-
-                    {/* Booking Details Grid */}
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          Assigned Captain
-                        </Typography>
-                        <Typography variant="body2" fontWeight={700} sx={{ mt: 0.5, color: tokens.colors.primary }}>
-                          {bk.worker ? bk.worker.full_name : 'Finding Captain...'}
-                        </Typography>
-                      </Box>
-
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          ETA / Schedule
-                        </Typography>
-                        <Typography variant="body2" fontWeight={700} sx={{ mt: 0.5, color: bk.status !== 'searching' ? 'primary.main' : 'text.primary' }}>
-                          {arrivalText}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    <Divider sx={{ borderColor: tokens.borderColor }} />
-
-                    {/* Progress Timeline bar */}
-                    <Box>
-                      <Box display="flex" justifyContent="space-between" mb={1}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                          Progress Timeline
-                        </Typography>
-                        <Typography variant="caption" fontWeight={700} sx={{ color: tokens.colors.accent }}>
-                          {getCardProgressLabel(bk.status)}
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={getCardTimelineProgress(bk.status)}
-                        sx={{
-                          height: 6,
-                          borderRadius: 3,
-                          bgcolor: '#E5E7EB',
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: '#1A73E8',
-                            borderRadius: 3
-                          }
-                        }}
-                      />
-                    </Box>
-
-                    {/* CTA */}
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      endIcon={<ArrowForwardIcon />}
-                      onClick={() => handleViewDetails(bk.id)}
-                      sx={{
-                        bgcolor: tokens.colors.primary,
-                        color: '#ffffff',
-                        borderRadius: `${tokens.borderRadiusSm}px`,
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        py: 1.2,
-                        '&:hover': { bgcolor: '#23232F' }
-                      }}
-                    >
-                      View Details
-                    </Button>
-                  </Paper>
-                );
-              })}
+            <Box display="flex" alignItems="flex-start" gap={1.75}>
+              <Box sx={{ p: 1.25, borderRadius: '10px', bgcolor: '#FFFBEB', color: '#D97706', flexShrink: 0 }}>
+                <HandymanIcon fontSize="small" />
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={800} color="#0F172A">
+                  Verified Guild Craftsmen
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.82rem', lineHeight: 1.5 }}>
+                  Government identity and skill-verified cooperative members. Every worker holds peer-endorsed trade credentials.
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        )}
+
+            <Box display="flex" alignItems="flex-start" gap={1.75}>
+              <Box sx={{ p: 1.25, borderRadius: '10px', bgcolor: '#F0F9FF', color: '#0284C7', flexShrink: 0 }}>
+                <FlashOnIcon fontSize="small" />
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={800} color="#0F172A">
+                  Transparent Fair Wages
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.82rem', lineHeight: 1.5 }}>
+                  Clear, objective rates calculated by category, duration, skill level, and distance. No hidden surge multipliers.
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Box>
 
         {/* ── 5. BOOKING HISTORY ───────────────────────────────────────── */}
         <Box sx={span.full}>
@@ -984,7 +1067,10 @@ function CustomerDashboard() {
         </DialogActions>
       </Dialog>
 
-
+      <NotificationCenterModal
+        isOpen={isNotificationCenterOpen}
+        onClose={() => setIsNotificationCenterOpen(false)}
+      />
 
     </DashboardPage>
   );

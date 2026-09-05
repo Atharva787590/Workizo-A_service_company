@@ -1,10 +1,19 @@
 import axios from 'axios';
 
-const defaultHost = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-const FALLBACK_API_ORIGIN = `http://${defaultHost}:8000`;
+const getAutoDetectedOrigin = () => {
+  if (typeof window === 'undefined') return 'http://127.0.0.1:8000';
+  const { hostname, origin } = window.location;
+  // If running locally in development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `http://${hostname}:8000`;
+  }
+  // In production behind reverse-proxy / same-origin
+  return origin;
+};
+
 const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '');
 
-export const API_ORIGIN = configuredApiOrigin || FALLBACK_API_ORIGIN;
+export const API_ORIGIN = configuredApiOrigin || getAutoDetectedOrigin();
 export const API_BASE_URL = `${API_ORIGIN}/api/`;
 
 export const buildMediaUrl = (path) => {
@@ -19,7 +28,15 @@ export const buildApiUrl = (path) => {
 };
 
 export const buildWsUrl = (path, query = '') => {
-  const wsOrigin = API_ORIGIN.replace(/^http/i, 'ws');
+  let wsOrigin = API_ORIGIN;
+  if (wsOrigin.startsWith('https://')) {
+    wsOrigin = wsOrigin.replace(/^https:\/\//i, 'wss://');
+  } else if (wsOrigin.startsWith('http://')) {
+    wsOrigin = wsOrigin.replace(/^http:\/\//i, 'ws://');
+  } else if (typeof window !== 'undefined') {
+    const isHttps = window.location.protocol === 'https:';
+    wsOrigin = `${isHttps ? 'wss://' : 'ws://'}${window.location.host}`;
+  }
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${wsOrigin}${normalizedPath}${query}`;
 };

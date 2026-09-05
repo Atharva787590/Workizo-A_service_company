@@ -7,11 +7,24 @@ from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from .models import Booking, RepairToken, MajorRepairApproval, BookingRejection, ChatMessage
-from .serializers import BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer, PublicBookingSerializer, ChatMessageSerializer
+from .models import (
+    Booking, RepairToken, MajorRepairApproval, BookingRejection, ChatMessage,
+    BookingAuditLog, BookingWorkerAllocation
+)
+from .serializers import (
+    BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer,
+    PublicBookingSerializer, ChatMessageSerializer, BookingAuditLogSerializer
+)
+from .state_machine import (
+    calculate_haversine_distance, validate_state_transition,
+    calculate_cancellation_compensation, record_booking_audit
+)
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
 from validations import validate_accept_booking
+from django.utils import timezone
+from decimal import Decimal
+import datetime
 
 User = get_user_model()
 
@@ -76,8 +89,70 @@ class BookingViewSet(viewsets.ModelViewSet):
         else:
             return base_qs.filter(customer=user).order_by('-created_at')
 
+    def create(self, request, *args, **kwargs):
+        # 1. Idempotency Check
+        idempotency_key = request.data.get('idempotency_key')
+        if idempotency_key:
+            since = timezone.now() - datetime.timedelta(hours=24)
+            existing = Booking.objects.filter(customer=request.user, idempotency_key=idempotency_key, created_at__gte=since).first()
+            if existing:
+                serializer = self.get_serializer(existing)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # 2. Scheduling Limits Validation (max 30 days ahead, not in the past)
+        booking_type = request.data.get('booking_type', 'instant')
+        scheduled_time_val = request.data.get('scheduled_time')
+        if booking_type == 'scheduled':
+            if not scheduled_time_val:
+                return Response({"detail": "Scheduled bookings require a valid scheduled_time."}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                from dateutil import parser
+                parsed_time = parser.parse(scheduled_time_val)
+                if timezone.is_naive(parsed_time):
+                    parsed_time = timezone.make_aware(parsed_time)
+                now = timezone.now()
+                if parsed_time < now:
+                    return Response({"detail": "Scheduled time cannot be in the past."}, status=status.HTTP_400_BAD_REQUEST)
+                if parsed_time > now + datetime.timedelta(days=30):
+                    return Response({"detail": "Bookings can only be scheduled up to 30 days in advance."}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception:
+                return Response({"detail": "Invalid date/time format for scheduled_time."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 3. Collective / Multi-worker limits
+        required_workers = int(request.data.get('required_worker_count', 1))
+        if required_workers < 1 or required_workers > 10:
+            return Response({"detail": "Required worker count must be between 1 and 10."}, status=status.HTTP_400_BAD_REQUEST)
+
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
-        booking = serializer.save(customer=self.request.user)
+        # Calculate contract value & cooperative reserve
+        category = serializer.validated_data.get('service_category')
+        base_charge = getattr(category, 'base_labour_charge', Decimal('250.00')) if category else Decimal('250.00')
+        required_workers = int(self.request.data.get('required_worker_count', 1))
+        
+        total_value = (Decimal(str(base_charge)) * Decimal(str(required_workers))).quantize(Decimal('0.01'))
+        coop_allocation = (total_value * Decimal('0.065')).quantize(Decimal('0.01')) # 6.5% transparent platform reserve
+        
+        booking_type = self.request.data.get('booking_type', 'instant')
+        initial_status = 'SCHEDULED' if booking_type == 'scheduled' else 'searching'
+
+        booking = serializer.save(
+            customer=self.request.user,
+            status=initial_status,
+            total_contract_value=total_value,
+            cooperative_allocation=coop_allocation
+        )
+
+        # Record Initial Audit Log
+        record_booking_audit(
+            booking=booking,
+            from_status='NONE',
+            to_status=booking.status,
+            user=self.request.user,
+            reason='Initial booking creation',
+            metadata={'booking_type': booking.booking_type, 'required_workers': required_workers}
+        )
         
         # Find and notify online approved workers in the service category
         from workers.models import WorkerProfile
@@ -89,11 +164,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         
         channel_layer = get_channel_layer()
         for wp in workers:
-            # Create DB notification for the worker
             noti = Notification.objects.create(
                 user=wp.user,
-                title="New Instant Booking Request",
-                message=f"New instant request for {booking.service_category.name}. Problem: {booking.problem_type}.",
+                title="New Service Request",
+                message=f"New {booking.booking_type.capitalize()} request for {booking.service_category.name}. Problem: {booking.problem_type}.",
                 notification_type="incoming_booking_request"
             )
             if channel_layer:
@@ -130,13 +204,16 @@ class BookingViewSet(viewsets.ModelViewSet):
         create_and_send_notification(
             user=self.request.user,
             title="Booking Placed",
-            message=f"Your request for {booking.service_category.name} is placed. Searching for nearest worker...",
+            message=f"Your {booking.booking_type} request for {booking.service_category.name} is placed successfully.",
             notification_type="booking_update"
         )
 
         # Send booking confirmation email to customer
-        from notifications.email_service import EmailNotificationService
-        EmailNotificationService.send_booking_confirmation_email(booking)
+        try:
+            from notifications.email_service import EmailNotificationService
+            EmailNotificationService.send_booking_confirmation_email(booking)
+        except Exception as e:
+            print(f"Error sending booking confirmation email: {e}")
 
         # Broadcast booking_created to the booking group
         booking_data = BookingSerializer(booking).data
@@ -597,6 +674,172 @@ class BookingViewSet(viewsets.ModelViewSet):
         send_booking_update(booking.id, booking_data)
 
         return Response(RepairTokenSerializer(token).data)
+
+    @action(detail=True, methods=['post'], url_path='verify-geofence')
+    def verify_geofence(self, request, pk=None):
+        booking = self.get_object()
+        user = request.user
+        if user.role != 'worker' and not user.is_staff:
+            return Response({"detail": "Only service workers can verify arrival via geo-fence."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if booking.worker != user and not booking.assigned_workers.filter(id=user.id).exists():
+            return Response({"detail": "You are not assigned to this booking."}, status=status.HTTP_403_FORBIDDEN)
+
+        worker_lat = request.data.get('latitude')
+        worker_lon = request.data.get('longitude')
+        gps_accuracy = request.data.get('accuracy', 0)
+
+        if worker_lat is None or worker_lon is None:
+            return Response({"detail": "Latitude and longitude are required for geo-fencing."}, status=status.HTTP_400_BAD_REQUEST)
+
+        job_lat = booking.latitude
+        job_lon = booking.longitude
+        radius = booking.arrival_radius_meters or 300
+
+        # Fallback if booking coordinates were not set
+        if job_lat is None or job_lon is None:
+            booking.geofence_verified = True
+            booking.geofence_verified_at = timezone.now()
+            booking.status = 'arrived'
+            booking.save(update_fields=['geofence_verified', 'geofence_verified_at', 'status'])
+            record_booking_audit(booking, booking.status, 'arrived', user, 'Arrival verified via manual fallback (no job coords)')
+            send_booking_update(booking.id, self.get_serializer(booking).data, 'worker_arrived')
+            return Response({
+                "verified": True,
+                "fallback": True,
+                "message": "Arrival confirmed via manual override.",
+                "booking": self.get_serializer(booking).data
+            })
+
+        distance = calculate_haversine_distance(job_lat, job_lon, worker_lat, worker_lon)
+        if distance is not None and distance <= radius:
+            booking.geofence_verified = True
+            booking.geofence_verified_at = timezone.now()
+            booking.status = 'arrived'
+            booking.save(update_fields=['geofence_verified', 'geofence_verified_at', 'status'])
+            record_booking_audit(
+                booking, booking.status, 'arrived', user,
+                f"Geo-fence arrival verified ({int(distance)}m distance, radius {radius}m)",
+                {'distance_meters': int(distance), 'accuracy': gps_accuracy}
+            )
+            send_booking_update(booking.id, self.get_serializer(booking).data, 'worker_arrived')
+            return Response({
+                "verified": True,
+                "distance_meters": int(distance),
+                "arrival_radius": radius,
+                "message": f"Geo-fence arrival verified! You are {int(distance)}m from the job site.",
+                "booking": self.get_serializer(booking).data
+            })
+        else:
+            int_dist = int(distance) if distance is not None else -1
+            return Response({
+                "verified": False,
+                "distance_meters": int_dist,
+                "arrival_radius": radius,
+                "detail": f"Worker is {int_dist}m away from the job site. Must be within {radius}m to verify arrival."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], url_path='cancel-booking')
+    def cancel_booking(self, request, pk=None):
+        booking = self.get_object()
+        user = request.user
+        reason = request.data.get('reason', 'Customer requested cancellation')
+
+        is_allowed, msg = validate_state_transition(booking, 'cancelled', user)
+        if not is_allowed:
+            return Response({"detail": msg}, status=status.HTTP_400_BAD_REQUEST)
+
+        fee, fee_desc = calculate_cancellation_compensation(booking, user)
+        
+        from_status = booking.status
+        booking.status = 'cancelled'
+        booking.cancellation_fee = fee
+        booking.cancellation_reason = reason
+        booking.save(update_fields=['status', 'cancellation_fee', 'cancellation_reason'])
+
+        # Credit compensation fee to worker if applicable
+        if fee > Decimal('0.00') and booking.worker:
+            from workers.models import Wallet, WalletTransaction
+            wallet, _ = Wallet.objects.get_or_create(worker=booking.worker)
+            wallet.current_balance += fee
+            wallet.save(update_fields=['current_balance'])
+            WalletTransaction.objects.create(
+                wallet=wallet,
+                amount=fee,
+                transaction_type='credit',
+                description=f"Late cancellation compensation for Booking #{booking.id}"
+            )
+
+        record_booking_audit(
+            booking, from_status, 'cancelled', user,
+            reason, {'fee': str(fee), 'fee_note': fee_desc}
+        )
+
+        create_and_send_notification(
+            user=booking.customer if user != booking.customer else (booking.worker or user),
+            title="Booking Cancelled",
+            message=f"Booking #{booking.id} has been cancelled. {fee_desc}",
+            notification_type="booking_update"
+        )
+        send_booking_update(booking.id, self.get_serializer(booking).data, 'booking_cancelled')
+
+        return Response({
+            "status": "cancelled",
+            "cancellation_fee": str(fee),
+            "fee_explanation": fee_desc,
+            "booking": self.get_serializer(booking).data
+        })
+
+    @action(detail=True, methods=['post'], url_path='raise-dispute')
+    def raise_dispute(self, request, pk=None):
+        booking = self.get_object()
+        user = request.user
+        reason = request.data.get('reason')
+        if not reason or len(reason.strip()) < 5:
+            return Response({"detail": "Please provide a detailed reason for the dispute (min 5 characters)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_allowed, msg = validate_state_transition(booking, 'disputed', user)
+        if not is_allowed:
+            return Response({"detail": msg}, status=status.HTTP_400_BAD_REQUEST)
+
+        from_status = booking.status
+        booking.status = 'disputed'
+        booking.dispute_reason = reason
+        booking.save(update_fields=['status', 'dispute_reason'])
+
+        record_booking_audit(booking, from_status, 'disputed', user, reason)
+
+        # Notify parties and admin
+        create_and_send_notification(
+            user=booking.customer,
+            title="Dispute Logged",
+            message=f"A dispute has been raised on booking #{booking.id}. Our cooperative arbitration committee will review it.",
+            notification_type="dispute"
+        )
+        if booking.worker:
+            create_and_send_notification(
+                user=booking.worker,
+                title="Dispute Raised on Booking",
+                message=f"Booking #{booking.id} is now under dispute review.",
+                notification_type="dispute"
+            )
+
+        send_booking_update(booking.id, self.get_serializer(booking).data, 'booking_disputed')
+        return Response({
+            "status": "disputed",
+            "message": "Dispute registered. Our cooperative resolution desk has been notified.",
+            "booking": self.get_serializer(booking).data
+        })
+
+    @action(detail=True, methods=['get'], url_path='audit-logs')
+    def audit_logs(self, request, pk=None):
+        booking = self.get_object()
+        if request.user != booking.customer and request.user != booking.worker and not request.user.is_staff:
+            return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        logs = booking.audit_logs.all().order_by('-created_at')
+        serializer = BookingAuditLogSerializer(logs, many=True)
+        return Response(serializer.data)
 
 
 class ChatMessagesView(APIView):

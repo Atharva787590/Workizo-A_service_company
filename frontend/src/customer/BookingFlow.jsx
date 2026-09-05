@@ -17,6 +17,7 @@ import { tokens, span } from '../design/tokens';
 import { 
   DashboardPage, DashboardGrid, DashboardCard 
 } from '../components/dashboard';
+import { BookingTypeSelector, ScheduledDatePicker, CollectiveWorkerSelector } from '../components/booking';
 
 function BookingFlow() {
   const navigate = useNavigate();
@@ -28,8 +29,27 @@ function BookingFlow() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [bookingType, setBookingType] = useState('instant');
+  const [scheduledTime, setScheduledTime] = useState(null);
+  const [requiredWorkerCount, setRequiredWorkerCount] = useState(2);
+  const [userCoords, setUserCoords] = useState(null);
 
   const selectedCategory = categories.find(cat => String(cat.id) === String(preselectedCategoryId));
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserCoords({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude
+          });
+        },
+        () => {},
+        { timeout: 8000 }
+      );
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch categories
@@ -58,6 +78,19 @@ function BookingFlow() {
     formData.append('city', data.city || 'Ahmedabad');
     formData.append('state', data.state || 'Gujarat');
     formData.append('pincode', data.pincode);
+    formData.append('booking_type', bookingType);
+
+    if (bookingType === 'scheduled' && scheduledTime) {
+      formData.append('scheduled_time', scheduledTime);
+    }
+    if (bookingType === 'collective') {
+      formData.append('required_worker_count', requiredWorkerCount);
+    }
+    if (userCoords) {
+      formData.append('latitude', String(userCoords.latitude));
+      formData.append('longitude', String(userCoords.longitude));
+    }
+    formData.append('idempotency_key', `UNN-REQ-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`);
 
     if (data.before_photo && data.before_photo[0]) {
       formData.append('before_photo', data.before_photo[0]);
@@ -109,6 +142,35 @@ function BookingFlow() {
           <DashboardCard title="Booking Details" subtitle="Provide the problem description and service location details">
             <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 2 }}>
               <DashboardGrid sx={{ gap: 2.5 }}>
+                {/* UNNATI Booking Mode Selector */}
+                <Box sx={span.full}>
+                  <BookingTypeSelector
+                    selectedType={bookingType}
+                    onSelect={(type) => setBookingType(type)}
+                  />
+                </Box>
+
+                {/* Scheduled Date Picker */}
+                {bookingType === 'scheduled' && (
+                  <Box sx={span.full}>
+                    <ScheduledDatePicker
+                      value={scheduledTime}
+                      onChange={(iso) => setScheduledTime(iso)}
+                    />
+                  </Box>
+                )}
+
+                {/* Collective Worker Count Selector */}
+                {bookingType === 'collective' && (
+                  <Box sx={span.full}>
+                    <CollectiveWorkerSelector
+                      workerCount={requiredWorkerCount}
+                      baseLabourCharge={selectedCategory?.base_labour_charge || 250}
+                      onChange={(cnt) => setRequiredWorkerCount(cnt)}
+                    />
+                  </Box>
+                )}
+
                 {/* Category */}
                 {!preselectedCategoryId ? (
                   <Box sx={span.full}>
@@ -273,12 +335,12 @@ function BookingFlow() {
         {/* Sidebar Guide */}
         <Box sx={span.oneThird}>
           <Box display="flex" flexDirection="column" gap={3}>
-            <DashboardCard title="WORKIZO Guarantee" subtitle="Why book service partners with us?">
+            <DashboardCard title="UNNATI Guarantee" subtitle="Why book cooperative partners with us?">
               <List disablePadding>
                 <ListItem sx={{ px: 0, py: 1.5 }}>
                   <ListItemIcon sx={{ minWidth: 36 }}><ShieldIcon color="primary" /></ListItemIcon>
                   <ListItemText 
-                    primary="Verified Captains Only" 
+                    primary="Verified Cooperative Artisans" 
                     secondary="All workers pass a background check and verify identification proofs."
                     primaryTypographyProps={{ fontWeight: 600 }}
                   />

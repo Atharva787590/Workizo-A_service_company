@@ -24,6 +24,11 @@ import {
   DashboardPage, DashboardGrid, DashboardCard, 
   SummaryCard, SummaryGrid 
 } from '../components/dashboard';
+import { GeoFenceArrivalTracker, BookingLifecycleStepper } from '../components/booking';
+import { PaymentStatusBadge, PaymentSummaryCard } from '../components/payment';
+import { TwoWayRatingModal } from '../components/trust';
+import { CachedDataBadge, OfflineTaskModal } from '../components/offline';
+import { saveCachedJobs, getCachedJobs } from '../lib/offlineSyncEngine';
 
 const JOB_TIMELINE = [
   { key: 'accepted', label: 'Accepted' },
@@ -95,6 +100,10 @@ function WorkerJobDetails() {
   const [existingBill, setExistingBill] = useState(null);
   const [confirmCashDialogOpen, setConfirmCashDialogOpen] = useState(false);
   const [confirmingCash, setConfirmingCash] = useState(false);
+  const [directBreakdown, setDirectBreakdown] = useState(null);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [isOfflineCached, setIsOfflineCached] = useState(false);
+  const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadChats, setUnreadChats] = useState(0);
@@ -110,9 +119,35 @@ function WorkerJobDetails() {
     try {
       const res = await api.get(`/api/bookings/bookings/${id}/`);
       setBooking(res.data);
+      setIsOfflineCached(false);
       setUnreadChats(res.data.unread_chats_count || 0);
 
-      if (['completed', 'waiting_approval', 'repair_completed', 'WAITING_FOR_CASH_CONFIRMATION'].includes(res.data.status)) {
+      // Cache job for offline view
+      try {
+        const existing = getCachedJobs().filter((j) => String(j.id) !== String(id));
+        saveCachedJobs([
+          {
+            id: res.data.id,
+            tracking_id: res.data.tracking_id || `WRK-${res.data.id}`,
+            customer_name: res.data.customer?.full_name || 'Customer',
+            customer_phone: res.data.customer?.phone,
+            service_name: res.data.service_category_detail?.name || 'Trade Service',
+            service_category: res.data.service_category_detail?.name || 'General',
+            problem_description: res.data.problem_description || '',
+            address: res.data.address || '',
+            city: res.data.city || '',
+            status: res.data.status,
+            cachedAt: new Date().toISOString(),
+            lastServerUpdated: res.data.updated_at || new Date().toISOString(),
+            isStale: false,
+          },
+          ...existing,
+        ].slice(0, 30));
+      } catch (cacheErr) {
+        console.warn('Non-fatal cache persistence issue:', cacheErr);
+      }
+
+      if (['completed', 'waiting_approval', 'repair_completed', 'WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete'].includes(res.data.status)) {
         try {
           const billRes = await api.get(`/api/billing/${id}/get-bill/`);
           setExistingBill(billRes.data);
@@ -120,9 +155,30 @@ function WorkerJobDetails() {
           setExistingBill(null);
         }
       }
+
+      try {
+        const summaryRes = await api.get(`/api/billing/${id}/direct-payment-summary/`);
+        setDirectBreakdown(summaryRes.data);
+      } catch (e) {
+        // Not yet generated
+      }
     } catch (err) {
-      console.error(err);
-      toast.error('Failed to load job details');
+      console.warn('Network fetch failed, attempting cached job fallback:', err);
+      const cached = getCachedJobs().find((j) => String(j.id) === String(id));
+      if (cached) {
+        setBooking({
+          ...cached,
+          service_category_detail: {
+            name: cached.service_name,
+            base_labour_charge: '0.00',
+          },
+          problem_type: cached.problem_description || 'General Service',
+        });
+        setIsOfflineCached(true);
+        toast('Operating in offline-first mode (Showing cached job)', { icon: '📦' });
+      } else {
+        toast.error('Failed to load job details');
+      }
     } finally {
       setLoading(false);
     }
@@ -206,6 +262,24 @@ function WorkerJobDetails() {
       toast.success(`Job status updated to ${newStatus.replace('_', ' ').toUpperCase()}`);
     } catch (err) {
       toast.error('Failed to update status');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyGeofence = async ({ latitude, longitude, accuracy }) => {
+    setSubmitting(true);
+    try {
+      const res = await api.post(`/api/bookings/bookings/${id}/verify-geofence/`, {
+        latitude,
+        longitude,
+        accuracy,
+      });
+      setBooking(res.data.booking);
+      toast.success(res.data.message || 'Geo-fence arrival confirmed!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Geo-fence verification failed');
+      throw err;
     } finally {
       setSubmitting(false);
     }
@@ -435,7 +509,28 @@ function WorkerJobDetails() {
       description={`Service: ${booking.service_category_detail?.name} (${booking.problem_type})`}
       summary={summary}
       actions={
-        <Box display="flex" gap={1.5}>
+        <Box display="flex" gap={1.5} alignItems="center" flexWrap="wrap">
+          <CachedDataBadge 
+            lastUpdated={booking?.cachedAt || booking?.lastServerUpdated || booking?.updated_at} 
+            isStale={isOfflineCached} 
+          />
+
+          <Button
+            variant="outlined"
+            onClick={() => setIsOfflineModalOpen(true)}
+            sx={{
+              borderColor: '#f59e0b',
+              color: '#b45309',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              borderRadius: `${tokens.borderRadiusSm}px`,
+              '&:hover': { borderColor: '#d97706', bgcolor: '#fffbeb' }
+            }}
+          >
+            Offline Notes & Progress
+          </Button>
+
           <Button 
             startIcon={<ArrowBackIcon />} 
             onClick={() => navigate('/captain/dashboard')}
@@ -502,6 +597,19 @@ function WorkerJobDetails() {
                   >
                     Start Navigation
                   </Button>
+                )}
+
+                {/* UNNATI Geo-fenced Arrival Tracker */}
+                {['accepted', 'on_the_way', 'arrived'].includes(booking.status) && (
+                  <GeoFenceArrivalTracker
+                    isWorker={true}
+                    isVerified={booking.geofence_verified}
+                    arrivalRadiusMeters={booking.arrival_radius_meters || 300}
+                    jobLatitude={booking.latitude}
+                    jobLongitude={booking.longitude}
+                    onVerifyArrival={handleVerifyGeofence}
+                    className="mb-3"
+                  />
                 )}
 
                 {booking.status === 'on_the_way' && (
@@ -635,9 +743,52 @@ function WorkerJobDetails() {
                 )}
 
                 {booking.status === 'completed' && (
-                  <Typography variant="body1" fontWeight={700} color="success.main" sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CheckCircleIcon sx={{ mr: 1 }} /> Job runs verified & completed successfully. Payout confirmed.
-                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body1" fontWeight={700} color="success.main" sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <CheckCircleIcon sx={{ mr: 1 }} /> Job runs verified & completed successfully. Payout confirmed.
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => setIsRatingModalOpen(true)}
+                      sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700 }}
+                    >
+                      ⭐ Rate Customer & Experience (ग्राहक मूल्यांकन)
+                    </Button>
+                  </Box>
+                )}
+
+                <TwoWayRatingModal
+                  isOpen={isRatingModalOpen}
+                  onClose={() => setIsRatingModalOpen(false)}
+                  bookingId={Number(id)}
+                  ratingType="WORKER_TO_CUSTOMER"
+                  targetName={booking?.customer_name || 'Customer'}
+                  onSuccess={() => {
+                    toast.success('Customer rating submitted to UNNATI Trust Network!');
+                  }}
+                />
+
+                {/* UNNATI Direct Breakdown for Craftsman */}
+                {directBreakdown && (
+                  <Box sx={{ mt: 3 }}>
+                    <PaymentSummaryCard
+                      breakdown={{
+                        totalCustomerPaid: Number(directBreakdown.total_customer_paid),
+                        workerDirectPayout: Number(directBreakdown.worker_direct_payout),
+                        cooperativeAllocation: Number(directBreakdown.cooperative_allocation),
+                        cooperativeRatePercentage: Number(directBreakdown.cooperative_rate_percentage),
+                        platformFee: 0,
+                        platformEscrowBalance: 0,
+                        platformHoldsEscrow: false,
+                        workerCount: directBreakdown.required_worker_count || 1,
+                        perWorkerShare: Number(directBreakdown.worker_direct_payout) / (directBreakdown.required_worker_count || 1),
+                        workerName: directBreakdown.worker_name,
+                        workerVpa: directBreakdown.worker_vpa,
+                        isCollective: directBreakdown.booking_type === 'collective',
+                      }}
+                    />
+                  </Box>
                 )}
               </Box>
             </DashboardCard>
@@ -1045,6 +1196,12 @@ function WorkerJobDetails() {
         bookingId={id}
         currentUser={JSON.parse(localStorage.getItem('user'))}
         otherUser={booking?.customer}
+      />
+      <OfflineTaskModal
+        jobId={Number(id)}
+        isOpen={isOfflineModalOpen}
+        onClose={() => setIsOfflineModalOpen(false)}
+        onTaskUpdated={fetchJobDetails}
       />
     </DashboardPage>
   );

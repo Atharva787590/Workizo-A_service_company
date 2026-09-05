@@ -11,8 +11,11 @@ from accounts.admin_views import (
     AdminDashboardStatsView, AdminBookingsView, AdminBookingDetailView,
     AdminWorkerDetailView, AdminCustomerDetailView, AdminCategoryView,
     AdminBillsView, AdminBookingBillView, AdminPaymentsView, AdminRatingsView,
-    AdminReportsView, AdminNotificationsView, AdminSettingsView, AdminProfileView
+    AdminReportsView, AdminNotificationsView, AdminSettingsView, AdminProfileView,
+    AdminOperationsOverviewView, AdminOperationsEconomicsView, AdminOperationsAuditLogsView,
+    AdminOperationsBookingTriageView, AdminOperationsPaymentSummaryView
 )
+
 
 urlpatterns = [
     # General auth
@@ -52,4 +55,12 @@ urlpatterns = [
     path('admin/notifications/', AdminNotificationsView.as_view(), name='admin_notifications'),
     path('admin/settings/', AdminSettingsView.as_view(), name='admin_settings'),
     path('admin/profile/', AdminProfileView.as_view(), name='admin_profile'),
+
+    # UNNATI Cooperative Operations Center Endpoints
+    path('admin/operations/overview/', AdminOperationsOverviewView.as_view(), name='admin_operations_overview'),
+    path('admin/operations/economics/', AdminOperationsEconomicsView.as_view(), name='admin_operations_economics'),
+    path('admin/operations/audit-logs/', AdminOperationsAuditLogsView.as_view(), name='admin_operations_audit_logs'),
+    path('admin/operations/bookings/triage/', AdminOperationsBookingTriageView.as_view(), name='admin_operations_bookings_triage'),
+    path('admin/operations/payments/summary/', AdminOperationsPaymentSummaryView.as_view(), name='admin_operations_payments_summary'),
 ]
+

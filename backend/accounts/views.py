@@ -304,7 +304,7 @@ def render_html_response(title, message, is_success=True, action_url=None, actio
         </style>
     </head>
     <body>
-        <div class="logo">WORKIZO</div>
+        <div class="logo">UNNATI</div>
         <div class="card">
             <h1>{title}</h1>
             <p>{message}</p>

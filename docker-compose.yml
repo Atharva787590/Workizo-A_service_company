@@ -1,0 +1,85 @@
+services:
+  # ── Django ASGI Application Server ──────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=${DB_NAME:-unnati_db}
+      - DB_USER=${DB_USER:-unnati_user}
+      - DB_PASSWORD=${DB_PASSWORD:-unnati_secure_password_2026}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - unnati_network
+
+  # ── Nginx Web Server & Frontend SPA ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - unnati_network
+
+  # ── Production Relational Database (PostgreSQL 16) ──────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-unnati_db}
+      POSTGRES_USER: ${DB_USER:-unnati_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-unnati_secure_password_2026}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-unnati_user} -d ${DB_NAME:-unnati_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - unnati_network
+
+  # ── Redis for Django Channels / WebSocket Layer ─────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - unnati_network
+
+volumes:
+  db_data:
+  static_volume:
+  media_volume:
+
+networks:
+  unnati_network:
+    driver: bridge

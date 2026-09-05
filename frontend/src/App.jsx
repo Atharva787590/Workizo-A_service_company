@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -17,6 +17,10 @@ import AdminLayout from './layouts/AdminLayout';
 // Pages
 import SplineLanding from './SplineLanding';
 import LandingPage from './LandingPage';
+import PublicServiceCatalogPage from './pages/PublicServiceCatalogPage';
+import TransparencyHubPage from './pages/TransparencyHubPage';
+import CooperativeGovernanceDashboard from './cooperative/CooperativeGovernanceDashboard';
+
 
 import CustomerLogin from './customer/CustomerLogin';
 import CustomerRegister from './customer/CustomerRegister';
@@ -39,6 +43,10 @@ import WorkerOnboarding from './captain/WorkerOnboarding';
 import WorkerWaiting from './captain/WorkerWaiting';
 import CaptainRouteWrapper from './components/CaptainRouteWrapper';
 import { Outlet } from 'react-router-dom';
+import { AccessibilityProvider } from './context/AccessibilityContext';
+import { AccessibilityToolbar } from './components/accessibility/AccessibilityToolbar';
+import { NetworkStatusBar } from './components/accessibility/NetworkStatusBar';
+import { VoiceAssistantButton } from './components/assistant';
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "1036814981144-mockgoogleclientid.apps.googleusercontent.com";
 
@@ -47,15 +55,21 @@ function App() {
     <GoogleOAuthProvider clientId={googleClientId}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-              {/* Spline Landing Page (No Layout, completely full screen) */}
-              <Route path="/" element={<SplineLanding />} />
+        <AccessibilityProvider>
+          <NetworkStatusBar />
+          <BrowserRouter>
+            <AuthProvider>
+              <Routes>
+                {/* Spline Landing Page (No Layout, completely full screen) */}
+                <Route path="/" element={<SplineLanding />} />
 
               {/* Public and Customer Routes under CustomerLayout */}
               <Route element={<CustomerLayout />}>
                 <Route path="/home" element={<LandingPage />} />
+                <Route path="/services" element={<PublicServiceCatalogPage />} />
+                <Route path="/transparency" element={<TransparencyHubPage />} />
+                <Route path="/governance" element={<CooperativeGovernanceDashboard />} />
+
 
                 <Route path="/customer/login" element={<CustomerLogin />} />
                 <Route path="/customer/register" element={<CustomerRegister />} />
@@ -129,7 +143,9 @@ function App() {
                 <Route path="/captain/history" element={<WorkerJobHistory />} />
                 <Route path="/captain/wallet" element={<WorkerWallet />} />
                 <Route path="/captain/settings" element={<WorkerSettings />} />
+                <Route path="/cooperative/governance" element={<CooperativeGovernanceDashboard />} />
               </Route>
+
 
               {/* Admin Protected Routes under AdminLayout */}
               <Route
@@ -141,6 +157,9 @@ function App() {
               >
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Route>
+
+              {/* Catch-all fallback */}
+              <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
             <Toaster
               position="top-right"
@@ -152,8 +171,11 @@ function App() {
                 }
               }}
             />
+            <VoiceAssistantButton />
+            <AccessibilityToolbar />
           </AuthProvider>
         </BrowserRouter>
+        </AccessibilityProvider>
       </ThemeProvider>
     </GoogleOAuthProvider>
   );

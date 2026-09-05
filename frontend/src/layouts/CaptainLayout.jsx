@@ -16,8 +16,10 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import PolicyIcon from '@mui/icons-material/Policy';
 import api, { buildMediaUrl } from '../services/api';
 import toast from 'react-hot-toast';
+import { NotificationCenterModal } from '../components/notification';
 
 const drawerWidth = 260;
 
@@ -32,6 +34,7 @@ const CaptainLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [togglingOnline, setTogglingOnline] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const isOnline = !!user?.profile?.online_status;
   
@@ -88,13 +91,14 @@ const CaptainLayout = () => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/captain/dashboard' },
     { text: 'Job History', icon: <HistoryIcon />, path: '/captain/history' },
-    { text: 'Wallet Ledger', icon: <AccountBalanceWalletIcon />, path: '/captain/wallet' },
+    { text: 'Earnings & Ledger', icon: <AccountBalanceWalletIcon />, path: '/captain/wallet' },
+    { text: 'Cooperative Governance', icon: <PolicyIcon />, path: '/cooperative/governance' },
     { text: 'Profile Settings', icon: <PersonIcon />, path: '/captain/profile' },
     { text: 'System Settings', icon: <SettingsIcon />, path: '/captain/settings' },
   ];
 
   const drawerContent = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#0F0F14', color: '#ffffff' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#0F172A', color: '#ffffff' }}>
       {/* Branding Logo & Collapse Trigger */}
       <Box 
         sx={{ 
@@ -102,7 +106,7 @@ const CaptainLayout = () => {
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: isCollapsed ? 'center' : 'space-between',
-          borderBottom: '1px solid #1E1E24',
+          borderBottom: '1px solid #1E293B',
           height: '75px'
         }}
       >
@@ -126,24 +130,24 @@ const CaptainLayout = () => {
                   flexShrink: 0
                 }}
               >
-                <Box component="img" src="/logo.png" sx={{ width: 34, height: 34, objectFit: 'contain' }} />
+                <Box component="img" src="/logo.png" sx={{ width: 32, height: 32, objectFit: 'contain' }} />
               </Box>
               <Box>
                 <Typography
                   variant="h6"
                   sx={{
-                    fontFamily: "'Outfit', 'Plus Jakarta Sans', 'Inter', sans-serif",
+                    fontFamily: "'Outfit', sans-serif",
                     fontWeight: 900,
-                    letterSpacing: '.03rem',
+                    letterSpacing: '.04rem',
                     color: '#ffffff',
-                    lineHeight: 1.2,
-                    fontSize: '1.3rem'
+                    lineHeight: 1.1,
+                    fontSize: '1.2rem'
                   }}
                 >
-                  WORKIZO
+                  UNNATI
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#888888', letterSpacing: '.1rem', fontWeight: 600 }}>
-                  CAPTAIN PANEL
+                <Typography variant="caption" sx={{ color: '#D97706', letterSpacing: '.05rem', fontWeight: 700, fontSize: '0.68rem' }}>
+                  WORKER GUILD • श्रमिक मंच
                 </Typography>
               </Box>
             </Box>
@@ -356,11 +360,18 @@ const CaptainLayout = () => {
             </Box>
 
             {/* Notification Badge */}
-            <IconButton color="inherit" onClick={() => navigate('/captain/dashboard')}>
-              <Badge color="error" variant="dot">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            <Tooltip title="UNNATI Notifications & Opportunities">
+              <IconButton 
+                color="inherit" 
+                onClick={() => setIsNotificationOpen(true)}
+                aria-label="Open UNNATI notifications"
+                sx={{ minWidth: 44, minHeight: 44 }}
+              >
+                <Badge color="error" variant="dot">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
 
             {/* Avatar Dropdown */}
             <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
@@ -468,6 +479,12 @@ const CaptainLayout = () => {
       >
         <Outlet />
       </Box>
+
+      {/* UNNATI Notifications Center Modal */}
+      <NotificationCenterModal
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
     </Box>
   );
 };
