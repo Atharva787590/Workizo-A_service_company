@@ -1,4 +1,5 @@
 import uuid
+import secrets
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -13,14 +14,17 @@ class Booking(models.Model):
 
     STATUS_CHOICES = (
         ('searching', 'Searching For Worker (REQUESTED)'),
+        ('requested', 'Requested'),
         ('MATCHING', 'Matching Workers'),
         ('accepted', 'Worker Accepted'),
         ('SCHEDULED', 'Scheduled in Advance'),
+        ('scheduled', 'Scheduled'),
         ('on_the_way', 'Worker On The Way (WORKER_ARRIVING)'),
         ('arrived', 'Worker Arrived'),
-        ('verified', 'QR / Geofence Verified'),
+        ('verified', 'QR / Arrival PIN / Geofence Verified'),
         ('inspection', 'Inspection'),
         ('repair_started', 'Repair Started (IN_PROGRESS)'),
+        ('in_progress', 'In Progress'),
         ('repair_completed', 'Repair Completed'),
         ('waiting_approval', 'Waiting For Customer Approval'),
         ('WAITING_FOR_CASH_CONFIRMATION', 'Waiting For Cash Confirmation'),
@@ -47,12 +51,15 @@ class Booking(models.Model):
     required_worker_count = models.PositiveIntegerField(default=1)
     assigned_workers = models.ManyToManyField(User, related_name='collective_jobs', blank=True)
     
-    # Geo-fencing
+    # Geo-fencing & Start-of-Service Verification
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     arrival_radius_meters = models.PositiveIntegerField(default=300)
     geofence_verified = models.BooleanField(default=False)
     geofence_verified_at = models.DateTimeField(null=True, blank=True)
+    arrival_pin = models.CharField(max_length=6, blank=True, null=True)
+    arrival_pin_verified = models.BooleanField(default=False)
+    arrival_pin_verified_at = models.DateTimeField(null=True, blank=True)
     
     # Cancellation & Disputes
     cancellation_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -76,6 +83,8 @@ class Booking(models.Model):
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
+        if not self.arrival_pin:
+            self.arrival_pin = f"{secrets.randbelow(9000) + 1000}"
         super().save(*args, **kwargs)
         if is_new and not self.tracking_id:
             self.tracking_id = f"WRK-{self.id + 10000}"
@@ -123,6 +132,7 @@ class MajorRepairApproval(models.Model):
 class BookingRejection(models.Model):
     worker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='booking_rejections')
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='booking_rejections')
+    reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -186,4 +196,36 @@ class BookingWorkerAllocation(models.Model):
         return f"Allocation for {self.worker.email} on Booking #{self.booking.id} (₹{self.allocated_payout})"
 
 
+class BookingDispute(models.Model):
+    """
+    UNNATI Dispute & Rework Resolution Record
+    Tracks customer disputes, worker responses, factual evidence records,
+    and deterministic rule-based assessments without automated verdicts.
+    """
+    STATUS_CHOICES = (
+        ('OPEN', 'Open'),
+        ('UNDER_REVIEW', 'Under Review'),
+        ('RESOLVED', 'Resolved'),
+        ('REJECTED', 'Rejected'),
+    )
 
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='disputes')
+    dispute_id = models.CharField(max_length=50, unique=True)
+    raised_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='raised_booking_disputes')
+    reason = models.TextField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='OPEN')
+    worker_response = models.TextField(blank=True, null=True)
+    worker_responded_at = models.DateTimeField(null=True, blank=True)
+    resolution_notes = models.TextField(blank=True, null=True)
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_booking_disputes')
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    evidence_record = models.JSONField(default=dict, blank=True)
+    assessment_report = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Dispute {self.dispute_id} on Booking #{self.booking_id} ({self.status})"

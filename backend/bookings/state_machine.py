@@ -23,27 +23,30 @@ def calculate_haversine_distance(lat1, lon1, lat2, lon2):
 
 # UNNATI Canonical Lifecycle Transition Graph
 UNNATI_ALLOWED_TRANSITIONS = {
-    'searching': ['MATCHING', 'accepted', 'SCHEDULED', 'cancelled', 'disputed'],
-    'REQUESTED': ['MATCHING', 'accepted', 'SCHEDULED', 'cancelled', 'disputed'],
-    'MATCHING': ['accepted', 'SCHEDULED', 'cancelled', 'disputed'],
+    'searching': ['MATCHING', 'accepted', 'SCHEDULED', 'scheduled', 'cancelled', 'disputed'],
+    'requested': ['MATCHING', 'accepted', 'SCHEDULED', 'scheduled', 'cancelled', 'disputed'],
+    'REQUESTED': ['MATCHING', 'accepted', 'SCHEDULED', 'scheduled', 'cancelled', 'disputed'],
+    'MATCHING': ['accepted', 'SCHEDULED', 'scheduled', 'cancelled', 'disputed'],
     'SCHEDULED': ['on_the_way', 'WORKER_ARRIVING', 'cancelled', 'disputed'],
-    'accepted': ['SCHEDULED', 'on_the_way', 'WORKER_ARRIVING', 'cancelled', 'disputed'],
+    'scheduled': ['on_the_way', 'WORKER_ARRIVING', 'cancelled', 'disputed'],
+    'accepted': ['SCHEDULED', 'scheduled', 'on_the_way', 'WORKER_ARRIVING', 'cancelled', 'disputed'],
     'on_the_way': ['arrived', 'cancelled', 'disputed'],
     'WORKER_ARRIVING': ['arrived', 'cancelled', 'disputed'],
-    'arrived': ['verified', 'inspection', 'repair_started', 'IN_PROGRESS', 'cancelled', 'disputed'],
-    'verified': ['inspection', 'repair_started', 'IN_PROGRESS', 'disputed'],
-    'inspection': ['repair_started', 'IN_PROGRESS', 'disputed'],
-    'repair_started': ['repair_completed', 'waiting_approval', 'COMPLETED', 'disputed'],
-    'IN_PROGRESS': ['repair_completed', 'waiting_approval', 'COMPLETED', 'disputed'],
-    'repair_completed': ['waiting_approval', 'ready_to_complete', 'COMPLETED', 'disputed'],
-    'waiting_approval': ['WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'COMPLETED', 'disputed'],
-    'WAITING_FOR_CASH_CONFIRMATION': ['ready_to_complete', 'COMPLETED', 'disputed'],
+    'arrived': ['verified', 'inspection', 'repair_started', 'IN_PROGRESS', 'in_progress', 'cancelled', 'disputed'],
+    'verified': ['inspection', 'repair_started', 'IN_PROGRESS', 'in_progress', 'disputed'],
+    'inspection': ['repair_started', 'IN_PROGRESS', 'in_progress', 'disputed'],
+    'repair_started': ['repair_completed', 'waiting_approval', 'COMPLETED', 'completed', 'disputed'],
+    'IN_PROGRESS': ['repair_completed', 'waiting_approval', 'COMPLETED', 'completed', 'disputed'],
+    'in_progress': ['repair_completed', 'waiting_approval', 'COMPLETED', 'completed', 'disputed'],
+    'repair_completed': ['waiting_approval', 'ready_to_complete', 'COMPLETED', 'completed', 'disputed'],
+    'waiting_approval': ['WAITING_FOR_CASH_CONFIRMATION', 'ready_to_complete', 'COMPLETED', 'completed', 'disputed'],
+    'WAITING_FOR_CASH_CONFIRMATION': ['ready_to_complete', 'COMPLETED', 'completed', 'disputed'],
     'ready_to_complete': ['completed', 'PAYMENT_RELEASED', 'disputed'],
     'COMPLETED': ['PAYMENT_RELEASED', 'completed'],
     'completed': ['PAYMENT_RELEASED'],
     'PAYMENT_RELEASED': [],
     'cancelled': [],
-    'disputed': ['searching', 'accepted', 'cancelled', 'completed', 'PAYMENT_RELEASED'],
+    'disputed': ['searching', 'requested', 'accepted', 'cancelled', 'completed', 'PAYMENT_RELEASED'],
 }
 
 def validate_state_transition(booking, new_status, user):
@@ -70,7 +73,7 @@ def validate_state_transition(booking, new_status, user):
             return False, "You do not have permission to manage this booking."
         if new_status == 'cancelled':
             # Customers cannot cancel once repair has started
-            if current_status in ['repair_started', 'IN_PROGRESS', 'repair_completed', 'completed', 'PAYMENT_RELEASED']:
+            if current_status in ['repair_started', 'IN_PROGRESS', 'in_progress', 'repair_completed', 'completed', 'PAYMENT_RELEASED']:
                 return False, "Cannot cancel job once work is in progress. Please raise a dispute."
             return True, ""
         elif new_status == 'disputed':
@@ -84,10 +87,15 @@ def validate_state_transition(booking, new_status, user):
             return False, "You are not assigned to this service contract."
 
         # Geo-fence guard for starting repair
-        if new_status in ['repair_started', 'IN_PROGRESS'] and not booking.geofence_verified:
+        if new_status in ['repair_started', 'IN_PROGRESS', 'in_progress'] and not booking.geofence_verified:
             # Allow fallback if no coordinates set on booking
             if booking.latitude is not None and booking.longitude is not None:
                 return False, "Worker arrival must be geo-fence verified before starting work."
+
+        # Start-of-service verification guard (Arrival PIN)
+        if new_status in ['repair_started', 'IN_PROGRESS', 'in_progress']:
+            if not booking.arrival_pin_verified and booking.status != 'verified':
+                return False, "Start-of-service verification (Arrival PIN) is required before entering in_progress."
 
         if new_status == 'cancelled':
             return True, ""

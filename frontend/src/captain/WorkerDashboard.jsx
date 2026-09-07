@@ -66,9 +66,14 @@ function WorkerDashboard() {
   const [togglingOnline, setTogglingOnline] = useState(false);
   const [acceptingId, setAcceptingId] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedRejectId, setSelectedRejectId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
   const [workerSkills, setWorkerSkills] = useState([]);
   const [workerCerts, setWorkerCerts] = useState([]);
+  const [demandData, setDemandData] = useState(null);
+  const [loadingDemand, setLoadingDemand] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
 
   // Sound Alert ref
@@ -135,6 +140,15 @@ function WorkerDashboard() {
         }
       } catch (e) {
         // Non-blocking
+      }
+
+      try {
+        const demandRes = await api.get('/api/bookings/bookings/demand-intelligence/?days=30');
+        setDemandData(demandRes.data);
+      } catch (e) {
+        console.warn('Demand intelligence unavailable', e);
+      } finally {
+        setLoadingDemand(false);
       }
     } catch (err) {
       console.error(err);
@@ -294,18 +308,32 @@ function WorkerDashboard() {
     }
   };
 
-  const handleRejectBooking = async (bookingId) => {
-    setRejectingId(bookingId);
+  const handleOpenRejectModal = (bookingId) => {
+    setSelectedRejectId(bookingId);
+    setRejectReason('');
+    setRejectModalOpen(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!selectedRejectId) return;
+    setRejectingId(selectedRejectId);
     try {
-      await api.post(`/api/bookings/bookings/${bookingId}/reject/`);
-      toast.success('Service booking request dismissed.');
-      setAvailableBookings((prev) => prev.filter(b => b.id !== bookingId));
+      await api.post(`/api/bookings/bookings/${selectedRejectId}/reject/`, {
+        reason: rejectReason || 'Worker declined request'
+      });
+      toast.success('Service booking request declined.');
+      setAvailableBookings((prev) => prev.filter(b => b.id !== selectedRejectId));
+      setRejectModalOpen(false);
     } catch (err) {
       console.error(err);
       toast.error('Failed to reject booking request');
     } finally {
       setRejectingId(null);
     }
+  };
+
+  const handleRejectBooking = async (bookingId) => {
+    handleOpenRejectModal(bookingId);
   };
 
   if (loadingStats) {
@@ -657,9 +685,20 @@ function WorkerDashboard() {
                             <Typography variant="body2" color="text.secondary">
                               Distance: <span style={{ fontWeight: 700, color: '#34A853' }}>{b.distance ? `${b.distance} km` : '1.2 km'}</span>
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Requested Time: <span style={{ fontWeight: 600 }}>{new Date(b.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                            </Typography>
+                            {b.scheduled_time ? (
+                              <Box sx={{ my: 0.5, p: 1, bgcolor: 'rgba(26,115,232,0.08)', borderRadius: '8px' }}>
+                                <Typography variant="caption" fontWeight={700} color="primary" display="block">
+                                  Scheduled Appointment:
+                                </Typography>
+                                <Typography variant="body2" fontWeight={700}>
+                                  {new Date(b.scheduled_time).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                Requested Time: <span style={{ fontWeight: 600 }}>{new Date(b.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} (Instant)</span>
+                              </Typography>
+                            )}
                             <Typography variant="body2" color="text.secondary">
                               Payment Mode: <span style={{ fontWeight: 700, color: '#1A73E8' }}>{b.payment_mode || 'Online / Cash'}</span>
                             </Typography>
@@ -676,7 +715,7 @@ function WorkerDashboard() {
                             <Button
                               fullWidth
                               variant="outlined"
-                              onClick={() => handleRejectBooking(b.id)}
+                              onClick={() => handleOpenRejectModal(b.id)}
                               disabled={rejectingId === b.id || acceptingId === b.id}
                               sx={{ minHeight: 48, borderColor: tokens.borderColor, color: 'text.secondary', textTransform: 'none', borderRadius: `${tokens.borderRadiusSm}px`, fontWeight: 700 }}
                             >
@@ -796,6 +835,93 @@ function WorkerDashboard() {
                   )}
                 </List>
               </DashboardCard>
+
+              {/* Upcoming Scheduled Appointments */}
+              <DashboardCard title="Upcoming Scheduled Jobs" subtitle="Advance customer appointments">
+                {recentJobs.filter(j => j.booking_type === 'scheduled' && ['SCHEDULED', 'scheduled', 'accepted'].includes(j.status)).length === 0 ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+                    No upcoming scheduled appointments booked yet.
+                  </Typography>
+                ) : (
+                  <List disablePadding>
+                    {recentJobs
+                      .filter(j => j.booking_type === 'scheduled' && ['SCHEDULED', 'scheduled', 'accepted'].includes(j.status))
+                      .slice(0, 3)
+                      .map((job) => (
+                        <ListItem key={job.id} sx={{ px: 0, py: 1 }} divider>
+                          <ListItemText
+                            primary={job.service_category_detail?.name || 'Trade Service'}
+                            secondary={job.scheduled_time ? new Date(job.scheduled_time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Scheduled'}
+                            primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700 }}
+                            secondaryTypographyProps={{ fontSize: '0.75rem', color: 'primary.main', fontWeight: 600 }}
+                          />
+                          <Button size="small" variant="outlined" onClick={() => navigate(`/captain/job/${job.id}`)} sx={{ borderRadius: '6px', textTransform: 'none', fontSize: '0.75rem' }}>
+                            View
+                          </Button>
+                        </ListItem>
+                      ))}
+                  </List>
+                )}
+              </DashboardCard>
+
+              {/* Real Regional Demand Intelligence Card */}
+              <DashboardCard title="Regional Demand Intelligence" subtitle="Live demand trends from real bookings">
+                {loadingDemand ? (
+                  <Box sx={{ py: 2 }}>
+                    <LinearProgress sx={{ mb: 1 }} />
+                    <Typography variant="caption" color="text.secondary">Aggregating actual booking records...</Typography>
+                  </Box>
+                ) : demandData?.status === 'INSUFFICIENT_DATA' ? (
+                  <Box sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
+                      HONEST DEMAND METRIC
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.5 }}>
+                      {demandData.message}
+                    </Typography>
+                    <Box display="flex" gap={1} sx={{ mt: 1.5 }}>
+                      <Chip label={`Actual Bookings: ${demandData.sample_count}`} size="small" sx={{ fontSize: '0.75rem', fontWeight: 600 }} />
+                      <Chip label="Zero Synthetic Data" size="small" color="success" variant="outlined" sx={{ fontSize: '0.75rem', fontWeight: 600 }} />
+                    </Box>
+                  </Box>
+                ) : demandData?.categories?.length > 0 ? (
+                  <List disablePadding>
+                    {demandData.categories.slice(0, 4).map((cat, idx) => (
+                      <ListItem key={idx} sx={{ px: 0, py: 1 }} divider={idx < 3}>
+                        <ListItemText
+                          primary={cat.category_name}
+                          secondary={`${cat.total_requests} requests · ${cat.completion_rate_percent}% completion`}
+                          primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
+                          secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                        />
+                        <Chip label={`${cat.share_of_demand_percent}% share`} size="small" sx={{ fontWeight: 700, fontSize: '0.75rem' }} />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No active regional records available.
+                  </Typography>
+                )}
+              </DashboardCard>
+
+              {/* Cooperative Fair-Wage Transparency Card */}
+              <DashboardCard title="Fair-Wage Guarantee" subtitle="Cooperative earnings model rules">
+                <Box sx={{ p: 2, bgcolor: '#F0FDF4', borderRadius: '8px', border: '1px solid #BBF7D0' }}>
+                  <Typography variant="body2" fontWeight={700} color="#166534" sx={{ mb: 1 }}>
+                    100% Direct Settlement Model
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.75, lineHeight: 1.4 }}>
+                    • <b>0% Platform Commission:</b> You keep the full customer service fee with zero middleman extraction.
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.75, lineHeight: 1.4 }}>
+                    • <b>6.5% Cooperative Reserve:</b> Democratically pooled for accident insurance, emergency aid, and year-end patronage dividends.
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
+                    • <b>Transparent Billing:</b> All labor and spare parts are authorized directly on-site before checkout.
+                  </Typography>
+                </Box>
+              </DashboardCard>
             </Box>
           </Box>
         </DashboardGrid>
@@ -913,6 +1039,50 @@ function WorkerDashboard() {
         isOpen={isNotificationCenterOpen}
         onClose={() => setIsNotificationCenterOpen(false)}
       />
+
+      {/* UNNATI Decline Service Request Dialog */}
+      <Dialog
+        open={rejectModalOpen}
+        onClose={() => !rejectingId && setRejectModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px', p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          Decline Service Request
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Please share the reason for declining. This helps the cooperative platform rematch the customer promptly.
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="e.g., Outside my current service area, conflicting schedule, specialized equipment required..."
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setRejectModalOpen(false)}
+            disabled={!!rejectingId}
+            sx={{ textTransform: 'none', color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleConfirmReject}
+            disabled={!!rejectingId}
+            sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 700 }}
+          >
+            {rejectingId ? 'Declining...' : 'Confirm Decline'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </DashboardPage>
   );
 }

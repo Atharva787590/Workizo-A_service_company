@@ -510,11 +510,14 @@ class VerifyOnlinePaymentView(views.APIView):
             return Response({"detail": "Payment recorded as failed."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Signature verification
+        import sys
+        is_testing = 'test' in sys.argv or 'pytest' in sys.modules
+
         is_verified = False
-        if not razorpay_signature or (razorpay_order_id and razorpay_order_id.startswith("order_mock_")) or (razorpay_payment_id and str(razorpay_payment_id).startswith("pay_mock_")):
-            # Mock validation succeeds automatically for testing/mock order ID
+        if (settings.DEBUG or is_testing) and (not razorpay_signature or (razorpay_order_id and razorpay_order_id.startswith("order_mock_")) or (razorpay_payment_id and str(razorpay_payment_id).startswith("pay_mock_"))):
+            # Mock validation succeeds automatically for testing/mock order ID in DEBUG/test mode only
             is_verified = True
-        elif razorpay_order_id and razorpay_payment_id and razorpay_signature:
+        elif razorpay_order_id and razorpay_payment_id and razorpay_signature and getattr(settings, 'RAZORPAY_KEY_SECRET', None):
             msg = f"{razorpay_order_id}|{razorpay_payment_id}"
             generated = hmac.new(
                 settings.RAZORPAY_KEY_SECRET.encode('utf-8'),
@@ -522,7 +525,7 @@ class VerifyOnlinePaymentView(views.APIView):
                 hashlib.sha256
             ).hexdigest()
             is_verified = hmac.compare_digest(generated, razorpay_signature)
-        elif settings.DEBUG or getattr(settings, 'RAZORPAY_KEY_ID', '').startswith('rzp_test_'):
+        elif (settings.DEBUG or is_testing) and getattr(settings, 'RAZORPAY_KEY_ID', '').startswith('rzp_test_'):
             is_verified = True
 
         if not is_verified:
@@ -964,7 +967,10 @@ class InitiateDirectPaymentView(views.APIView):
         )
 
         adapter_type = request.data.get('adapter_type', 'DIRECT_UPI')
-        adapter = PaymentAdapterFactory.get_adapter(adapter_type)
+        try:
+            adapter = PaymentAdapterFactory.get_adapter(adapter_type)
+        except ValueError as err:
+            return Response({"detail": str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
         primary_worker = booking.worker or booking.assigned_workers.first()
         if not primary_worker:
@@ -1053,7 +1059,16 @@ class VerifyDirectPaymentView(views.APIView):
         if not valid:
             return Response({"detail": err}, status=status.HTTP_400_BAD_REQUEST)
 
-        adapter = PaymentAdapterFactory.get_adapter(payment.adapter_type)
+        try:
+            adapter = PaymentAdapterFactory.get_adapter(payment.adapter_type)
+        except ValueError as err:
+            return Response({"detail": str(err)}, status=status.HTTP_400_BAD_REQUEST)
+
+        import sys
+        is_testing = 'test' in sys.argv or 'pytest' in sys.modules or getattr(settings, 'TESTING', False)
+        if adapter.is_mock and not (settings.DEBUG or is_testing):
+            return Response({"detail": "Mock payment verification is prohibited in production."}, status=status.HTTP_400_BAD_REQUEST)
+
         verify_res = adapter.verify_payment(payment, request.data)
 
         if not verify_res.get('verified'):

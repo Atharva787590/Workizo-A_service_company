@@ -25,7 +25,7 @@ function BookingFlow() {
   const searchParams = new URLSearchParams(location.search);
   const preselectedCategoryId = searchParams.get('category');
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -33,8 +33,11 @@ function BookingFlow() {
   const [scheduledTime, setScheduledTime] = useState(null);
   const [requiredWorkerCount, setRequiredWorkerCount] = useState(2);
   const [userCoords, setUserCoords] = useState(null);
+  const [fairWageQuote, setFairWageQuote] = useState(null);
+  const [loadingQuote, setLoadingQuote] = useState(false);
 
-  const selectedCategory = categories.find(cat => String(cat.id) === String(preselectedCategoryId));
+  const watchedCategoryId = watch('service_category');
+  const activeCategoryId = watchedCategoryId || preselectedCategoryId;
 
   useEffect(() => {
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
@@ -67,6 +70,31 @@ function BookingFlow() {
       })
       .finally(() => setLoading(false));
   }, [preselectedCategoryId, setValue]);
+
+  useEffect(() => {
+    if (!activeCategoryId) {
+      setFairWageQuote(null);
+      return;
+    }
+    let isMounted = true;
+    setLoadingQuote(true);
+    const workerCount = bookingType === 'collective' ? requiredWorkerCount : 1;
+    api.post('/api/bookings/bookings/fair-wage-quote/', {
+      category_id: activeCategoryId,
+      required_worker_count: workerCount,
+      duration_minutes: 60
+    })
+    .then(res => {
+      if (isMounted) setFairWageQuote(res.data);
+    })
+    .catch(() => {
+      if (isMounted) setFairWageQuote(null);
+    })
+    .finally(() => {
+      if (isMounted) setLoadingQuote(false);
+    });
+    return () => { isMounted = false; };
+  }, [activeCategoryId, bookingType, requiredWorkerCount]);
 
   const onSubmit = async (data) => {
     setSubmitting(true);
@@ -364,18 +392,56 @@ function BookingFlow() {
               </List>
             </DashboardCard>
 
-            <DashboardCard title="Estimates & Billing" subtitle="How are service charges calculated?">
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Service rates consist of:
-              </Typography>
-              <Typography variant="body2" color="text.secondary" component="ul" sx={{ pl: 2, mb: 2 }}>
-                <li><b>Flat Labour Base Rate:</b> As defined by the service category.</li>
-                <li><b>Parts Charges:</b> If any spare parts are required during repair.</li>
-                <li><b>18% GST:</b> Standard tax rate applicable on the final service sum.</li>
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                You will review the compiled invoice and pay securely through the application once the service is complete.
-              </Typography>
+            <DashboardCard title="Fair-Price Transparency" subtitle="How is this service price calculated?">
+              {loadingQuote ? (
+                <Box sx={{ py: 3, textAlign: 'center' }}>
+                  <LinearProgress sx={{ mb: 1.5 }} />
+                  <Typography variant="caption" color="text.secondary">Calculating cooperative quote...</Typography>
+                </Box>
+              ) : fairWageQuote ? (
+                <Box>
+                  <Box sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', mb: 2 }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
+                      ESTIMATED FAIR PRICE (उचित मूल्य अनुमान)
+                    </Typography>
+                    <Box display="flex" alignItems="baseline" gap={1} sx={{ mt: 0.5 }}>
+                      <Typography variant="h4" fontWeight={800} color="#0F172A">
+                        ₹{fairWageQuote.customer_total}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        for {fairWageQuote.required_worker_count} worker(s)
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="success.main" fontWeight={700} sx={{ mt: 0.5, display: 'block' }}>
+                      ✓ 0% Platform Commission · Direct Worker Settlement
+                    </Typography>
+                  </Box>
+
+                  <List disablePadding sx={{ mb: 2 }}>
+                    {fairWageQuote.explanation?.map((item, idx) => (
+                      <ListItem key={idx} sx={{ px: 0, py: 0.75 }} divider={idx < fairWageQuote.explanation.length - 1}>
+                        <ListItemText
+                          primary={item.label}
+                          secondary={item.detail}
+                          primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
+                          secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                        />
+                        <Typography variant="body2" fontWeight={700} color="#0F172A">
+                          {item.amount}
+                        </Typography>
+                      </ListItem>
+                    ))}
+                  </List>
+
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
+                    {fairWageQuote.disclaimer}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Select a service trade category on the left to view the transparent fair-wage quote breakdown.
+                </Typography>
+              )}
             </DashboardCard>
           </Box>
         </Box>

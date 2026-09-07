@@ -10,10 +10,10 @@ def verify_google_id_token(token):
     Supports a mock fallback for testing in development when settings.DEBUG = True
     and the token starts with 'mock_token_'.
     """
-    # 1. Check for mock token in DEBUG or test mode
+    # 1. Check for mock token strictly during test runner execution
     is_testing = 'test' in sys.argv or getattr(settings, 'TESTING', False)
-    if (settings.DEBUG or is_testing) and token and token.startswith('mock_token_'):
-        logger.info("Using mock Google token verification (development/test mode)")
+    if is_testing and token and token.startswith('mock_token_'):
+        logger.info("Using mock Google token verification for automated test suite")
         # Expected format: mock_token_<role>_<email>_<full_name_dashed>
         parts = token.split('_')
         role = parts[2] if len(parts) > 2 else 'customer'

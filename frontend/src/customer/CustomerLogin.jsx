@@ -80,18 +80,13 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
   const onRegisterSubmit = async (data) => {
     setLoading(true);
     try {
-      await registerAuth(data.fullName, data.email, data.phone, data.password, 'customer');
-      toast.success('Registration successful!');
-      navigate('/customer/dashboard');
+      const newUser = await registerAuth(data.fullName, data.email, data.phone, data.password, 'customer');
+      if (newUser) {
+        navigate('/customer/dashboard');
+      }
     } catch (err) {
       console.error(err);
-      if (err.email) {
-        toast.error(`Email: ${err.email[0]}`);
-      } else if (err.phone) {
-        toast.error(`Phone: ${err.phone[0]}`);
-      } else {
-        toast.error(err.detail || 'Registration failed. Please check inputs.');
-      }
+      toast.error(err.message || 'Registration failed. Please check inputs.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +97,7 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
     setLoading(true);
     try {
       const loggedUser = await googleLogin(credentialResponse.credential, 'customer');
-      if (loggedUser.role === 'customer') {
+      if (loggedUser?.role === 'customer') {
         const redirectPath = localStorage.getItem('redirect_after_login');
         if (redirectPath) {
           localStorage.removeItem('redirect_after_login');
@@ -110,43 +105,7 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
         } else {
           navigate('/customer/dashboard');
         }
-      } else {
-        await logout();
-        toast.error('This portal is only for Customers. Please log in on the Captain Portal.');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMockGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      const email = prompt("Enter mock Google email:", "googletest@unnati.coop");
-      if (!email) {
-        setLoading(false);
-        return;
-      }
-      const name = prompt("Enter mock Google Full Name:", "Google Customer");
-      if (!name) {
-        setLoading(false);
-        return;
-      }
-      const dashedName = name.replace(/\s+/g, '-');
-      const mockToken = `mock_token_customer_${email}_${dashedName}`;
-      
-      const loggedUser = await googleLogin(mockToken, 'customer');
-      if (loggedUser.role === 'customer') {
-        const redirectPath = localStorage.getItem('redirect_after_login');
-        if (redirectPath) {
-          localStorage.removeItem('redirect_after_login');
-          navigate(redirectPath);
-        } else {
-          navigate('/customer/dashboard');
-        }
-      } else {
+      } else if (loggedUser) {
         await logout();
         toast.error('This portal is only for Customers. Please log in on the Captain Portal.');
       }
@@ -293,40 +252,21 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
               </Button>
             </Box>
 
-            <Divider sx={{ my: 2, fontSize: '0.8rem', color: 'text.secondary' }}>or use Google</Divider>
-
-            {import.meta.env.VITE_GOOGLE_CLIENT_ID && import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'MOCK_CLIENT_ID' ? (
-              <Box display="flex" justifyContent="center" width="100%" mb={2}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => toast.error("Google Sign-In failed.")}
-                  text="signin_with"
-                  width="340"
-                />
-              </Box>
-            ) : (
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={handleMockGoogleLogin}
-                disabled={loading}
-                sx={{
-                  py: 1,
-                  mb: 2,
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  borderColor: '#E5E7EB',
-                  color: '#374151',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 1,
-                  '&:hover': { borderColor: '#D1D5DB', bgcolor: '#F9FAFB' }
-                }}
-              >
-                Continue with Google
-              </Button>
+            {import.meta.env.VITE_GOOGLE_CLIENT_ID && 
+             import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'MOCK_CLIENT_ID' && 
+             !import.meta.env.VITE_GOOGLE_CLIENT_ID.includes('mock') &&
+             !import.meta.env.VITE_GOOGLE_CLIENT_ID.includes('your-google') && (
+              <>
+                <Divider sx={{ my: 2, fontSize: '0.8rem', color: 'text.secondary' }}>or use Google</Divider>
+                <Box display="flex" justifyContent="center" width="100%" mb={2}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => toast.error("Google Sign-In failed.")}
+                    text="signin_with"
+                    width="340"
+                  />
+                </Box>
+              </>
             )}
 
             {/* Mobile-only toggle */}
@@ -488,40 +428,21 @@ const CustomerLogin = ({ defaultSignUp = false }) => {
               </Button>
             </Box>
 
-            <Divider sx={{ my: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>or use Google</Divider>
-
-            {import.meta.env.VITE_GOOGLE_CLIENT_ID && import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'MOCK_CLIENT_ID' ? (
-              <Box display="flex" justifyContent="center" width="100%" mb={2}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => toast.error("Google Sign-In failed.")}
-                  text="signup_with"
-                  width="340"
-                />
-              </Box>
-            ) : (
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={handleMockGoogleLogin}
-                disabled={loading}
-                sx={{
-                  py: 1,
-                  mb: 2,
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  borderColor: '#E5E7EB',
-                  color: '#374151',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 1,
-                  '&:hover': { borderColor: '#D1D5DB', bgcolor: '#F9FAFB' }
-                }}
-              >
-                Continue with Google
-              </Button>
+            {import.meta.env.VITE_GOOGLE_CLIENT_ID && 
+             import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'MOCK_CLIENT_ID' && 
+             !import.meta.env.VITE_GOOGLE_CLIENT_ID.includes('mock') &&
+             !import.meta.env.VITE_GOOGLE_CLIENT_ID.includes('your-google') && (
+              <>
+                <Divider sx={{ my: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>or use Google</Divider>
+                <Box display="flex" justifyContent="center" width="100%" mb={2}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => toast.error("Google Sign-In failed.")}
+                    text="signup_with"
+                    width="340"
+                  />
+                </Box>
+              </>
             )}
 
             {/* Mobile-only toggle */}

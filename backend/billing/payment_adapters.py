@@ -184,10 +184,20 @@ class DirectCashAdapter(BasePaymentAdapter):
         }
 
 
+import sys
+from django.conf import settings
+
+
+def _is_development_or_test() -> bool:
+    """Helper to detect whether mock payment behavior is permissible."""
+    return getattr(settings, 'DEBUG', False) or 'test' in sys.argv or 'pytest' in sys.modules or getattr(settings, 'TESTING', False)
+
+
 class MockPaymentAdapter(BasePaymentAdapter):
     """
     Developer / Sandbox simulation adapter.
     Explicitly flags is_mock = True to distinguish from real payment settlement.
+    Disabled in production (when DEBUG=False and not testing).
     """
     adapter_name = "MOCK_PROVIDER"
     is_mock = True
@@ -200,6 +210,9 @@ class MockPaymentAdapter(BasePaymentAdapter):
         idempotency_key: str,
         extra_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
+        if not _is_development_or_test():
+            raise ValueError("Mock payment initiation is prohibited in production environment.")
+
         mock_order_id = f"demo_order_{booking.id}_{int(time.time())}"
         worker_upi = f"demo.{recipient_user.id}@mock.upi"
         return {
@@ -219,6 +232,14 @@ class MockPaymentAdapter(BasePaymentAdapter):
         payment,
         verification_payload: Dict[str, Any]
     ) -> Dict[str, Any]:
+        if not _is_development_or_test():
+            return {
+                'verified': False,
+                'is_mock': True,
+                'method': 'MOCK_PROVIDER',
+                'detail': 'Mock payment verification is prohibited in production environment.'
+            }
+
         mock_tx_id = verification_payload.get('transaction_id') or f"mock_tx_{int(time.time())}"
         return {
             'verified': True,
@@ -234,6 +255,9 @@ class MockPaymentAdapter(BasePaymentAdapter):
         refund_amount: Decimal,
         reason: str
     ) -> Dict[str, Any]:
+        if not _is_development_or_test():
+            raise ValueError("Mock payment refund is prohibited in production environment.")
+
         return {
             'refund_initiated': True,
             'is_mock': True,
@@ -246,6 +270,7 @@ class MockPaymentAdapter(BasePaymentAdapter):
 class PaymentAdapterFactory:
     """
     Factory to resolve the appropriate payment adapter.
+    Disallows mock adapters in production.
     """
     @staticmethod
     def get_adapter(adapter_type: str) -> BasePaymentAdapter:
@@ -255,6 +280,13 @@ class PaymentAdapterFactory:
         elif adapter_type in ['DIRECT_CASH', 'CASH']:
             return DirectCashAdapter()
         elif adapter_type in ['MOCK', 'MOCK_PROVIDER', 'DEMO']:
+            if not _is_development_or_test():
+                raise ValueError("Mock payment adapter is disabled in production environments.")
             return MockPaymentAdapter()
-        # Default fallback for unconfigured providers:
-        return MockPaymentAdapter()
+        
+        # Production must NOT fall back to MockPaymentAdapter
+        if _is_development_or_test():
+            return MockPaymentAdapter()
+
+        raise ValueError(f"Unrecognized or unsupported payment adapter: '{adapter_type}'")
+

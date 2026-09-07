@@ -1,0 +1,87 @@
+export type SupportedLanguage = 'en' | 'hi' | 'mr';
+
+export interface LanguageInfo {
+  code: SupportedLanguage;
+  name: string;
+  nativeName: string;
+  description: string;
+}
+
+export type TranslationKey =
+  // Common Navigation & Shell
+  | 'nav_home'
+  | 'nav_services'
+  | 'nav_transparency'
+  | 'nav_governance'
+  | 'nav_dashboard'
+  | 'nav_settings'
+  | 'nav_logout'
+  | 'nav_profile'
+  | 'nav_help'
+
+  // Settings Page
+  | 'settings_page_title'
+  | 'settings_page_subtitle'
+  | 'settings_back_to_dashboard'
+  | 'settings_save_success'
+  | 'settings_reset_success'
+  | 'settings_language_section_title'
+  | 'settings_language_section_subtitle'
+  | 'settings_language_en_desc'
+  | 'settings_language_hi_desc'
+  | 'settings_language_mr_desc'
+  | 'settings_language_explicit_note'
+  | 'settings_accessibility_section_title'
+  | 'settings_accessibility_section_subtitle'
+  | 'settings_high_contrast_label'
+  | 'settings_high_contrast_desc'
+  | 'settings_text_size_label'
+  | 'settings_text_size_desc'
+  | 'settings_text_size_normal'
+  | 'settings_text_size_large'
+  | 'settings_text_size_xlarge'
+  | 'settings_reduced_motion_label'
+  | 'settings_reduced_motion_desc'
+  | 'settings_low_bandwidth_label'
+  | 'settings_low_bandwidth_desc'
+  | 'settings_reset_accessibility'
+  | 'settings_notifications_section_title'
+  | 'settings_notifications_section_subtitle'
+  | 'settings_sound_alerts_label'
+  | 'settings_sound_alerts_desc'
+  | 'settings_support_section_title'
+  | 'settings_support_section_subtitle'
+  | 'settings_support_email_label'
+  | 'settings_support_phone_label'
+  | 'settings_support_hours_label'
+  | 'settings_support_hours_val'
+  | 'settings_legal_section_title'
+  | 'settings_legal_terms_title'
+  | 'settings_legal_terms_desc'
+  | 'settings_legal_privacy_title'
+  | 'settings_legal_privacy_desc'
+
+  // UNNATI Help / Chat
+  | 'help_button_label'
+  | 'help_modal_title'
+  | 'help_modal_subtitle'
+  | 'help_clear_history'
+  | 'help_close'
+  | 'help_input_placeholder'
+  | 'help_send_button'
+  | 'help_empty_heading'
+  | 'help_empty_subtitle'
+  | 'help_chip_services'
+  | 'help_chip_booking'
+  | 'help_chip_payment'
+  | 'help_chip_wages'
+  | 'help_chip_cancellation'
+  | 'help_chip_governance'
+  | 'help_chip_safety'
+  | 'help_verified_badge'
+  | 'help_advisory_badge'
+  | 'help_unsupported_title'
+  | 'help_error_length'
+  | 'help_error_empty'
+  | 'help_offline_notice'
+  | 'help_contact_prompt';

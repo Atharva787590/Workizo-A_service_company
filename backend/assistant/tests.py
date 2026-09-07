@@ -21,6 +21,7 @@ class AssistantEngineTest(TestCase):
         self.user = User.objects.create_user(
             email="assistant_user@workizo.com",
             full_name="Pooja Sharma",
+            phone="9876543290",
             role="customer",
             password="password123"
         )
@@ -61,18 +62,51 @@ class AssistantEngineTest(TestCase):
         result = self.engine.process_query("What is the price and fair wage policy?", language="en")
         self.assertFalse(result["requires_confirmation"])
         self.assertTrue(result["is_verified_data"])
-        self.assertIn("zero platform middleman fees", result["text"])
-        self.assertIn("6.5%", result["text"])
+        self.assertIn("without commercial middleman fees", result["text"])
+        self.assertIn("cooperative reserve", result["text"])
 
     def test_cooperative_information(self):
         result = self.engine.process_query("tell me about cooperative patronage dividend", language="en")
         self.assertTrue(result["is_verified_data"])
-        self.assertIn("patronage dividend", result["text"])
+        self.assertIn("cooperative principles", result["text"])
 
     def test_weather_advisory_non_medical(self):
         result = self.engine.process_query("weather rain safety", language="en")
         self.assertTrue(result["is_advisory"])
         self.assertIn("non-medical", result["text"])
+
+    def test_canonical_knowledge_retrieval(self):
+        # Grounded query about cancellation
+        result = self.engine.process_query("What is the cancellation and refund policy?", language="en")
+        self.assertTrue(result["is_verified_data"])
+        self.assertEqual(result["data_source"], "CANONICAL_KNOWLEDGE_BASE")
+        self.assertEqual(result["knowledge_topic"], "cancellations")
+        self.assertIn("rescheduled or cancelled", result["text"])
+
+    def test_canonical_knowledge_retrieval_hindi(self):
+        result = self.engine.process_query("कारीगर कैसे जुड़ सकते हैं?", language="hi")
+        self.assertTrue(result["is_verified_data"])
+        self.assertEqual(result["data_source"], "CANONICAL_KNOWLEDGE_BASE")
+        self.assertIn("सहकारी", result["text"])
+
+    def test_canonical_knowledge_retrieval_marathi(self):
+        result = self.engine.process_query("थेट पेमेंट कसे काम करते?", language="mr")
+        self.assertTrue(result["is_verified_data"])
+        self.assertEqual(result["data_source"], "CANONICAL_KNOWLEDGE_BASE")
+        self.assertIn("थेट पेमेंट", result["text"])
+
+    def test_unsupported_question_safe_fallback(self):
+        # Query outside canonical knowledge base
+        result = self.engine.process_query("What is the stock price of Tesla?", language="en")
+        self.assertFalse(result["is_verified_data"])
+        self.assertTrue(result.get("is_unsupported", False))
+        self.assertIn("don't have verified information", result["text"])
+        self.assertIn("support@unnati.coop", result["text"])
+
+    def test_query_length_truncation(self):
+        long_query = "services " * 100
+        result = self.engine.process_query(long_query, language="en")
+        self.assertIsNotNone(result)
 
 
 class AssistantAPITest(TestCase):
@@ -94,6 +128,12 @@ class AssistantAPITest(TestCase):
     def test_query_endpoint_empty(self):
         response = self.client.post('/api/assistant/query/', {'query': '   '}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_query_endpoint_length_exceeded(self):
+        long_query = "A" * 501
+        response = self.client.post('/api/assistant/query/', {'query': long_query}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('exceeds maximum limit', response.data['detail'])
 
     def test_query_endpoint_success(self):
         response = self.client.post('/api/assistant/query/', {

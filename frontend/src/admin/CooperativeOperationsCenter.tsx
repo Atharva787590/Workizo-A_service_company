@@ -27,10 +27,8 @@ import {
 } from '../types/operations';
 import {
   MOCK_OPERATIONS_OVERVIEW,
-  MOCK_TRIAGED_BOOKINGS,
   MOCK_PAYMENT_SUMMARY,
   MOCK_ECONOMICS,
-  MOCK_AUDIT_LOGS,
   MOCK_WORKER_PROFILES,
   filterTriagedBookings,
   getBookingStatusBadge
@@ -42,11 +40,11 @@ export const CooperativeOperationsCenter: React.FC = () => {
   >('overview');
 
   const [overview, setOverview] = useState<OperationsOverviewData>(MOCK_OPERATIONS_OVERVIEW);
-  const [bookings, setBookings] = useState<TriagedBooking[]>(MOCK_TRIAGED_BOOKINGS);
+  const [bookings, setBookings] = useState<TriagedBooking[]>([]);
   const [workers, setWorkers] = useState<WorkerOperationalProfile[]>(MOCK_WORKER_PROFILES);
   const [payments, setPayments] = useState<PaymentLifecycleSummary>(MOCK_PAYMENT_SUMMARY);
   const [economics, setEconomics] = useState<CooperativeEconomicsSummary>(MOCK_ECONOMICS);
-  const [auditLogs, setAuditLogs] = useState<OperationalAuditLog[]>(MOCK_AUDIT_LOGS);
+  const [auditLogs, setAuditLogs] = useState<OperationalAuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Filters & Search
@@ -80,20 +78,20 @@ export const CooperativeOperationsCenter: React.FC = () => {
       if (ovRes.status === 'fulfilled' && ovRes.value.data?.metrics) {
         setOverview(ovRes.value.data);
       }
-      if (bkRes.status === 'fulfilled' && Array.isArray(bkRes.value.data) && bkRes.value.data.length > 0) {
+      if (bkRes.status === 'fulfilled' && Array.isArray(bkRes.value.data)) {
         setBookings(bkRes.value.data);
       }
-      if (pmRes.status === 'fulfilled' && pmRes.value.data?.successful_payments) {
+      if (pmRes.status === 'fulfilled' && pmRes.value.data) {
         setPayments(pmRes.value.data);
       }
-      if (ecRes.status === 'fulfilled' && ecRes.value.data?.cooperative_surplus_generated) {
+      if (ecRes.status === 'fulfilled' && ecRes.value.data) {
         setEconomics(ecRes.value.data);
       }
-      if (auRes.status === 'fulfilled' && Array.isArray(auRes.value.data) && auRes.value.data.length > 0) {
+      if (auRes.status === 'fulfilled' && Array.isArray(auRes.value.data)) {
         setAuditLogs(auRes.value.data);
       }
     } catch {
-      // Fallback on high-fidelity fixtures
+      // Retain current state on network error
     } finally {
       setIsLoading(false);
     }
@@ -540,7 +538,14 @@ export const CooperativeOperationsCenter: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredTriagedBookings.map(b => {
+                  {filteredTriagedBookings.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-500 dark:text-slate-400">
+                        No bookings requiring triage or operational intervention.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTriagedBookings.map(b => {
                     const badge = getBookingStatusBadge(b.status);
                     return (
                       <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
@@ -592,7 +597,8 @@ export const CooperativeOperationsCenter: React.FC = () => {
                         </td>
                       </tr>
                     );
-                  })}
+                  })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -749,7 +755,14 @@ export const CooperativeOperationsCenter: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredAuditLogs.map(log => (
+                {filteredAuditLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-500 dark:text-slate-400">
+                      No operational audit logs recorded yet.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredAuditLogs.map(log => (
                   <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     <td className="py-2.5 px-3 font-mono text-slate-400">
                       {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -770,7 +783,8 @@ export const CooperativeOperationsCenter: React.FC = () => {
                       {log.notes}
                     </td>
                   </tr>
-                ))}
+                ))
+                )}
               </tbody>
             </table>
           </div>

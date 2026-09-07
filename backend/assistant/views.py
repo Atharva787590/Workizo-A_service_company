@@ -30,6 +30,12 @@ class AssistantQueryView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        if len(query) > 500:
+            return Response(
+                {"detail": "Query exceeds maximum limit of 500 characters."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         user = request.user if request.user.is_authenticated else None
         result = engine.process_query(query=query, user=user, language=language)
 
@@ -64,22 +70,22 @@ class AssistantCapabilitiesView(APIView):
 
     def get(self, request):
         return Response({
-            "assistant_name": "UNNATI Multilingual Voice Assistant",
+            "assistant_name": "UNNATI Help — Knowledge-based support",
             "capabilities": [
                 "Service catalog discovery",
                 "Service details & base rates",
                 "Authenticated booking status tracking",
-                "Fair wage & zero-escrow pricing transparency",
+                "Fair wage & direct payment transparency",
                 "Nearby opportunity discovery for craftspersons",
                 "Weather & travel consideration advisories",
-                "Cooperative patronage & dividend policy explanation",
+                "Cooperative principles & governance explanation",
             ],
             "safety_boundaries": [
                 "Zero independent authorization of financial transfers or booking cancellations",
                 "Explicit user confirmation required for consequential actions",
                 "Strict non-medical advisory disclaimer",
                 "Strict isolation of private user records",
-                "Zero platform escrow guarantee (direct customer-to-worker settlement)"
+                "Direct customer-to-worker settlement model"
             ],
             "privacy_guarantees": {
                 "raw_audio_retention": False,

@@ -1,157 +1,290 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import api from '../services/api';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
 
+const mapSupabaseUser = (sbUser) => {
+  if (!sbUser) return null;
+  const meta = sbUser.user_metadata || {};
+  return {
+    id: sbUser.id,
+    email: sbUser.email || '',
+    full_name: meta.full_name || meta.name || sbUser.email?.split('@')[0] || 'User',
+    phone: meta.phone || null,
+    role: meta.role || 'customer',
+    is_email_verified: Boolean(sbUser.email_confirmed_at),
+    profile: null,
+    created_at: sbUser.created_at,
+  };
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize Auth state from localStorage
+  // Initialize session and listen for auth state transitions via Supabase
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem('access_token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (token && storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-          // Refresh user data from backend
-          const res = await api.get('accounts/me/');
-          const refreshedUser = {
-            ...res.data.user,
-            profile: res.data.profile
-          };
-          setUser(refreshedUser);
-          localStorage.setItem('user', JSON.stringify(refreshedUser));
-        } catch (err) {
-          console.error("Failed to restore session", err);
-          // Token might be expired, Axios interceptor will try refresh or redirect
+    let isMounted = true;
+
+    const initAuth = async () => {
+      try {
+        if (!isSupabaseConfigured()) {
+          console.warn('[UNNATI Auth] Supabase is not configured. Real auth requires frontend/.env.local.');
+          if (isMounted) setLoading(false);
+          return;
         }
+
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('[UNNATI Auth] Error retrieving session:', error.message);
+        }
+
+        if (isMounted) {
+          if (data?.session?.user) {
+            setSession(data.session);
+            setUser(mapSupabaseUser(data.session.user));
+            if (data.session.access_token) {
+              localStorage.setItem('access_token', data.session.access_token);
+            }
+          } else {
+            setSession(null);
+            setUser(null);
+          }
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('[UNNATI Auth] Unexpected error initializing session:', err);
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     };
 
-    initializeAuth();
+    initAuth();
+
+    // Subscribe to auth state updates (sign in, sign out, token refresh)
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        if (!isMounted) return;
+
+        if (currentSession?.user) {
+          setSession(currentSession);
+          setUser(mapSupabaseUser(currentSession.user));
+          if (currentSession.access_token) {
+            localStorage.setItem('access_token', currentSession.access_token);
+          }
+        } else {
+          setSession(null);
+          setUser(null);
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
-  // Login Function
+  // Real Supabase Email/Password Login
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const res = await api.post('accounts/login/', { email, password });
-      const { access, refresh, user: loggedUser } = res.data;
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      localStorage.setItem('user', JSON.stringify(loggedUser));
-      setUser(loggedUser);
-      toast.success(`Welcome back, ${loggedUser.full_name}!`);
-      return loggedUser;
-    } catch (err) {
-      const errorMsg = err.response?.data?.detail || 'Invalid email or password';
-      toast.error(errorMsg);
-      throw err;
+      if (!isSupabaseConfigured()) {
+        const errorMsg = 'Authentication service is not configured. Please set Supabase credentials in frontend/.env.local.';
+        toast.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (error) {
+        let userMessage = error.message;
+        if (error.message.toLowerCase().includes('invalid login credentials')) {
+          userMessage = 'Incorrect email or password. Please try again.';
+        } else if (error.message.toLowerCase().includes('email not confirmed')) {
+          userMessage = 'Please confirm your email address before logging in.';
+        }
+        toast.error(userMessage);
+        throw new Error(userMessage);
+      }
+
+      const appUser = mapSupabaseUser(data.user);
+      setUser(appUser);
+      setSession(data.session);
+      if (data.session?.access_token) {
+        localStorage.setItem('access_token', data.session.access_token);
+      }
+      toast.success(`Welcome back, ${appUser.full_name}!`);
+      return appUser;
     } finally {
       setLoading(false);
     }
   };
 
-  // Register Function
+  // Real Supabase Email/Password Registration
   const register = async (fullName, email, phone, password, role) => {
     setLoading(true);
     try {
-      const res = await api.post('accounts/register/', {
-        full_name: fullName,
-        email,
-        phone,
+      if (!isSupabaseConfigured()) {
+        const errorMsg = 'Authentication service is not configured. Please set Supabase credentials in frontend/.env.local.';
+        toast.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
         password,
-        role,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            phone: phone ? phone.trim() : '',
+            role: role || 'customer',
+          },
+        },
       });
-      
-      const { access, refresh, user: registeredUser } = res.data;
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      const fullUser = {
-        ...registeredUser,
-        profile: null // initially null
-      };
-      
-      localStorage.setItem('user', JSON.stringify(fullUser));
-      setUser(fullUser);
-      toast.success('Account created successfully!');
-      return fullUser;
-    } catch (err) {
-      // Return specific field validation errors or fallback
-      const errorData = err.response?.data || { detail: 'Registration failed' };
-      throw errorData;
+
+      if (error) {
+        let userMessage = error.message;
+        if (error.message.toLowerCase().includes('user already registered')) {
+          userMessage = 'An account with this email already exists. Please sign in instead.';
+        }
+        toast.error(userMessage);
+        throw new Error(userMessage);
+      }
+
+      const appUser = mapSupabaseUser(data.user);
+      if (data.session) {
+        setUser(appUser);
+        setSession(data.session);
+        if (data.session.access_token) {
+          localStorage.setItem('access_token', data.session.access_token);
+        }
+        toast.success('Account created successfully!');
+      } else {
+        toast.success('Registration successful! Please check your email for confirmation instructions.');
+      }
+      return appUser;
     } finally {
       setLoading(false);
     }
   };
 
-  // Google Login Function
-  const googleLogin = async (credential, role) => {
+  // Google Login (Real OAuth only if configured, otherwise rejects fake mock)
+  const googleLogin = async () => {
     setLoading(true);
     try {
-      const res = await api.post('auth/google-login/', { credential, role });
-      const { access, refresh, user: loggedUser } = res.data;
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      localStorage.setItem('user', JSON.stringify(loggedUser));
-      setUser(loggedUser);
-      toast.success(`Welcome, ${loggedUser.full_name}!`);
-      return loggedUser;
-    } catch (err) {
-      const errorMsg = err.response?.data?.detail || 'Google login failed';
-      toast.error(errorMsg);
-      throw err;
+      if (!isSupabaseConfigured()) {
+        toast.error('Supabase is not configured.');
+        return;
+      }
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+      return data;
     } finally {
       setLoading(false);
     }
   };
 
-  // Update Profile State
-  const updateProfileState = (updatedUserAndProfile) => {
-    const updated = {
-      ...user,
-      ...updatedUserAndProfile.user,
-      profile: updatedUserAndProfile.profile
-    };
-    localStorage.setItem('user', JSON.stringify(updated));
-    setUser(updated);
+  // Reset Password for Email
+  const resetPassword = async (email) => {
+    setLoading(true);
+    try {
+      if (!isSupabaseConfigured()) {
+        toast.error('Supabase is not configured.');
+        return;
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/forgot-password?mode=update`,
+      });
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+      toast.success('Password reset instructions sent to your email.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Logout Function
-  const logout = async () => {
-    const refresh = localStorage.getItem('refresh_token');
-    if (refresh) {
-      try {
-        await api.post('accounts/logout/', { refresh });
-      } catch (err) {
-        console.error("Logout request failed on backend", err);
+  // Update Password (when logged in or arrived via reset link)
+  const updatePassword = async (newPassword) => {
+    setLoading(true);
+    try {
+      if (!isSupabaseConfigured()) {
+        toast.error('Supabase is not configured.');
+        return;
       }
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+      toast.success('Password updated successfully!');
+    } finally {
+      setLoading(false);
     }
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    setUser(null);
-    toast.success('Logged out successfully');
+  };
+
+  // Update Profile State (retains Supabase identity)
+  const updateProfileState = (updatedUserAndProfile) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        ...updatedUserAndProfile?.user,
+        profile: updatedUserAndProfile?.profile ?? prev.profile,
+      };
+    });
+  };
+
+  // Real Supabase Logout
+  const logout = async () => {
+    setLoading(true);
+    try {
+      if (isSupabaseConfigured()) {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.error('[UNNATI Auth] Logout error:', err);
+    } finally {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setSession(null);
+      setLoading(false);
+      toast.success('Logged out successfully');
+    }
   };
 
   const value = {
     user,
-    isAuthenticated: !!user,
+    session,
+    isAuthenticated: Boolean(user),
     loading,
     login,
     register,
     googleLogin,
+    resetPassword,
+    updatePassword,
     logout,
     updateProfileState,
   };

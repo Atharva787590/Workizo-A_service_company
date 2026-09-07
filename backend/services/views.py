@@ -40,6 +40,21 @@ class SubmitRatingView(APIView):
             review=review_text
         )
 
+        try:
+            from workers.models import TwoWayRating
+            TwoWayRating.objects.get_or_create(
+                booking=booking,
+                rater=request.user,
+                defaults={
+                    "ratee": booking.worker,
+                    "rating_type": "CUSTOMER_TO_WORKER",
+                    "overall_rating": int(rating_value),
+                    "review": review_text
+                }
+            )
+        except Exception:
+            pass
+
         return Response({
             "status": "success",
             "rating": rating_value,
@@ -124,7 +139,13 @@ class ServiceCatalogDetailView(APIView):
                 approval_status='approved'
             ).select_related('user', 'service_category')[:10]
 
+            from django.db.models import Avg
             for w in matching_workers:
+                ratings_qs = w.user.received_ratings.filter(is_hidden=False)
+                r_count = ratings_qs.count()
+                avg_val = ratings_qs.aggregate(Avg('rating'))['rating__avg']
+                real_rating = round(float(avg_val), 2) if avg_val else None
+
                 raw_workers.append({
                     'id': w.user_id,
                     'full_name': w.user.full_name or 'Verified Craftsman',
@@ -136,49 +157,14 @@ class ServiceCatalogDetailView(APIView):
                     'guild_tier': 'Master Craftsman' if w.experience >= 5 else 'Skilled Member',
                     'verified_skills': [s.name for s in w.user.worker_skills.filter(is_verified=True)],
                     'verified_certifications_count': w.user.certifications.filter(verification_status='VERIFIED').count(),
-                    'rating': 4.9,
-                    'review_count': 32,
+                    'rating': real_rating,
+                    'review_count': r_count,
                     'online_status': w.online_status
                 })
         except Exception:
             pass
 
-        # If database workers are empty, provide representative verified members
-        if not raw_workers:
-            raw_workers = [
-                {
-                    'id': 101,
-                    'full_name': 'Rameshchandra Patel',
-                    'service_category': item['category'],
-                    'city': 'Ahmedabad',
-                    'state': 'Gujarat',
-                    'experience': 6,
-                    'is_verified': True,
-                    'guild_tier': 'Master Craftsman',
-                    'verified_skills': item['required_skills'],
-                    'verified_certifications_count': 2,
-                    'rating': 4.92,
-                    'review_count': 48,
-                    'online_status': True
-                },
-                {
-                    'id': 102,
-                    'full_name': 'Suresh Kumar',
-                    'service_category': item['category'],
-                    'city': 'Ahmedabad',
-                    'state': 'Gujarat',
-                    'experience': 3,
-                    'is_verified': True,
-                    'guild_tier': 'Skilled Member',
-                    'verified_skills': item['required_skills'][:1],
-                    'verified_certifications_count': 1,
-                    'rating': 4.85,
-                    'review_count': 26,
-                    'online_status': True
-                }
-            ]
-
-        eligible, _ = filter_eligible_providers(raw_workers, item)
+        eligible, _ = filter_eligible_providers(raw_workers, item) if raw_workers else ([], None)
         item['eligible_providers_preview'] = eligible
 
         return Response({
@@ -191,6 +177,7 @@ class ServiceProviderDiscoveryView(APIView):
     """
     Public Service Provider Discovery
     Lists verified, eligible providers for a trade or service without exposing any sensitive PII.
+    Never synthesizes fake or fabricated worker profiles.
     """
     permission_classes = (permissions.AllowAny,)
 
@@ -208,6 +195,7 @@ class ServiceProviderDiscoveryView(APIView):
 
         raw_workers = []
         try:
+            from django.db.models import Avg
             qs = WorkerProfile.objects.filter(approval_status='approved')
             if category and category.lower() != 'all':
                 qs = qs.filter(service_category__name__iexact=category)
@@ -215,6 +203,11 @@ class ServiceProviderDiscoveryView(APIView):
                 qs = qs.filter(city__icontains=city)
 
             for w in qs.select_related('user', 'service_category')[:25]:
+                ratings_qs = w.user.received_ratings.filter(is_hidden=False)
+                r_count = ratings_qs.count()
+                avg_val = ratings_qs.aggregate(Avg('rating'))['rating__avg']
+                real_rating = round(float(avg_val), 2) if avg_val else None
+
                 raw_workers.append({
                     'id': w.user_id,
                     'full_name': w.user.full_name or 'Verified Craftsman',
@@ -226,32 +219,20 @@ class ServiceProviderDiscoveryView(APIView):
                     'guild_tier': 'Master Craftsman' if w.experience >= 5 else 'Skilled Member',
                     'verified_skills': [s.name for s in w.user.worker_skills.filter(is_verified=True)],
                     'verified_certifications_count': w.user.certifications.filter(verification_status='VERIFIED').count(),
-                    'rating': 4.9,
-                    'review_count': 32,
+                    'rating': real_rating,
+                    'review_count': r_count,
                     'online_status': w.online_status
                 })
         except Exception:
             pass
 
         if not raw_workers:
-            # Baseline verified cooperative member demonstration
-            categories_to_show = [category] if (category and category.lower() != 'all') else ['Electrician', 'Plumber', 'Carpenter', 'AC Technician', 'Mechanic', 'Home Cleaning']
-            for idx, cat_name in enumerate(categories_to_show):
-                raw_workers.append({
-                    'id': 200 + idx,
-                    'full_name': f"Mohan {chr(65 + idx)}. Sharma",
-                    'service_category': cat_name,
-                    'city': 'Ahmedabad',
-                    'state': 'Gujarat',
-                    'experience': 4 + (idx % 4),
-                    'is_verified': True,
-                    'guild_tier': 'Master Craftsman' if idx % 2 == 0 else 'Skilled Member',
-                    'verified_skills': ['Professional Diagnostics', 'Precision Fitting'],
-                    'verified_certifications_count': 1 + (idx % 2),
-                    'rating': round(4.75 + (idx * 0.04), 2),
-                    'review_count': 25 + (idx * 7),
-                    'online_status': True
-                })
+            return Response({
+                'status': 'success',
+                'count': 0,
+                'providers': [],
+                'message': 'No verified cooperative service providers found matching criteria.'
+            }, status=status.HTTP_200_OK)
 
         if target_service:
             eligible, _ = filter_eligible_providers(raw_workers, target_service)
@@ -303,19 +284,19 @@ class TransparencyPoliciesView(APIView):
                 'description': 'No surge pricing. No predatory discounts. Every rupee in the breakdown is visible to both customer and provider.',
             },
             'cooperative_dividend': {
-                'title': 'Patronage Dividend & Welfare Pool',
-                'description': 'A democratic 5% cooperative contribution is allocated from completed service contracts. 100% of this fund is reinvested into emergency medical relief, accident insurance, and year-end patronage dividends.',
+                'title': 'Cooperative Welfare & Patronage Reserve',
+                'description': 'A democratic 6.5% cooperative contribution is allocated from completed service contracts. 100% of this fund is retained for emergency medical relief, accident insurance, and member patronage dividends.',
             },
             'booking_cancellation_rules': {
                 'title': 'Cancellation & Travel Compensation Safeguards',
-                'description': 'Free cancellation within 15 minutes of booking or prior to worker dispatch. If cancelled after technician arrival, fair travel compensation is paid to respect the worker\'s transit time.',
+                'description': 'Free cancellation within the initial grace period or prior to worker dispatch. If cancelled after technician arrival, fair travel compensation is paid to respect the worker\'s transit time.',
             },
             'verification_methodology': {
-                'title': 'Rigorous 4-Tier Trust & Verification',
+                'title': 'Multi-Tier Trust & Verification',
                 'tiers': [
-                    'Aadhaar e-KYC Identity Verification',
-                    'State Police Clearance & Background Audit',
-                    'Skill India / NSDC / ITI Vocational Credential Verification',
+                    'Identity & Contact Verification',
+                    'Background & Trade History Review',
+                    'Vocational Skill & Certification Assessment',
                     'Peer Guild Endorsements by Senior Cooperative Craftsmen'
                 ]
             }

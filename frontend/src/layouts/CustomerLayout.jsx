@@ -14,6 +14,7 @@ import HandymanIcon from '@mui/icons-material/Handyman';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PolicyIcon from '@mui/icons-material/Policy';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -319,6 +320,10 @@ const CustomerLayout = () => {
                           Profile Settings
                         </MenuItem>
                       )}
+                      <MenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }} sx={{ py: 1 }}>
+                        <SettingsIcon fontSize="small" sx={{ mr: 1.5, color: '#64748B' }} />
+                        Settings
+                      </MenuItem>
                       <MenuItem onClick={handleLogout} sx={{ color: '#DC2626', py: 1 }}>
                         <LogoutIcon fontSize="small" sx={{ mr: 1.5, color: '#DC2626' }} />
                         Logout
@@ -465,6 +470,17 @@ const CustomerLayout = () => {
                     sx={{ borderRadius: '8px', minHeight: 48 }}
                   >
                     <ListItemText primary="Profile Settings" primaryTypographyProps={{ fontWeight: 600 }} />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding sx={{ mb: 0.5 }}>
+                  <ListItemButton
+                    onClick={() => {
+                      setMobileDrawerOpen(false);
+                      navigate('/settings');
+                    }}
+                    sx={{ borderRadius: '8px', minHeight: 48 }}
+                  >
+                    <ListItemText primary="Settings" primaryTypographyProps={{ fontWeight: 600 }} />
                   </ListItemButton>
                 </ListItem>
               </>

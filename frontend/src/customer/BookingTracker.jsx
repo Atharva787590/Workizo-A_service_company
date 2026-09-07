@@ -146,13 +146,17 @@ const getStatusBadgeStyle = (status) => {
 
 const getStatusIndex = (status) => {
   switch (status) {
-    case 'searching': return 0;
+    case 'searching':
+    case 'requested':
+    case 'scheduled':
+    case 'SCHEDULED': return 0;
     case 'accepted': return 1;
     case 'on_the_way': return 2;
     case 'arrived':
     case 'verified': return 3;
     case 'inspection':
     case 'repair_started':
+    case 'in_progress':
     case 'repair_completed':
     case 'waiting_approval':
     case 'WAITING_FOR_CASH_CONFIRMATION':
@@ -182,11 +186,41 @@ function BookingTracker() {
   const [unreadChats, setUnreadChats] = useState(0);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTimeSlot, setRescheduleTimeSlot] = useState('morning');
+  const [rescheduling, setRescheduling] = useState(false);
   const [directPaymentModalOpen, setDirectPaymentModalOpen] = useState(false);
   const [directBreakdown, setDirectBreakdown] = useState(null);
   const [twoWayRatingModalOpen, setTwoWayRatingModalOpen] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const isChatOpenRef = useRef(false);
+
+  const handleRescheduleBooking = async () => {
+    if (!rescheduleDate) {
+      toast.error('Please choose a date to reschedule');
+      return;
+    }
+    const [year, month, day] = rescheduleDate.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    if (rescheduleTimeSlot === 'morning') dateObj.setHours(10, 0, 0, 0);
+    else if (rescheduleTimeSlot === 'afternoon') dateObj.setHours(14, 0, 0, 0);
+    else dateObj.setHours(18, 0, 0, 0);
+
+    setRescheduling(true);
+    try {
+      const res = await api.post(`/api/bookings/bookings/${id}/reschedule/`, {
+        scheduled_time: dateObj.toISOString()
+      });
+      toast.success(res.data.message || 'Service rescheduled successfully!');
+      setRescheduleModalOpen(false);
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to reschedule booking');
+    } finally {
+      setRescheduling(false);
+    }
+  };
 
   const handleCancelBooking = async (reason) => {
     try {
@@ -471,27 +505,6 @@ function BookingTracker() {
     }
   };
 
-  const handleDevMockVerifyPayment = async (orderId) => {
-    setPaying(true);
-    try {
-      await api.post(`/api/billing/${id}/verify-online-payment/`, {
-        razorpay_payment_id: `pay_mock_${Date.now()}`,
-        razorpay_order_id: orderId || `order_mock_${id}_${Date.now()}`,
-        razorpay_signature: `sig_mock_${Date.now()}`
-      });
-      setPaymentSuccess(true);
-      toast.success("Development Mock Razorpay Payment verified!");
-      setTimeout(() => {
-        setPaymentModalOpen(false);
-        setPaymentSuccess(false);
-        fetchDetails();
-      }, 2000);
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Mock payment verification failed');
-    } finally {
-      setPaying(false);
-    }
-  };
 
   const handleSelectCashPayment = async () => {
     setPaying(true);
@@ -906,9 +919,25 @@ function BookingTracker() {
                     </Box>
                   )}
 
-                  {/* Actions Bar: Cancel / Dispute */}
+                  {/* Actions Bar: Reschedule / Cancel / Dispute */}
                   <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${tokens.borderColor}`, display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                    {!['completed', 'cancelled'].includes(booking.status) && (
+                    {['searching', 'requested', 'SCHEDULED', 'scheduled', 'accepted', 'MATCHING'].includes(booking.status) && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<CalendarTodayIcon />}
+                        onClick={() => {
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          setRescheduleDate(tomorrow.toISOString().split('T')[0]);
+                          setRescheduleModalOpen(true);
+                        }}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700, borderColor: tokens.borderColor, color: 'text.primary' }}
+                      >
+                        Reschedule Service
+                      </Button>
+                    )}
+                    {!['completed', 'cancelled', 'repair_started', 'in_progress', 'IN_PROGRESS'].includes(booking.status) && (
                       <Button
                         variant="outlined"
                         color="error"
@@ -920,7 +949,7 @@ function BookingTracker() {
                         Cancel Booking
                       </Button>
                     )}
-                    {!['searching', 'cancelled', 'disputed'].includes(booking.status) && (
+                    {!['searching', 'requested', 'scheduled', 'cancelled', 'disputed'].includes(booking.status) && (
                       <Button
                         variant="outlined"
                         size="small"
@@ -947,24 +976,27 @@ function BookingTracker() {
               onVerifyArrival={async () => {}}
             />
 
-            {/* SECTION 6: OTP VERIFICATION CARD */}
-            {booking.status === 'arrived' && (
+            {/* SECTION 6: ARRIVAL PIN VERIFICATION CARD */}
+            {['arrived', 'accepted', 'on_the_way'].includes(booking.status) && (booking.arrival_pin || booking.qr_code_value) && (
               <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                 <Box display="flex" flexDirection="column" alignItems="center">
-                  <QrCode2Icon sx={{ fontSize: 56, color: tokens.colors.primary, mb: 1.5 }} />
-                  <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-                    Service Check-In Code
+                  <SecurityIcon sx={{ fontSize: 52, color: tokens.colors.primary, mb: 1.5 }} />
+                  <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
+                    Start-of-Service Arrival PIN
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
+                    4-digit security code for service check-in
                   </Typography>
                   <Box display="flex" alignItems="center" gap={1.5} sx={{ bgcolor: 'rgba(0,0,0,0.02)', px: 3, py: 1.5, borderRadius: '12px', border: `1px solid ${tokens.borderColor}`, mb: 1.5 }}>
-                    <Typography variant="h5" fontWeight={800} color="primary" sx={{ letterSpacing: 3, fontFamily: 'Outfit' }}>
-                      {booking.qr_code_value ? String(booking.qr_code_value).substring(0, 8).toUpperCase() : 'N/A'}
+                    <Typography variant="h4" fontWeight={800} color="primary" sx={{ letterSpacing: 4, fontFamily: 'Outfit' }}>
+                      {booking.arrival_pin || String(booking.qr_code_value || '').substring(0, 8).toUpperCase()}
                     </Typography>
-                    <IconButton size="small" onClick={() => copyToClipboard(String(booking.qr_code_value).substring(0, 8).toUpperCase())}>
+                    <IconButton size="small" onClick={() => copyToClipboard(String(booking.arrival_pin || String(booking.qr_code_value || '').substring(0, 8).toUpperCase()))}>
                       <FileCopyIcon fontSize="small" />
                     </IconButton>
                   </Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ maxWidth: '400px', lineHeight: 1.5 }}>
-                    Provide this check-in OTP code to the Captain ONLY after they reach your location to securely start work.
+                  <Typography variant="caption" color="text.secondary" sx={{ maxWidth: '420px', lineHeight: 1.5 }}>
+                    Share this 4-digit arrival PIN with your Captain ONLY after they arrive in person at your location. Service cannot start without this verification.
                   </Typography>
                 </Box>
               </Paper>
@@ -1008,6 +1040,93 @@ function BookingTracker() {
                   </Paper>
                 ))}
               </Box>
+            )}
+
+            {/* UNNATI Active Dispute Resolution Card */}
+            {(booking.dispute || booking.status === 'disputed') && (
+              <Paper elevation={0} sx={{ p: 3, border: '1px solid #FDE68A', borderRadius: '18px', bgcolor: '#FFFBEB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 1.5 }}>
+                  <ScaleIcon sx={{ color: '#D97706', fontSize: 24 }} />
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight={700} color="#92400E">
+                      Active Dispute Review (विवाद समीक्षा)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Case ID: <b>{booking.dispute?.dispute_id || `UNN-DISP-${booking.id}`}</b> · Status: <Chip label={booking.dispute?.status || 'OPEN'} size="small" sx={{ fontWeight: 700, height: 20, fontSize: '0.7rem' }} />
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ p: 2, bgcolor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', mb: 2 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
+                    Your Stated Grievance:
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    "{booking.dispute?.reason || booking.dispute_reason || 'Dispute under review by committee.'}"
+                  </Typography>
+                  {booking.dispute?.worker_response && (
+                    <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid #E2E8F0' }}>
+                      <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
+                        Technician Response:
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        "{booking.dispute.worker_response}"
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+                {booking.dispute?.assessment_report && (
+                  <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.7)', borderRadius: '10px' }}>
+                    <Typography variant="caption" fontWeight={700} color="text.secondary" display="block">
+                      Objective Assessment Signal:
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4, display: 'block', mt: 0.5 }}>
+                      {booking.dispute.assessment_report.explanation}
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            )}
+
+            {/* UNNATI Fair-Price Transparency Breakdown */}
+            {booking.fair_wage_breakdown && (
+              <Paper elevation={0} sx={{ p: 3, border: `1px solid ${tokens.borderColor}`, borderRadius: '18px', bgcolor: tokens.colors.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Fair-Price Transparency Breakdown (उचित मूल्य विवरण)
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                  Cooperative labor pricing model with guaranteed 0% platform commission
+                </Typography>
+                <Box sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', mb: 2 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Typography variant="body2" color="text.secondary">Total Contract Value:</Typography>
+                    <Typography variant="h6" fontWeight={800} color="primary">₹{booking.total_contract_value || booking.fair_wage_breakdown.customer_total}</Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Worker Direct Payout:</Typography>
+                    <Typography variant="caption" fontWeight={700} color="success.main">₹{booking.fair_wage_breakdown.worker_earning}</Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary">Cooperative Reserve (6.5%):</Typography>
+                    <Typography variant="caption" fontWeight={700}>₹{booking.cooperative_allocation || booking.fair_wage_breakdown.cooperative_reserve}</Typography>
+                  </Box>
+                </Box>
+                <List disablePadding>
+                  {booking.fair_wage_breakdown.explanation?.map((item, idx) => (
+                    <ListItem key={idx} sx={{ px: 0, py: 0.5 }} divider={idx < booking.fair_wage_breakdown.explanation.length - 1}>
+                      <ListItemText
+                        primary={item.label}
+                        secondary={item.detail}
+                        primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }}
+                        secondaryTypographyProps={{ fontSize: '0.72rem' }}
+                      />
+                      <Typography variant="caption" fontWeight={700}>{item.amount}</Typography>
+                    </ListItem>
+                  ))}
+                </List>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5, fontSize: '0.72rem', lineHeight: 1.3 }}>
+                  {booking.fair_wage_breakdown.disclaimer}
+                </Typography>
+              </Paper>
             )}
 
             {/* SECTION 8: PAYMENT CARD */}
@@ -1524,17 +1643,6 @@ function BookingTracker() {
                   </Box>
                 </Paper>
 
-                {/* 3. DEV MOCK SIMULATION (For Testing in Dev Mode) */}
-                <Box sx={{ textAlign: 'center', mt: 1 }}>
-                  <Button
-                    size="small"
-                    onClick={() => handleDevMockVerifyPayment()}
-                    disabled={paying}
-                    sx={{ fontSize: '0.75rem', color: 'text.secondary', textTransform: 'none' }}
-                  >
-                    ⚡ Development Test Mode: Simulate Instant Razorpay Success
-                  </Button>
-                </Box>
               </Box>
             </Box>
           )}
@@ -1571,6 +1679,85 @@ function BookingTracker() {
             onConfirm={handleRaiseDispute}
             bookingId={booking.id}
           />
+          {/* UNNATI Reschedule Dialog */}
+          <Dialog
+            open={rescheduleModalOpen}
+            onClose={() => !rescheduling && setRescheduleModalOpen(false)}
+            maxWidth="xs"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: '16px', p: 1 } }}
+          >
+            <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+              Reschedule Service
+            </DialogTitle>
+            <DialogContent>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Select a new date up to 30 days ahead. Rescheduling is free before your service professional arrives.
+              </Typography>
+              <TextField
+                fullWidth
+                type="date"
+                label="Select Date"
+                value={rescheduleDate}
+                onChange={(e) => setRescheduleDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  min: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                  max: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+                }}
+                sx={{ mb: 2.5 }}
+              />
+              <Typography variant="caption" fontWeight={700} sx={{ mb: 1, display: 'block', color: 'text.secondary' }}>
+                Preferred Time Slot
+              </Typography>
+              <Grid container spacing={1}>
+                {[
+                  { id: 'morning', label: 'Morning', time: '9 AM - 12 PM' },
+                  { id: 'afternoon', label: 'Afternoon', time: '12 PM - 4 PM' },
+                  { id: 'evening', label: 'Evening', time: '4 PM - 8 PM' }
+                ].map((slot) => (
+                  <Grid item xs={4} key={slot.id}>
+                    <Box
+                      onClick={() => setRescheduleTimeSlot(slot.id)}
+                      sx={{
+                        p: 1.5,
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        borderRadius: '10px',
+                        border: `2px solid ${rescheduleTimeSlot === slot.id ? tokens.colors.primary : tokens.borderColor}`,
+                        bgcolor: rescheduleTimeSlot === slot.id ? 'rgba(0,0,0,0.04)' : 'transparent',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Typography variant="caption" fontWeight={700} display="block">
+                        {slot.label}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary' }}>
+                        {slot.time}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button
+                onClick={() => setRescheduleModalOpen(false)}
+                disabled={rescheduling}
+                sx={{ textTransform: 'none', color: 'text.secondary' }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleRescheduleBooking}
+                disabled={rescheduling || !rescheduleDate}
+                sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 700 }}
+              >
+                {rescheduling ? 'Rescheduling...' : 'Confirm Reschedule'}
+              </Button>
+            </DialogActions>
+          </Dialog>
           {directBreakdown && (
             <DirectPaymentModal
               isOpen={directPaymentModalOpen}

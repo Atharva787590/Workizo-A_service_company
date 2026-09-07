@@ -15,14 +15,60 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import sys
+from django.core.exceptions import ImproperlyConfigured
+
 # Read .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-unnati-dev-fallback-key-change-in-production')
+INSECURE_DEV_SECRET_KEY = 'django-insecure-unnati-dev-fallback-key-change-in-production'
+
+SECRET_KEY = env('SECRET_KEY', default=INSECURE_DEV_SECRET_KEY)
 DEBUG = env.bool('DEBUG', default=False)
 
 allowed_hosts_str = env('ALLOWED_HOSTS', default='*')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_str.split(',') if h.strip()]
+
+def validate_production_settings(debug_mode: bool, secret: str, hosts: list) -> None:
+    """
+    Ensures safe failure in production when critical security configuration is missing or unsafe.
+    """
+    if not debug_mode:
+        if not secret or secret == INSECURE_DEV_SECRET_KEY:
+            raise ImproperlyConfigured(
+                "Insecure configuration: Production SECRET_KEY must be set to a secure, unique value via environment variable when DEBUG=False."
+            )
+        if '*' in hosts or not hosts:
+            raise ImproperlyConfigured(
+                "Insecure configuration: ALLOWED_HOSTS cannot contain wildcard '*' or be empty when DEBUG=False. Please specify allowed production domains."
+            )
+
+# Enforce production security invariants (skipped during test runner execution)
+is_test_runner = 'test' in sys.argv or 'pytest' in sys.modules
+if not DEBUG and not is_test_runner:
+    validate_production_settings(DEBUG, SECRET_KEY, ALLOWED_HOSTS)
+
+# Supabase Authentication Settings
+SUPABASE_URL = env('SUPABASE_URL', default=None)
+if not SUPABASE_URL:
+    SUPABASE_URL = env('VITE_SUPABASE_URL', default=None)
+if not SUPABASE_URL:
+    frontend_env = BASE_DIR.parent / 'frontend' / '.env.local'
+    if frontend_env.is_file():
+        try:
+            with open(frontend_env, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith('VITE_SUPABASE_URL='):
+                        SUPABASE_URL = line.split('=', 1)[1].strip().strip('"').strip("'")
+                        break
+        except Exception:
+            pass
+
+if SUPABASE_URL:
+    SUPABASE_URL = SUPABASE_URL.rstrip('/')
+    if SUPABASE_URL.endswith('/rest/v1'):
+        SUPABASE_URL = SUPABASE_URL[:-8]
 
 # Application definition
 INSTALLED_APPS = [
@@ -55,6 +101,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # Put at the top
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -106,6 +153,15 @@ if database_url:
     DATABASES = {
         'default': env.db_url('DATABASE_URL')
     }
+    # Configure SSL and connection tuning for Supabase PostgreSQL
+    if 'postgres' in DATABASES['default'].get('ENGINE', ''):
+        DATABASES['default'].setdefault('OPTIONS', {})
+        if any(domain in database_url for domain in ('supabase.co', 'supabase.com', 'pooler.supabase.com')):
+            DATABASES['default']['OPTIONS']['sslmode'] = 'require'
+        # Set connect_timeout
+        DATABASES['default']['OPTIONS'].setdefault('connect_timeout', 10)
+        # Connection pooling optimization: keep connections alive up to 600s if not using pgbouncer transaction mode
+        DATABASES['default']['CONN_MAX_AGE'] = env.int('CONN_MAX_AGE', default=0)
 else:
     db_engine = env('DB_ENGINE', default='django.db.backends.sqlite3' if not env('DB_NAME', default='') else 'django.db.backends.mysql')
     if db_engine == 'django.db.backends.sqlite3':
@@ -163,6 +219,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # REST Framework Config
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'accounts.authentication.SupabaseAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -187,9 +244,14 @@ SIMPLE_JWT = {
 # CORS Config
 cors_origins = env('CORS_ALLOWED_ORIGINS', default='')
 if cors_origins:
-    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+    CORS_ALLOW_ALL_ORIGINS = False
 else:
-    CORS_ALLOW_ALL_ORIGINS = True
+    if DEBUG:
+        CORS_ALLOW_ALL_ORIGINS = True
+    else:
+        CORS_ALLOW_ALL_ORIGINS = False
+        CORS_ALLOWED_ORIGINS = []
 CORS_ALLOW_CREDENTIALS = True
 
 # Security Headers & Cookie Hardening
@@ -200,8 +262,8 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
 SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=False)
-SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)
-CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=False)
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=not DEBUG)
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=not DEBUG)
 
 csrf_trusted = env('CSRF_TRUSTED_ORIGINS', default='')
 if csrf_trusted:
@@ -217,6 +279,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media Files (User profile photos, verification files)
 MEDIA_URL = '/media/'

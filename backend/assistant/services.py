@@ -8,6 +8,7 @@ consequential action safety guards, and 12+ Indian language knowledge support.
 from typing import Dict, Any, List, Optional
 from decimal import Decimal
 import re
+from .knowledge_base import CANONICAL_KNOWLEDGE_BASE, SAFE_UNSUPPORTED_FALLBACK
 
 SUPPORTED_LANGUAGES = [
     {"code": "hi", "bcp47": "hi-IN", "name": "Hindi", "native_name": "हिन्दी"},
@@ -89,7 +90,7 @@ class NativeMultilingualProvider(BaseSpeechTranslationProvider):
 
 class UnnatiAssistantEngine:
     """
-    Core AI Assistant Engine for UNNATI.
+    Core Help Engine for UNNATI.
     Enforces:
       - 0 independent authorization of financial/consequential actions
       - User-authenticated privacy isolation
@@ -140,37 +141,46 @@ class UnnatiAssistantEngine:
         if consequential_check:
             return consequential_check
 
-        # 2. Intent Parsing: Service Search
+        # 2. Dynamic User Booking Status Check (specific tracking intent)
+        if any(w in cleaned for w in ['my booking', 'booking status', 'track booking', 'order status', 'status of my', 'बुकिंग स्थिति', 'ऑर्डर स्थिति', 'माझी बुकिंग']):
+            return self._handle_booking_status(user, lang)
+
+        # 3. Dynamic Nearby Opportunities (Worker role)
+        if any(w in cleaned for w in ['nearby opportunity', 'available jobs', 'job request', 'काम खोजें']):
+            return self._handle_nearby_opportunities(user, lang)
+
+        # 4. Non-Medical Weather and Travel Notice
+        if any(w in cleaned for w in ['weather', 'rain', 'travel advisory', 'extreme heat', 'मौसम', 'बारिश', 'हवामान', 'વરસાદ', 'ಮಳೆ']):
+            return self._handle_weather_travel_notice(lang)
+
+        # 5. Canonical Knowledge Base Grounded RAG Retrieval
+        grounded_answer = self._retrieve_grounded_answer(cleaned, lang)
+        if grounded_answer:
+            return grounded_answer
+
+        # 6. Intent Parsing: Specific Trade Service Search
         if any(w in cleaned for w in ['plumber', 'electrician', 'carpenter', 'clean', 'paint', 'mechanic', 'service', 'काम', 'सेवा', 'પ્લમ્બર', 'इलेक्ट्रीशियन', 'ಕಾರ್ಪೆಂಟರ್']):
             return self._handle_service_search(cleaned, lang)
 
-        # 3. Intent Parsing: Booking Status
-        if any(w in cleaned for w in ['booking', 'status', 'order', 'my job', 'स्थिति', 'बुकिंग', 'કામ સ્થિતિ', 'நிலவரம்']):
-            return self._handle_booking_status(user, lang)
-
-        # 4. Intent Parsing: Wage and Pricing Transparency
-        if any(w in cleaned for w in ['price', 'rate', 'wage', 'cost', 'fee', 'charge', 'कीमत', 'कमाई', 'भाव', 'दर', 'ખર્ચ', 'விலை']):
+        # 7. Intent Parsing: Wage and Pricing Transparency
+        if any(w in cleaned for w in ['fair wage', 'pricing transparency', 'pricing policy', 'how are fair wages', 'price and fair wage', 'उचित मजदूरी']):
             return self._handle_pricing_transparency(lang)
 
-        # 5. Intent Parsing: Cooperative Benefits and Patronage
+        # 8. Intent Parsing: Cooperative Benefits and Governance
         if any(w in cleaned for w in ['cooperative', 'dividend', 'patronage', 'shg', 'guild', 'सहकारी', 'लाभांश', 'મંડળી']):
             return self._handle_cooperative_info(lang)
 
-        # 6. Intent Parsing: Weather and Travel Consideration
-        if any(w in cleaned for w in ['weather', 'rain', 'travel', 'heat', 'मौसम', 'बारिश', 'हवामान', 'વરસાદ', 'ಮಳೆ']):
-            return self._handle_weather_travel_notice(lang)
+        # 9. General Greetings and Overview
+        if any(w in cleaned for w in ['hi', 'hello', 'hey', 'help', 'namaste', 'namaskar', 'नमस्ते', 'नमस्कार', 'मदद', 'सहायता', 'info']):
+            return self._handle_general_help(lang)
 
-        # 7. Intent Parsing: Nearby Opportunities (Worker role)
-        if any(w in cleaned for w in ['opportunity', 'nearby', 'available', 'job request', 'अवसर', 'काम खोजें', 'તક']):
-            return self._handle_nearby_opportunities(user, lang)
-
-        # 8. Intent Parsing: Navigation / General Help
-        return self._handle_general_help(lang)
+        # 10. Safe Unsupported Fallback (prevents hallucination)
+        return self._handle_unsupported_query(lang)
 
     def _check_consequential_actions(self, query: str, lang: str) -> Optional[Dict[str, Any]]:
         """
         SAFETY RULE:
-        The AI MUST NEVER independently authorize payments, refunds, worker assignment,
+        The system MUST NEVER independently authorize payments, refunds, worker assignment,
         cancellations, or account changes.
         Requires explicit user confirmation with deep-link/button.
         """
@@ -183,7 +193,7 @@ class UnnatiAssistantEngine:
         if is_book_action:
             msg = LOCALIZED_CONFIRMATION_REQUIRED.get(lang, LOCALIZED_CONFIRMATION_REQUIRED['en'])
             return {
-                "text": f"{msg}\n\n[Safety Protocol]: AI cannot auto-book services without your explicit review.",
+                "text": f"{msg}\n\n[Safety Protocol]: Automated booking is not permitted; services require your explicit review.",
                 "spoken_text": msg,
                 "language": lang,
                 "is_verified_data": False,
@@ -201,7 +211,7 @@ class UnnatiAssistantEngine:
         if is_cancel_action:
             msg = LOCALIZED_CONFIRMATION_REQUIRED.get(lang, LOCALIZED_CONFIRMATION_REQUIRED['en'])
             return {
-                "text": f"{msg}\n\n[Safety Protocol]: AI cannot cancel active bookings automatically to protect worker and customer agreement safeguards.",
+                "text": f"{msg}\n\n[Safety Protocol]: Automated cancellation is not permitted; booking changes must be confirmed in your bookings dashboard.",
                 "spoken_text": msg,
                 "language": lang,
                 "is_verified_data": False,
@@ -373,10 +383,10 @@ class UnnatiAssistantEngine:
     def _handle_pricing_transparency(self, lang: str) -> Dict[str, Any]:
         """Transparent pricing explanation."""
         text_map = {
-            "hi": "उन्नति में कोई बिचौलिया कमीशन नहीं है। ग्राहक सीधे कामगार को पूरी राशि देते हैं। पारदर्शी 6.5% हिस्सा सीधे कामगार के सहकारी लाभांश कोष (Patronage Pool) में जाता है।",
-            "mr": "उन्नतीमध्ये मध्यस्थ कमिशन नाही. ग्राहक थेट कारागिराला पैसे देतात. 6.5% हिस्सा कारागिराच्या सहकारी लाभांश निधीत जातो.",
-            "gu": "ઉન્નતિમાં કોઈ મધ્યસ્થી કમિશન નથી. ગ્રાહકો સીધા કારીગરને પૈસા ચૂકવે છે. 6.5% હિસ્સો કારીગરના સહકારી ડિવિડન્ડ ફંડમાં જાય છે.",
-            "en": "UNNATI charges zero platform middleman fees. Customers pay craftspersons directly. 6.5% transparent cooperative reserve is credited directly into the worker's patronage dividend pool."
+            "hi": "उन्नति ग्राहकों और कारीगरों के बीच बिना किसी वाणिज्यिक बिचौलिए शुल्क के सीधे भुगतान की सुविधा प्रदान करती है। सेवा से पहले पारदर्शी मूल्य तय होता है, जिसमें सहकारी आरक्षित राशि शामिल होती है।",
+            "mr": "उन्नती ग्राहक आणि कामगारांमध्ये कोणत्याही व्यावसायिक मध्यस्थ शुल्काशिवाय थेट पेमेंटची सोय करते. सेवेपूर्वी पारदर्शक दर ठरवले जातात, ज्यामध्ये सहकारी राखीव निधी समाविष्ट असतो.",
+            "gu": "ઉન્નતિ ગ્રાહકો અને કારીગરો વચ્ચે કોઈપણ વ્યાવસાયિક મધ્યસ્થી ફી વગર સીધા ચુકવણીની સુવિધા આપે છે. સેવા પહેલાં પારદર્શક દર નક્કી કરવામાં આવે છે.",
+            "en": "UNNATI facilitates direct payments between customers and craftspersons without commercial middleman fees. Transparent pricing is agreed before service execution, with a nominal cooperative reserve contributing toward platform maintenance and worker collective funds."
         }
         t = text_map.get(lang, text_map['en'])
         return {
@@ -387,16 +397,16 @@ class UnnatiAssistantEngine:
             "is_advisory": False,
             "data_source": "PRICING_ENGINE",
             "requires_confirmation": False,
-            "suggested_chips": ["Cooperative Dividend", "View Rates"]
+            "suggested_chips": ["Direct Payments", "View Rates"]
         }
 
     def _handle_cooperative_info(self, lang: str) -> Dict[str, Any]:
         """Cooperative patronage and dividend explanation."""
         text_map = {
-            "hi": "सहकारी सदस्यता के लाभ: लोकतांत्रिक मताधिकार, संरक्षण लाभांश (Patronage Dividend), आपातकालीन कल्याण कोष, और सामूहिक कार्य अवसर।",
-            "mr": "सहकारी सदस्यत्वाचे फायदे: लोकशाही मतदानाचा अधिकार, संरक्षण लाभांश आणि आपत्कालीन कल्याण निधी.",
-            "gu": "સહકારી સભ્યપદના ફાયદા: લોકશાહી મતાધિકાર, સંરક્ષણ ડિવિડન્ડ અને ઇમરજન્સી કલ્યાણ ભંડોળ.",
-            "en": "Cooperative member benefits include democratic guild voting rights, patronage dividend balance, emergency welfare protection, and collective booking allocations."
+            "hi": "सहकारी सदस्यता के लाभ: लोकतांत्रिक भागीदारी, पारदर्शी सामूहिक नीतियां, आपातकालीन कल्याण सहायता और समुदाय-आधारित सेवा समन्वय।",
+            "mr": "सहकारी सदस्यत्वाचे फायदे: लोकशाही सहभाग, पारदर्शक सामूहिक धोरणे, आपत्कालीन कल्याण मदत आणि समुदाय-आधारित सेवा समन्वय.",
+            "gu": "સહકારી સભ્યપદના ફાયદા: લોકશાહી ભાગીદારી, પારદર્શક સામૂહિક નીતિઓ, ઇમરજન્સી સહાય અને સેવા સંકલન.",
+            "en": "Cooperative member benefits include democratic participation, transparent collective policies, emergency welfare assistance, and community-led service coordination."
         }
         t = text_map.get(lang, text_map['en'])
         return {
@@ -407,7 +417,7 @@ class UnnatiAssistantEngine:
             "is_advisory": False,
             "data_source": "COOPERATIVE_POLICY",
             "requires_confirmation": False,
-            "suggested_chips": ["Cooperative Matrix", "Guild Status"]
+            "suggested_chips": ["Cooperative Principles", "Guild Status"]
         }
 
     def _handle_weather_travel_notice(self, lang: str) -> Dict[str, Any]:
@@ -416,7 +426,7 @@ class UnnatiAssistantEngine:
             "hi": "[सलाहकार सूचना]: बाहरी काम या भारी बारिश के दौरान बिजली सुरक्षा और पर्याप्त विश्राम का ध्यान रखें।",
             "mr": "[सल्लागार सूचना]: बाहेरील काम किंवा मुसळधार पावसात विजेची काळजी घ्या आणि पुरेसा विश्रांती घ्या.",
             "gu": "[સલાહકાર સૂચના]: બહારના કામ અથવા ભારે વરસાદમાં વીજળીની સુરક્ષાનું ધ્યાન રાખો.",
-            "en": "[Advisory Notice]: For outdoor tasks during heavy rain or extreme heat, prioritize electrical safety and stay hydrated. AI advice is non-medical."
+            "en": "[Advisory Notice]: For outdoor tasks during heavy rain or extreme heat, prioritize electrical safety and stay hydrated. Guidance is non-medical."
         }
         t = text_map.get(lang, text_map['en'])
         return {
@@ -499,4 +509,81 @@ class UnnatiAssistantEngine:
                 "Fair Wage (उचित मूल्य)",
                 "Cooperative Help (सहकारी)"
             ]
+        }
+
+    def _retrieve_grounded_answer(self, cleaned_query: str, lang: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves matching canonical knowledge passage based on keyword and token overlap.
+        Enforces grounding in verified UNNATI records without hallucination.
+        """
+        words = set(re.findall(r'\w+', cleaned_query))
+        best_doc = None
+        best_score = 0
+
+        for doc in CANONICAL_KNOWLEDGE_BASE:
+            score = 0
+            for kw in doc.get("keywords", []):
+                if kw in cleaned_query:
+                    score += 2
+                elif any(w in kw for w in words if len(w) > 2):
+                    score += 1
+            if score > best_score:
+                best_score = score
+                best_doc = doc
+
+        if best_doc and best_score >= 2:
+            content_key = f"content_{lang}" if f"content_{lang}" in best_doc else "content_en"
+            text = best_doc.get(content_key, best_doc["content_en"])
+            action_label_key = f"action_label_{lang}" if f"action_label_{lang}" in best_doc else "action_label_en"
+            action_label = best_doc.get(action_label_key, best_doc.get("action_label_en", "Learn More"))
+            chips_key = f"suggested_chips_{lang}" if f"suggested_chips_{lang}" in best_doc else "suggested_chips_en"
+            chips = best_doc.get(chips_key, best_doc.get("suggested_chips_en", []))
+
+            return {
+                "text": f"[Verified UNNATI Knowledge]\n{text}",
+                "spoken_text": text.split(".")[0],
+                "language": lang,
+                "is_verified_data": True,
+                "is_advisory": False,
+                "data_source": "CANONICAL_KNOWLEDGE_BASE",
+                "knowledge_topic": best_doc.get("category"),
+                "title": best_doc.get("title"),
+                "requires_confirmation": False,
+                "action": {
+                    "action_type": "NAVIGATE",
+                    "label": action_label,
+                    "target_url": best_doc.get("action_url", "/"),
+                } if best_doc.get("action_url") else None,
+                "suggested_chips": chips,
+            }
+
+        return None
+
+    def _handle_unsupported_query(self, lang: str) -> Dict[str, Any]:
+        """
+        Safe fallback when user inquiry is outside canonical UNNATI verified facts.
+        Prevents hallucination and directs user to authoritative support channels.
+        """
+        fallback_text = SAFE_UNSUPPORTED_FALLBACK.get(lang, SAFE_UNSUPPORTED_FALLBACK['en'])
+        chips = {
+            "hi": ["सेवाएं देखें", "बुकिंग सहायता", "सीधा भुगतान"],
+            "mr": ["सेवा पहा", "बुकिंग मदत", "थेट पेमेंट"],
+            "en": ["Available Services", "Booking Help", "Direct Payments Policy"]
+        }.get(lang, ["Available Services", "Booking Help", "Direct Payments Policy"])
+
+        return {
+            "text": fallback_text,
+            "spoken_text": fallback_text.split(".")[0],
+            "language": lang,
+            "is_verified_data": False,
+            "is_advisory": True,
+            "is_unsupported": True,
+            "data_source": "UNSUPPORTED_QUERY_FALLBACK",
+            "requires_confirmation": False,
+            "action": {
+                "action_type": "NAVIGATE",
+                "label": "Contact Support / Settings",
+                "target_url": "/settings",
+            },
+            "suggested_chips": chips,
         }

@@ -458,7 +458,7 @@ const SplineLanding = () => {
                   mb: 1.5,
                 }}
               >
-                DEMO PORTALS
+                PLATFORM PORTALS
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Link
@@ -569,7 +569,7 @@ const SplineLanding = () => {
                 '&:hover': { bgcolor: '#0369A1' },
               }}
             >
-              Customer Demo
+              Customer Portal
             </Button>
             <Button
               onClick={() => navigate('/captain/login')}
@@ -587,7 +587,7 @@ const SplineLanding = () => {
                 '&:hover': { bgcolor: '#B45309' },
               }}
             >
-              Worker Demo
+              Worker Portal
             </Button>
             <Button
               onClick={() => navigate('/governance')}

@@ -44,11 +44,13 @@ import WorkerWaiting from './captain/WorkerWaiting';
 import CaptainRouteWrapper from './components/CaptainRouteWrapper';
 import { Outlet } from 'react-router-dom';
 import { AccessibilityProvider } from './context/AccessibilityContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { AccessibilityToolbar } from './components/accessibility/AccessibilityToolbar';
 import { NetworkStatusBar } from './components/accessibility/NetworkStatusBar';
-import { VoiceAssistantButton } from './components/assistant';
+import { UnnatiHelpButton } from './components/assistant';
+import SettingsPage from './pages/SettingsPage';
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "1036814981144-mockgoogleclientid.apps.googleusercontent.com";
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 function App() {
   return (
@@ -56,12 +58,13 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AccessibilityProvider>
-          <NetworkStatusBar />
-          <BrowserRouter>
-            <AuthProvider>
-              <Routes>
-                {/* Spline Landing Page (No Layout, completely full screen) */}
-                <Route path="/" element={<SplineLanding />} />
+          <LanguageProvider>
+            <NetworkStatusBar />
+            <BrowserRouter>
+              <AuthProvider>
+                <Routes>
+                  {/* Spline Landing Page (No Layout, completely full screen) */}
+                  <Route path="/" element={<SplineLanding />} />
 
               {/* Public and Customer Routes under CustomerLayout */}
               <Route element={<CustomerLayout />}>
@@ -108,6 +111,15 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['customer']}>
                       <BookingTracker />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route
+                  path="/customer/settings"
+                  element={
+                    <ProtectedRoute allowedRoles={['customer']}>
+                      <SettingsPage />
                     </ProtectedRoute>
                   }
                 />
@@ -171,10 +183,11 @@ function App() {
                 }
               }}
             />
-            <VoiceAssistantButton />
+            <UnnatiHelpButton />
             <AccessibilityToolbar />
           </AuthProvider>
         </BrowserRouter>
+        </LanguageProvider>
         </AccessibilityProvider>
       </ThemeProvider>
     </GoogleOAuthProvider>

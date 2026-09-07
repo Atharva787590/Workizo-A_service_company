@@ -963,13 +963,14 @@ class AdminOperationsOverviewView(APIView):
         completed_jobs = Booking.objects.filter(status='completed').count()
         cancelled_jobs = Booking.objects.filter(status='cancelled').count()
         disputed_jobs = GovernanceReviewCase.objects.filter(status__in=['OPEN_IN_QUEUE', 'UNDER_PEER_REVIEW']).count()
-        avg_rating = Rating.objects.all().aggregate(Avg('rating'))['rating__avg'] or 4.8
+        avg_rating_val = Rating.objects.all().aggregate(Avg('rating'))['rating__avg']
+        avg_rating = float(avg_rating_val) if avg_rating_val is not None else 0.0
 
         coop_members = {
-            'apprentice': WorkerProfile.objects.filter(is_verified=False).count() or 5,
-            'member': WorkerProfile.objects.filter(is_verified=True).count() or 18,
-            'guild_lead': WorkerProfile.objects.filter(nsdc_certified=True).count() or 4,
-            'master_craftsman': WorkerProfile.objects.filter(experience__gte=5, is_verified=True).count() or 3
+            'apprentice': WorkerProfile.objects.filter(is_verified=False).count(),
+            'member': WorkerProfile.objects.filter(is_verified=True).count(),
+            'guild_lead': WorkerProfile.objects.filter(nsdc_certified=True).count(),
+            'master_craftsman': WorkerProfile.objects.filter(experience__gte=5, is_verified=True).count()
         }
 
         stats_input = {
@@ -980,8 +981,8 @@ class AdminOperationsOverviewView(APIView):
             'completed_jobs': completed_jobs,
             'cancelled_jobs': cancelled_jobs,
             'disputed_jobs': disputed_jobs,
-            'avg_rating': round(float(avg_rating), 1),
-            'demand_index': 86.4,
+            'avg_rating': round(avg_rating, 1),
+            'demand_index': 0.0 if active_workers == 0 else 86.4,
             'coop_members': coop_members
         }
 
@@ -1001,8 +1002,6 @@ class AdminOperationsEconomicsView(APIView):
         payment_sum = Payment.objects.filter(status__in=PAID_STATUSES).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
         bill_sum = Bill.objects.filter(is_approved=True, booking__status='completed').aggregate(Sum('grand_total'))['grand_total__sum'] or Decimal('0.00')
         turnover = float(max(payment_sum, bill_sum))
-        if turnover == 0.0:
-            turnover = 125000.0  # Baseline demo volume if brand new instance
 
         economics = calculate_cooperative_economics(
             completed_turnover=turnover,

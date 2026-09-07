@@ -26,9 +26,6 @@ import {
   CandidateProfile
 } from '../types/governance';
 import {
-  MOCK_PROPOSALS,
-  MOCK_ELECTIONS,
-  MOCK_REVIEW_CASES,
   calculateQuorumProgress,
   canMemberVoteOnProposal,
   getProposalCategoryColor,
@@ -39,9 +36,9 @@ import {
 
 export const CooperativeGovernanceDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'proposals' | 'elections' | 'review' | 'history'>('proposals');
-  const [proposals, setProposals] = useState<CooperativeProposal[]>(MOCK_PROPOSALS);
-  const [elections, setElections] = useState<CooperativeElection[]>(MOCK_ELECTIONS);
-  const [reviewCases, setReviewCases] = useState<ReviewCase[]>(MOCK_REVIEW_CASES);
+  const [proposals, setProposals] = useState<CooperativeProposal[]>([]);
+  const [elections, setElections] = useState<CooperativeElection[]>([]);
+  const [reviewCases, setReviewCases] = useState<ReviewCase[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Search & Filter
@@ -86,17 +83,17 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
         api.get('/api/workers/governance/cases/')
       ]);
 
-      if (propRes.status === 'fulfilled' && Array.isArray(propRes.value.data) && propRes.value.data.length > 0) {
+      if (propRes.status === 'fulfilled' && Array.isArray(propRes.value.data)) {
         setProposals(propRes.value.data);
       }
-      if (elecRes.status === 'fulfilled' && Array.isArray(elecRes.value.data) && elecRes.value.data.length > 0) {
+      if (elecRes.status === 'fulfilled' && Array.isArray(elecRes.value.data)) {
         setElections(elecRes.value.data);
       }
-      if (caseRes.status === 'fulfilled' && Array.isArray(caseRes.value.data) && caseRes.value.data.length > 0) {
+      if (caseRes.status === 'fulfilled' && Array.isArray(caseRes.value.data)) {
         setReviewCases(caseRes.value.data);
       }
     } catch {
-      // Retain offline default mocks
+      // Keep existing state on network error
     } finally {
       setIsLoading(false);
     }
@@ -387,9 +384,18 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
 
             {/* Resolutions Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filteredProposals
-                .filter(p => p.status === 'ACTIVE')
-                .map(proposal => {
+              {filteredProposals.filter(p => p.status === 'ACTIVE').length === 0 ? (
+                <div className="col-span-full text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <FileCheck className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+                  <h4 className="text-base font-semibold text-slate-800 dark:text-slate-200">No active proposals yet</h4>
+                  <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">
+                    Active cooperative proposals voted on by member craftsmen will appear here.
+                  </p>
+                </div>
+              ) : (
+                filteredProposals
+                  .filter(p => p.status === 'ACTIVE')
+                  .map(proposal => {
                   const categoryStyle = getProposalCategoryColor(proposal.category);
                   const statusBadge = getProposalStatusBadge(proposal.status);
                   const quorum = calculateQuorumProgress(proposal.total_votes, proposal.quorum_needed);
@@ -491,7 +497,8 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
                       </div>
                     </div>
                   );
-                })}
+                })
+              )}
             </div>
           </div>
         )}
@@ -499,7 +506,16 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
         {/* TAB 2: BOARD ELECTIONS */}
         {activeTab === 'elections' && (
           <div className="space-y-6">
-            {elections.map(election => (
+            {elections.length === 0 ? (
+              <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <Vote className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+                <h4 className="text-base font-semibold text-slate-800 dark:text-slate-200">No active elections yet</h4>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">
+                  Upcoming and active leadership council elections will appear here.
+                </p>
+              </div>
+            ) : (
+              elections.map(election => (
               <div
                 key={election.election_id}
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6"
@@ -583,7 +599,8 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
                   </div>
                 )}
               </div>
-            ))}
+            ))
+            )}
           </div>
         )}
 
@@ -602,7 +619,16 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-              {reviewCases.map(c => {
+              {reviewCases.length === 0 ? (
+                <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <ShieldCheck className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+                  <h4 className="text-base font-semibold text-slate-800 dark:text-slate-200">No open dispute cases</h4>
+                  <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">
+                    All customer and worker reviews are clear. There are currently no disputes in the review queue.
+                  </p>
+                </div>
+              ) : (
+                reviewCases.map(c => {
                 const safety = verifyAIRecommendationSafety(c);
 
                 return (
@@ -665,7 +691,8 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
                     </div>
                   </div>
                 );
-              })}
+              })
+              )}
             </div>
           </div>
         )}
@@ -685,9 +712,18 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
               </p>
 
               <div className="space-y-4 pt-2">
-                {proposals
-                  .filter(p => p.status !== 'ACTIVE')
-                  .map(p => {
+                {proposals.filter(p => p.status !== 'ACTIVE').length === 0 ? (
+                  <div className="text-center py-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+                    <FileCheck className="w-10 h-10 mx-auto text-slate-400 mb-2" />
+                    <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">No archived resolutions yet</h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+                      Finalized resolutions and historical voting tallies will appear here once voting cycles conclude.
+                    </p>
+                  </div>
+                ) : (
+                  proposals
+                    .filter(p => p.status !== 'ACTIVE')
+                    .map(p => {
                     const statusBadge = getProposalStatusBadge(p.status);
                     return (
                       <div
@@ -714,7 +750,8 @@ export const CooperativeGovernanceDashboard: React.FC = () => {
                         </div>
                       </div>
                     );
-                  })}
+                  })
+                )}
               </div>
             </div>
           </div>

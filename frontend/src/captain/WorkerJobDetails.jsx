@@ -18,6 +18,7 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import ScaleIcon from '@mui/icons-material/Scale';
 
 import { tokens, span } from '../design/tokens';
 import { 
@@ -68,8 +69,9 @@ function WorkerJobDetails() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // QR Code Verification
+  // QR / Arrival PIN Verification
   const [qrCodeInput, setQrCodeInput] = useState('');
+  const [pinInput, setPinInput] = useState('');
 
   // Cancel Warning Modal
   const [cancelWarningOpen, setCancelWarningOpen] = useState(false);
@@ -104,6 +106,9 @@ function WorkerJobDetails() {
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isOfflineCached, setIsOfflineCached] = useState(false);
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
+  const [disputeResponseOpen, setDisputeResponseOpen] = useState(false);
+  const [disputeResponseText, setDisputeResponseText] = useState('');
+  const [submittingDisputeResponse, setSubmittingDisputeResponse] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadChats, setUnreadChats] = useState(0);
@@ -285,6 +290,26 @@ function WorkerJobDetails() {
     }
   };
 
+  const handleVerifyPin = async () => {
+    if (!pinInput || pinInput.trim().length < 4) {
+      toast.error('Please enter the customer 4-digit arrival PIN');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await api.post(`/api/bookings/bookings/${id}/verify-pin/`, {
+        pin: pinInput.trim()
+      });
+      setBooking(res.data.booking || res.data);
+      toast.success('Arrival PIN verified successfully! You may now begin work.');
+      setPinInput('');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Arrival PIN verification failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleVerifyQR = async () => {
     if (!qrCodeInput) {
       toast.error('Please input QR code value');
@@ -434,6 +459,28 @@ function WorkerJobDetails() {
       toast.error('Failed to confirm cash payment.');
     } finally {
       setConfirmingCash(false);
+    }
+  };
+
+  const handleRespondDispute = async () => {
+    if (!disputeResponseText.trim() || disputeResponseText.trim().length < 5) {
+      toast.error('Please provide a response of at least 5 characters');
+      return;
+    }
+    setSubmittingDisputeResponse(true);
+    try {
+      await api.post(`/api/bookings/bookings/${id}/respond-dispute/`, {
+        response: disputeResponseText
+      });
+      toast.success('Response submitted. Dispute transitioned to Under Review.');
+      setDisputeResponseOpen(false);
+      setDisputeResponseText('');
+      fetchJobDetails();
+    } catch (err) {
+      const detail = err.response?.data?.detail || 'Failed to submit response';
+      toast.error(detail);
+    } finally {
+      setSubmittingDisputeResponse(false);
     }
   };
 
@@ -625,15 +672,46 @@ function WorkerJobDetails() {
                 )}
 
                 {booking.status === 'arrived' && (
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Scan or enter the verification check-in QR token generated on the Customer's app to unlock the service:
+                  <Box sx={{ p: 2.5, bgcolor: tokens.colors.paper, borderRadius: `${tokens.borderRadiusSm}px`, border: `1px solid ${tokens.borderColor}` }}>
+                    <Typography variant="subtitle2" fontWeight={800} color="primary" sx={{ mb: 0.5 }}>
+                      Start-of-Service Verification
                     </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                      Ask the customer for their 4-digit Arrival PIN displayed on their Booking Tracker to verify on-site arrival:
+                    </Typography>
+                    <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                      <Grid item xs>
+                        <TextField
+                          fullWidth
+                          label="Customer 4-Digit Arrival PIN"
+                          placeholder="e.g. 1234"
+                          value={pinInput}
+                          onChange={(e) => setPinInput(e.target.value)}
+                          inputProps={{ maxLength: 6 }}
+                        />
+                      </Grid>
+                      <Grid item>
+                        <Button
+                          variant="contained"
+                          onClick={handleVerifyPin}
+                          disabled={submitting}
+                          sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', py: 2, px: 3, borderRadius: `${tokens.borderRadiusSm}px`, textTransform: 'none', fontWeight: 700 }}
+                        >
+                          Verify PIN & Start
+                        </Button>
+                      </Grid>
+                    </Grid>
+
+                    <Divider sx={{ my: 1.5 }}>
+                      <Typography variant="caption" color="text.secondary">OR SCAN QR CODE</Typography>
+                    </Divider>
+
                     <Grid container spacing={2} alignItems="center">
                       <Grid item xs>
                         <TextField
                           fullWidth
-                          label="Enter Customer QR Value"
+                          size="small"
+                          label="Customer QR Value"
                           placeholder="e.g. 8-digit code"
                           value={qrCodeInput}
                           onChange={(e) => setQrCodeInput(e.target.value)}
@@ -641,13 +719,14 @@ function WorkerJobDetails() {
                       </Grid>
                       <Grid item>
                         <Button
-                          variant="contained"
+                          variant="outlined"
+                          size="medium"
                           onClick={handleVerifyQR}
                           disabled={submitting}
                           startIcon={<QrCodeScannerIcon />}
-                          sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', py: 2, px: 3, borderRadius: `${tokens.borderRadiusSm}px`, textTransform: 'none', fontWeight: 700 }}
+                          sx={{ py: 1, px: 2, borderRadius: `${tokens.borderRadiusSm}px`, textTransform: 'none', fontWeight: 700 }}
                         >
-                          Check-in (Verify QR)
+                          Verify QR
                         </Button>
                       </Grid>
                     </Grid>
@@ -991,6 +1070,16 @@ function WorkerJobDetails() {
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                   Address: <b>{booking.address}, {booking.city}, {booking.state} - {booking.pincode}</b>
                 </Typography>
+                {booking.scheduled_time && (
+                  <Box sx={{ mt: 1.5, p: 1, bgcolor: 'rgba(26,115,232,0.08)', borderRadius: '8px' }}>
+                    <Typography variant="caption" fontWeight={700} color="primary" display="block">
+                      Scheduled Time:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={700}>
+                      {new Date(booking.scheduled_time).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' })}
+                    </Typography>
+                  </Box>
+                )}
 
                 <Box display="flex" gap={2} sx={{ mt: 3 }}>
                   <Button
@@ -1036,6 +1125,95 @@ function WorkerJobDetails() {
                 </Typography>
               </Box>
             </DashboardCard>
+
+            {/* UNNATI Fair-Wage Earnings Transparency */}
+            <DashboardCard title="Fair-Wage Earnings" subtitle="Direct settlement breakdown">
+              <Box sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
+                  EXPECTED DIRECT PAYOUT
+                </Typography>
+                <Typography variant="h4" fontWeight={800} color="#0F172A" sx={{ mt: 0.5 }}>
+                  ₹{booking.fair_wage_breakdown?.worker_earning || (Number(booking.total_contract_value || 250) * 0.935).toFixed(2)}
+                </Typography>
+                <Divider sx={{ my: 1.5 }} />
+                <Box display="flex" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary">Total Contract Value:</Typography>
+                  <Typography variant="caption" fontWeight={700}>₹{booking.total_contract_value || '250.00'}</Typography>
+                </Box>
+                <Box display="flex" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary">Cooperative Reserve (6.5%):</Typography>
+                  <Typography variant="caption" fontWeight={700} color="primary">₹{booking.cooperative_allocation || '16.25'}</Typography>
+                </Box>
+                <Box display="flex" justifyContent="space-between">
+                  <Typography variant="caption" color="text.secondary">Platform Commission:</Typography>
+                  <Typography variant="caption" fontWeight={700} color="success.main">₹0.00 (0%)</Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block', fontSize: '0.72rem', lineHeight: 1.3 }}>
+                  Direct customer-to-worker settlement via UPI or cash upon completion.
+                </Typography>
+              </Box>
+            </DashboardCard>
+
+            {/* UNNATI Active Dispute Resolution Card */}
+            {(booking.dispute || booking.status === 'disputed') && (
+              <DashboardCard 
+                title="Active Dispute Review" 
+                subtitle={`Status: ${booking.dispute?.status || 'OPEN'}`}
+              >
+                <Box sx={{ p: 2, bgcolor: '#FFFBEB', borderRadius: '8px', border: '1px solid #FDE68A' }}>
+                  <Box display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
+                    <ScaleIcon sx={{ color: '#D97706', fontSize: 20 }} />
+                    <Typography variant="subtitle2" fontWeight={700} color="#92400E">
+                      Customer Grievance Filed
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    "{booking.dispute?.reason || booking.dispute_reason || 'Dispute raised by customer.'}"
+                  </Typography>
+
+                  {booking.dispute?.worker_response ? (
+                    <Box sx={{ p: 1.5, bgcolor: '#FFFFFF', borderRadius: '6px', border: '1px solid #E2E8F0', mb: 1 }}>
+                      <Typography variant="caption" fontWeight={700} color="text.primary" display="block">
+                        Your Submitted Statement:
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        "{booking.dispute.worker_response}"
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                        Under review by cooperative peer committee
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      onClick={() => setDisputeResponseOpen(true)}
+                      sx={{
+                        bgcolor: '#D97706',
+                        color: '#FFFFFF',
+                        fontWeight: 700,
+                        textTransform: 'none',
+                        borderRadius: `${tokens.borderRadiusSm}px`,
+                        '&:hover': { bgcolor: '#B45309' }
+                      }}
+                    >
+                      Submit Technician Statement
+                    </Button>
+                  )}
+
+                  {booking.dispute?.assessment_report && (
+                    <Box sx={{ mt: 1.5, p: 1, bgcolor: 'rgba(255,255,255,0.7)', borderRadius: '6px' }}>
+                      <Typography variant="caption" fontWeight={700} color="text.secondary" display="block">
+                        Assessment Aid:
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.3, display: 'block' }}>
+                        {booking.dispute.assessment_report.explanation}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </DashboardCard>
+            )}
 
             {/* Workshop Repair Token Allocation */}
             {['inspection', 'repair_started', 'repair_completed'].includes(booking.status) && (
@@ -1190,6 +1368,47 @@ function WorkerJobDetails() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Worker Dispute Response Dialog */}
+      <Dialog 
+        open={disputeResponseOpen} 
+        onClose={() => setDisputeResponseOpen(false)}
+        maxWidth="sm" 
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          Submit Technician Statement
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Provide your factual statement regarding this service dispute for the cooperative resolution desk.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            multiline
+            rows={4}
+            fullWidth
+            label="Your Statement / Explanation"
+            placeholder="Explain the service delivery, on-site diagnostics, or reason for disagreement..."
+            value={disputeResponseText}
+            onChange={(e) => setDisputeResponseText(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDisputeResponseOpen(false)} disabled={submittingDisputeResponse}>
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleRespondDispute} 
+            disabled={submittingDisputeResponse || !disputeResponseText.trim()}
+            sx={{ bgcolor: tokens.colors.primary, color: '#ffffff', fontWeight: 700, textTransform: 'none' }}
+          >
+            {submittingDisputeResponse ? 'Submitting...' : 'Submit Statement'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <ChatWindow
         open={isChatOpen}
         onClose={() => setIsChatOpen(false)}

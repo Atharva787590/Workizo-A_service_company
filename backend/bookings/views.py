@@ -9,16 +9,20 @@ from channels.layers import get_channel_layer
 
 from .models import (
     Booking, RepairToken, MajorRepairApproval, BookingRejection, ChatMessage,
-    BookingAuditLog, BookingWorkerAllocation
+    BookingAuditLog, BookingWorkerAllocation, BookingDispute
 )
 from .serializers import (
     BookingSerializer, RepairTokenSerializer, MajorRepairApprovalSerializer,
-    PublicBookingSerializer, ChatMessageSerializer, BookingAuditLogSerializer
+    PublicBookingSerializer, ChatMessageSerializer, BookingAuditLogSerializer,
+    BookingDisputeSerializer
 )
 from .state_machine import (
     calculate_haversine_distance, validate_state_transition,
     calculate_cancellation_compensation, record_booking_audit
 )
+from .fair_wage_engine import calculate_fair_wage
+from .evidence_assessor import assess_booking_dispute_evidence
+from .demand_engine import aggregate_demand_intelligence
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
 from validations import validate_accept_booking
@@ -66,6 +70,25 @@ def create_and_send_notification(user, title, message, notification_type='genera
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'head', 'options']
+
+    def update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Direct modification via PUT is disabled. Use dedicated booking action endpoints."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Direct modification via PATCH is disabled. Use dedicated booking action endpoints."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Direct deletion of bookings is disabled. Use booking cancellation endpoints."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def get_queryset(self):
         user = self.request.user
@@ -105,18 +128,17 @@ class BookingViewSet(viewsets.ModelViewSet):
         if booking_type == 'scheduled':
             if not scheduled_time_val:
                 return Response({"detail": "Scheduled bookings require a valid scheduled_time."}, status=status.HTTP_400_BAD_REQUEST)
-            try:
-                from dateutil import parser
-                parsed_time = parser.parse(scheduled_time_val)
-                if timezone.is_naive(parsed_time):
-                    parsed_time = timezone.make_aware(parsed_time)
-                now = timezone.now()
-                if parsed_time < now:
-                    return Response({"detail": "Scheduled time cannot be in the past."}, status=status.HTTP_400_BAD_REQUEST)
-                if parsed_time > now + datetime.timedelta(days=30):
-                    return Response({"detail": "Bookings can only be scheduled up to 30 days in advance."}, status=status.HTTP_400_BAD_REQUEST)
-            except Exception:
+            from django.utils.dateparse import parse_datetime
+            parsed_time = parse_datetime(str(scheduled_time_val))
+            if parsed_time is None:
                 return Response({"detail": "Invalid date/time format for scheduled_time."}, status=status.HTTP_400_BAD_REQUEST)
+            if timezone.is_naive(parsed_time):
+                parsed_time = timezone.make_aware(parsed_time)
+            now = timezone.now()
+            if parsed_time < now:
+                return Response({"detail": "Scheduled time cannot be in the past."}, status=status.HTTP_400_BAD_REQUEST)
+            if parsed_time > now + datetime.timedelta(days=30):
+                return Response({"detail": "Bookings can only be scheduled up to 30 days in advance."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 3. Collective / Multi-worker limits
         required_workers = int(request.data.get('required_worker_count', 1))
@@ -126,13 +148,19 @@ class BookingViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        # Calculate contract value & cooperative reserve
+        # Calculate contract value & cooperative reserve via deterministic fair-wage engine
         category = serializer.validated_data.get('service_category')
         base_charge = getattr(category, 'base_labour_charge', Decimal('250.00')) if category else Decimal('250.00')
         required_workers = int(self.request.data.get('required_worker_count', 1))
         
-        total_value = (Decimal(str(base_charge)) * Decimal(str(required_workers))).quantize(Decimal('0.01'))
-        coop_allocation = (total_value * Decimal('0.065')).quantize(Decimal('0.01')) # 6.5% transparent platform reserve
+        quote = calculate_fair_wage(
+            base_charge=base_charge,
+            duration_minutes=60,
+            required_worker_count=required_workers,
+            category_name=category.name if category else "General Maintenance"
+        )
+        total_value = Decimal(quote['customer_total'])
+        coop_allocation = Decimal(quote['cooperative_reserve'])
         
         booking_type = self.request.data.get('booking_type', 'instant')
         initial_status = 'SCHEDULED' if booking_type == 'scheduled' else 'searching'
@@ -264,7 +292,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         bookings = Booking.objects.select_related('customer', 'worker', 'service_category', 'repair_token', 'payment').prefetch_related('major_repairs').filter(
             service_category=category,
-            status='searching'
+            status__in=['searching', 'requested', 'SCHEDULED', 'scheduled', 'MATCHING']
         ).exclude(id__in=rejected_booking_ids).order_by('-created_at')
         
         serializer = self.get_serializer(bookings, many=True)
@@ -289,14 +317,37 @@ class BookingViewSet(viewsets.ModelViewSet):
 
             try:
                 validate_accept_booking(user, booking)
-            except Exception as ve:
+            except Exception:
                 pass
 
-            if booking.status != 'searching':
+            valid_accept_statuses = ['searching', 'requested', 'SCHEDULED', 'scheduled', 'MATCHING']
+            if booking.status not in valid_accept_statuses:
                 return Response({"detail": "This booking has already been assigned or cancelled."}, status=status.HTTP_400_BAD_REQUEST)
             
-            booking.worker = user
-            booking.status = 'accepted'
+            # Support collective / multi-worker assignments
+            if booking.booking_type == 'collective' and booking.required_worker_count > 1:
+                booking.assigned_workers.add(user)
+                BookingWorkerAllocation.objects.get_or_create(
+                    booking=booking, worker=user,
+                    defaults={'status': 'assigned'}
+                )
+                if not booking.worker:
+                    booking.worker = user
+
+                assigned_count = booking.assigned_workers.count()
+                if assigned_count >= booking.required_worker_count:
+                    booking.status = 'scheduled' if booking.booking_type == 'scheduled' else 'accepted'
+                else:
+                    booking.status = 'MATCHING'
+            else:
+                booking.worker = user
+                booking.assigned_workers.add(user)
+                BookingWorkerAllocation.objects.get_or_create(
+                    booking=booking, worker=user,
+                    defaults={'status': 'assigned'}
+                )
+                booking.status = 'scheduled' if booking.booking_type == 'scheduled' else 'accepted'
+            
             booking.save()
 
         # Send captain assigned email to customer
@@ -309,22 +360,23 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking_data = self.get_serializer(booking).data
         send_booking_update(booking.id, booking_data, 'booking_accepted')
 
-        # Broadcast to all workers in this category that booking is taken (remove from their dashboard)
-        channel_layer = get_channel_layer()
-        if channel_layer:
-            category_id_group = f"category_{booking.service_category.id}"
-            category_slug_group = booking.service_category.name.lower().replace(' ', '_')
-            for group in [category_id_group, category_slug_group]:
-                async_to_sync(channel_layer.group_send)(
-                    group,
-                    {
-                        "type": "send_notification",
-                        "data": {
-                            "type": "booking_taken",
-                            "booking_id": booking.id
+        # Broadcast to all workers in this category if fully taken
+        if booking.status in ['accepted', 'scheduled']:
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                category_id_group = f"category_{booking.service_category.id}"
+                category_slug_group = booking.service_category.name.lower().replace(' ', '_')
+                for group in [category_id_group, category_slug_group]:
+                    async_to_sync(channel_layer.group_send)(
+                        group,
+                        {
+                            "type": "send_notification",
+                            "data": {
+                                "type": "booking_taken",
+                                "booking_id": booking.id
+                            }
                         }
-                    }
-                )
+                    )
 
         # Notify Customer
         create_and_send_notification(
@@ -350,8 +402,24 @@ class BookingViewSet(viewsets.ModelViewSet):
         if user.role != 'worker':
             return Response({"detail": "Only workers can reject jobs."}, status=status.HTTP_403_FORBIDDEN)
 
-        BookingRejection.objects.get_or_create(worker=user, booking=booking)
-        return Response({"detail": "Booking request rejected/declined."})
+        reason = request.data.get('reason', '')
+        rejection, _ = BookingRejection.objects.get_or_create(worker=user, booking=booking)
+        if reason:
+            rejection.reason = reason
+            rejection.save(update_fields=['reason'])
+
+        # If worker was assigned to this booking, remove assignment
+        if booking.worker == user or booking.assigned_workers.filter(id=user.id).exists():
+            booking.assigned_workers.remove(user)
+            BookingWorkerAllocation.objects.filter(booking=booking, worker=user).delete()
+            if booking.worker == user:
+                remaining_worker = booking.assigned_workers.first()
+                booking.worker = remaining_worker
+            if not booking.worker:
+                booking.status = 'scheduled' if booking.booking_type == 'scheduled' else 'searching'
+            booking.save()
+
+        return Response({"detail": "Booking request rejected/declined.", "reason": reason})
 
 
     @action(detail=True, methods=['post'], url_path='update-status')
@@ -372,16 +440,21 @@ class BookingViewSet(viewsets.ModelViewSet):
 
             # Define allowed transitions for each status
             allowed_transitions = {
-                'searching': ['accepted', 'cancelled'],
-                'accepted': ['on_the_way', 'cancelled'],
+                'searching': ['accepted', 'cancelled', 'scheduled'],
+                'requested': ['accepted', 'cancelled', 'scheduled'],
+                'MATCHING': ['accepted', 'cancelled', 'scheduled'],
+                'SCHEDULED': ['on_the_way', 'cancelled'],
+                'scheduled': ['on_the_way', 'cancelled'],
+                'accepted': ['on_the_way', 'cancelled', 'SCHEDULED', 'scheduled'],
                 'on_the_way': ['arrived', 'cancelled'],
-                'arrived': ['verified', 'cancelled'],
-                'verified': ['inspection', 'repair_started'],
-                'inspection': ['repair_started'],
-                'repair_started': ['repair_completed'],
-                'repair_completed': ['waiting_approval'],
-                'waiting_approval': [],
-                'WAITING_FOR_CASH_CONFIRMATION': [],
+                'arrived': ['verified', 'inspection', 'repair_started', 'in_progress', 'cancelled'],
+                'verified': ['inspection', 'repair_started', 'in_progress'],
+                'inspection': ['repair_started', 'in_progress'],
+                'repair_started': ['repair_completed', 'completed'],
+                'in_progress': ['repair_completed', 'completed'],
+                'repair_completed': ['waiting_approval', 'ready_to_complete', 'completed'],
+                'waiting_approval': ['ready_to_complete', 'completed'],
+                'WAITING_FOR_CASH_CONFIRMATION': ['ready_to_complete', 'completed'],
                 'ready_to_complete': ['completed'],
                 'completed': [],
                 'cancelled': []
@@ -394,18 +467,18 @@ class BookingViewSet(viewsets.ModelViewSet):
                 if booking.customer != user:
                     return Response({"detail": "You do not own this booking."}, status=status.HTTP_403_FORBIDDEN)
                 if new_status == 'cancelled':
-                    if current_status != 'searching':
-                        return Response({"detail": "You can only cancel a booking while it is searching for a captain."}, status=status.HTTP_400_BAD_REQUEST)
+                    if current_status in ['repair_started', 'in_progress', 'IN_PROGRESS', 'repair_completed', 'completed']:
+                        return Response({"detail": "Cannot cancel job once work is in progress. Please raise a dispute."}, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    return Response({"detail": "Customers can only cancel bookings while searching for a captain. Job completion must be verified by the captain."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail": "Customers can only cancel bookings before work begins. Job completion must be verified by the captain."}, status=status.HTTP_400_BAD_REQUEST)
                     
             elif user.role == 'worker':
-                if booking.worker != user:
+                if booking.worker != user and not booking.assigned_workers.filter(id=user.id).exists():
                     return Response({"detail": "You are not assigned to this job."}, status=status.HTTP_403_FORBIDDEN)
                 
-                # Workers cannot manually force verified status (must happen via verify-qr)
+                # Workers cannot manually force verified status (must happen via verify-qr or verify-pin)
                 if new_status == 'verified':
-                    return Response({"detail": "Status 'verified' cannot be set manually."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail": "Status 'verified' cannot be set manually. Use Arrival PIN verification."}, status=status.HTTP_400_BAD_REQUEST)
                     
                 allowed = allowed_transitions.get(current_status, [])
                 if new_status not in allowed:
@@ -415,6 +488,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 pass
             else:
                 return Response({"detail": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Start-of-service verification guard: cannot enter in_progress / repair_started without verification
+            if new_status in ['repair_started', 'in_progress', 'IN_PROGRESS']:
+                if not booking.arrival_pin_verified and booking.status != 'verified':
+                    return Response({"detail": "Start-of-service verification (Arrival PIN) is required before entering work in progress."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Enforce that no booking can reach COMPLETED status until payment is PAID
             if new_status == 'completed':
@@ -555,7 +633,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         
         if expected_token == provided_token:
             booking.status = 'verified'
-            booking.save()
+            booking.arrival_pin_verified = True
+            booking.arrival_pin_verified_at = timezone.now()
+            booking.save(update_fields=['status', 'arrival_pin_verified', 'arrival_pin_verified_at'])
 
             booking_data = self.get_serializer(booking).data
             send_booking_update(booking.id, booking_data)
@@ -570,6 +650,55 @@ class BookingViewSet(viewsets.ModelViewSet):
             return Response({"verified": True, "booking": booking_data})
         else:
             return Response({"verified": False, "detail": "Invalid QR code value. Please ask customer to reload."}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], url_path='verify-pin')
+    def verify_pin(self, request, pk=None):
+        booking = self.get_object()
+        user = request.user
+        
+        if user.role != 'worker' and not user.is_staff:
+            return Response({"detail": "Only workers can verify arrival PIN."}, status=status.HTTP_403_FORBIDDEN)
+
+        if booking.worker != user and not booking.assigned_workers.filter(id=user.id).exists() and not user.is_staff:
+            return Response({"detail": "You are not assigned to this booking."}, status=status.HTTP_403_FORBIDDEN)
+
+        if booking.status not in ['arrived', 'verified']:
+            return Response({
+                "verified": False,
+                "detail": f"Cannot verify PIN when status is '{booking.status}'. Worker must mark arrival first."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        pin = request.data.get('pin') or request.data.get('arrival_pin')
+        if not pin:
+            return Response({"verified": False, "detail": "PIN code is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        expected_pin = str(booking.arrival_pin or '').strip()
+        provided_pin = str(pin).strip()
+
+        if expected_pin and expected_pin == provided_pin:
+            booking.arrival_pin_verified = True
+            booking.arrival_pin_verified_at = timezone.now()
+            booking.status = 'verified'
+            booking.save(update_fields=['arrival_pin_verified', 'arrival_pin_verified_at', 'status'])
+
+            record_booking_audit(booking, 'arrived', 'verified', user, 'Arrival PIN verified by customer')
+
+            booking_data = self.get_serializer(booking).data
+            send_booking_update(booking.id, booking_data, 'service_verified')
+
+            create_and_send_notification(
+                user=booking.customer,
+                title="Start-of-Service Verified",
+                message="Your arrival PIN was successfully verified. The captain is starting work.",
+                notification_type="booking_update"
+            )
+
+            return Response({"verified": True, "booking": booking_data})
+        else:
+            return Response({
+                "verified": False,
+                "detail": "Invalid Arrival PIN. Please ask the customer for the correct 4-digit code."
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'], url_path='request-major-repair')
     def request_major_repair(self, request, pk=None):
@@ -739,6 +868,70 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "detail": f"Worker is {int_dist}m away from the job site. Must be within {radius}m to verify arrival."
             }, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['post'], url_path='reschedule')
+    def reschedule(self, request, pk=None):
+        booking = self.get_object()
+        user = request.user
+
+        if user.role == 'customer' and booking.customer != user:
+            return Response({"detail": "You do not own this booking."}, status=status.HTTP_403_FORBIDDEN)
+        elif user.role not in ['customer', 'admin'] and not user.is_staff:
+            return Response({"detail": "Only customers can reschedule bookings."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Rescheduling is only allowed before service starts
+        non_reschedulable = ['arrived', 'verified', 'inspection', 'repair_started', 'in_progress', 'IN_PROGRESS', 'repair_completed', 'completed', 'cancelled', 'disputed']
+        if booking.status in non_reschedulable:
+            return Response({
+                "detail": f"Cannot reschedule booking once service has started or reached status '{booking.status}'."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        scheduled_time_val = request.data.get('scheduled_time')
+        if not scheduled_time_val:
+            return Response({"detail": "New scheduled_time is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        from django.utils.dateparse import parse_datetime
+        parsed_time = parse_datetime(str(scheduled_time_val))
+        if parsed_time is None:
+            return Response({"detail": "Invalid date/time format for scheduled_time."}, status=status.HTTP_400_BAD_REQUEST)
+        if timezone.is_naive(parsed_time):
+            parsed_time = timezone.make_aware(parsed_time)
+        now = timezone.now()
+        if parsed_time < now:
+            return Response({"detail": "Scheduled time cannot be in the past."}, status=status.HTTP_400_BAD_REQUEST)
+        if parsed_time > now + datetime.timedelta(days=30):
+            return Response({"detail": "Bookings can only be scheduled up to 30 days in advance."}, status=status.HTTP_400_BAD_REQUEST)
+
+        old_time = booking.scheduled_time
+        from_status = booking.status
+        booking.scheduled_time = parsed_time
+        booking.booking_type = 'scheduled'
+        if booking.status in ['searching', 'requested']:
+            booking.status = 'scheduled'
+        booking.save(update_fields=['scheduled_time', 'booking_type', 'status'])
+
+        record_booking_audit(
+            booking, from_status, booking.status, user,
+            f"Customer rescheduled booking to {parsed_time.isoformat()}",
+            {'old_time': str(old_time), 'new_time': parsed_time.isoformat()}
+        )
+
+        booking_data = self.get_serializer(booking).data
+        send_booking_update(booking.id, booking_data, 'booking_rescheduled')
+
+        if booking.worker:
+            create_and_send_notification(
+                user=booking.worker,
+                title="Job Rescheduled",
+                message=f"Booking #{booking.id} was rescheduled by the customer to {parsed_time.strftime('%d %b %Y, %I:%M %p')}.",
+                notification_type="booking_update"
+            )
+
+        return Response({
+            "message": "Booking rescheduled successfully.",
+            "scheduled_time": parsed_time.isoformat(),
+            "booking": booking_data
+        })
+
     @action(detail=True, methods=['post'], url_path='cancel-booking')
     def cancel_booking(self, request, pk=None):
         booking = self.get_object()
@@ -790,6 +983,57 @@ class BookingViewSet(viewsets.ModelViewSet):
             "booking": self.get_serializer(booking).data
         })
 
+    @action(detail=False, methods=['get', 'post'], url_path='fair-wage-quote')
+    def fair_wage_quote(self, request):
+        cat_id = request.data.get('category_id') or request.query_params.get('category_id')
+        duration = request.data.get('duration_minutes') or request.query_params.get('duration_minutes')
+        skill = request.data.get('skill_tier') or request.query_params.get('skill_tier')
+        distance = request.data.get('travel_distance_km') or request.query_params.get('travel_distance_km')
+        hazard = request.data.get('hazard_level') or request.query_params.get('hazard_level')
+        worker_count = request.data.get('required_worker_count') or request.query_params.get('required_worker_count')
+
+        base_charge = None
+        cat_name = None
+        if cat_id:
+            try:
+                from services.models import ServiceCategory
+                cat = ServiceCategory.objects.get(id=cat_id)
+                base_charge = cat.base_labour_charge
+                cat_name = cat.name
+            except Exception:
+                pass
+
+        quote = calculate_fair_wage(
+            base_charge=base_charge,
+            duration_minutes=int(duration) if duration else None,
+            skill_tier=str(skill) if skill else None,
+            travel_distance_km=float(distance) if distance else None,
+            hazard_level=str(hazard) if hazard else None,
+            required_worker_count=int(worker_count) if worker_count else 1,
+            category_name=cat_name
+        )
+        return Response(quote, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='demand-intelligence')
+    def demand_intelligence(self, request):
+        city = request.query_params.get('city')
+        category_id = request.query_params.get('category_id')
+        days = request.query_params.get('days', 30)
+        try:
+            days = int(days)
+        except (ValueError, TypeError):
+            days = 30
+
+        cat_id_int = None
+        if category_id:
+            try:
+                cat_id_int = int(category_id)
+            except (ValueError, TypeError):
+                cat_id_int = None
+
+        data = aggregate_demand_intelligence(city=city, category_id=cat_id_int, days=days)
+        return Response(data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'], url_path='raise-dispute')
     def raise_dispute(self, request, pk=None):
         booking = self.get_object()
@@ -797,6 +1041,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         reason = request.data.get('reason')
         if not reason or len(reason.strip()) < 5:
             return Response({"detail": "Please provide a detailed reason for the dispute (min 5 characters)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # RBAC: only customer can raise dispute on their booking
+        if booking.customer != user and not user.is_staff:
+            return Response({"detail": "Only the booking customer can raise a dispute."}, status=status.HTTP_403_FORBIDDEN)
 
         is_allowed, msg = validate_state_transition(booking, 'disputed', user)
         if not is_allowed:
@@ -808,6 +1056,67 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking.save(update_fields=['status', 'dispute_reason'])
 
         record_booking_audit(booking, from_status, 'disputed', user, reason)
+
+        # Assemble factual evidence record deterministically
+        audit_trail = [
+            {
+                "from_status": a.from_status,
+                "to_status": a.to_status,
+                "changed_by": a.changed_by.email if a.changed_by else None,
+                "reason": a.reason,
+                "timestamp": a.created_at.isoformat()
+            }
+            for a in booking.audit_logs.all().order_by('created_at')
+        ]
+
+        payment_data = None
+        if hasattr(booking, 'payment') and booking.payment:
+            payment_data = {
+                "amount": str(booking.payment.amount),
+                "status": booking.payment.status,
+                "method": booking.payment.method,
+                "receipt_number": booking.payment.receipt_number
+            }
+
+        booking_summary = {
+            "id": booking.id,
+            "tracking_id": booking.tracking_id,
+            "status": booking.status,
+            "created_at": booking.created_at.isoformat() if booking.created_at else None,
+            "scheduled_time": booking.scheduled_time.isoformat() if booking.scheduled_time else None,
+            "arrival_pin_verified": booking.arrival_pin_verified,
+            "arrival_pin_verified_at": booking.arrival_pin_verified_at.isoformat() if booking.arrival_pin_verified_at else None,
+            "geofence_verified": booking.geofence_verified,
+            "before_photo": bool(booking.before_photo),
+            "after_photo": bool(booking.after_photo),
+            "customer_email": booking.customer.email,
+            "worker_email": booking.worker.email if booking.worker else None,
+        }
+
+        # Deterministic rule-based assessment
+        assessment = assess_booking_dispute_evidence(
+            booking_data=booking_summary,
+            dispute_data={"reason": reason},
+            payment_data=payment_data,
+            audit_trail=audit_trail
+        )
+
+        dispute_id = f"UNN-DISP-{booking.id}-{int(timezone.now().timestamp())}"
+        dispute, _ = BookingDispute.objects.update_or_create(
+            booking=booking,
+            defaults={
+                "dispute_id": dispute_id,
+                "raised_by": user,
+                "reason": reason,
+                "status": "OPEN",
+                "evidence_record": {
+                    "booking": booking_summary,
+                    "payment": payment_data,
+                    "audit_trail": audit_trail
+                },
+                "assessment_report": assessment
+            }
+        )
 
         # Notify parties and admin
         create_and_send_notification(
@@ -828,8 +1137,62 @@ class BookingViewSet(viewsets.ModelViewSet):
         return Response({
             "status": "disputed",
             "message": "Dispute registered. Our cooperative resolution desk has been notified.",
+            "dispute": BookingDisputeSerializer(dispute).data,
             "booking": self.get_serializer(booking).data
         })
+
+    @action(detail=True, methods=['post'], url_path='respond-dispute')
+    def respond_dispute(self, request, pk=None):
+        booking = self.get_object()
+        user = request.user
+        
+        # RBAC: Only assigned worker or staff can respond
+        is_assigned_worker = (booking.worker == user) or booking.assigned_workers.filter(id=user.id).exists()
+        if not is_assigned_worker and not user.is_staff:
+            return Response({"detail": "Only the assigned service technician can respond to this dispute."}, status=status.HTTP_403_FORBIDDEN)
+
+        dispute = booking.disputes.first()
+        if not dispute:
+            return Response({"detail": "No active dispute found on this booking."}, status=status.HTTP_404_NOT_FOUND)
+
+        response_text = request.data.get('response', '').strip()
+        if not response_text or len(response_text) < 5:
+            return Response({"detail": "Please provide a detailed response (min 5 characters)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        dispute.worker_response = response_text
+        dispute.worker_responded_at = timezone.now()
+        dispute.status = 'UNDER_REVIEW'
+        dispute.save(update_fields=['worker_response', 'worker_responded_at', 'status', 'updated_at'])
+
+        record_booking_audit(booking, 'disputed', 'disputed', user, f"Worker responded to dispute: {response_text[:40]}...")
+
+        create_and_send_notification(
+            user=booking.customer,
+            title="Worker Responded to Dispute",
+            message=f"The technician has submitted a response regarding booking #{booking.id} dispute.",
+            notification_type="dispute"
+        )
+
+        return Response({
+            "status": "success",
+            "message": "Response submitted. Dispute transitioned to UNDER_REVIEW.",
+            "dispute": BookingDisputeSerializer(dispute).data
+        })
+
+    @action(detail=True, methods=['get'], url_path='dispute-details')
+    def dispute_details(self, request, pk=None):
+        booking = self.get_object()
+        user = request.user
+
+        is_assigned = (booking.worker == user) or booking.assigned_workers.filter(id=user.id).exists()
+        if user != booking.customer and not is_assigned and not user.is_staff:
+            return Response({"detail": "Unauthorized to view dispute details for this booking."}, status=status.HTTP_403_FORBIDDEN)
+
+        dispute = booking.disputes.first()
+        if not dispute:
+            return Response({"detail": "No dispute found for this booking."}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(BookingDisputeSerializer(dispute).data)
 
     @action(detail=True, methods=['get'], url_path='audit-logs')
     def audit_logs(self, request, pk=None):
