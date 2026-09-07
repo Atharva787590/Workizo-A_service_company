@@ -17,7 +17,7 @@ class BookingRejectionTest(TestCase):
         
         # Create customer
         self.customer = User.objects.create_user(
-            email="cust@workizo.com",
+            email="cust@unnati.in",
             full_name="Cust Patel",
             phone="9000000001",
             password="password123",
@@ -26,7 +26,7 @@ class BookingRejectionTest(TestCase):
         
         # Create worker
         self.worker_user = User.objects.create_user(
-            email="worker@workizo.com",
+            email="worker@unnati.in",
             full_name="Worker Dave",
             phone="9000000002",
             password="password123",

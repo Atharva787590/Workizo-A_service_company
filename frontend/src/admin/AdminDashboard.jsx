@@ -2265,7 +2265,7 @@ const ReportsView = ({ hideHeader }) => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'workizo_bookings_report.csv');
+      link.setAttribute('download', 'unnati_bookings_report.csv');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -2518,9 +2518,9 @@ const SettingsView = ({ hideHeader }) => {
   const [saving, setSaving] = useState(false);
 
   // Settings state
-  const [companyName, setCompanyName] = useState('Workizo');
+  const [companyName, setCompanyName] = useState('Unnati');
   const [gstPercentage, setGstPercentage] = useState(18.00);
-  const [supportEmail, setSupportEmail] = useState('support@workizo.com');
+  const [supportEmail, setSupportEmail] = useState('support@unnati.in');
   const [supportPhone, setSupportPhone] = useState('+919876543210');
   const [contactDetails, setContactDetails] = useState('');
   const [terms, setTerms] = useState('');

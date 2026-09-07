@@ -273,7 +273,7 @@ function BookingFlow() {
         {/* Sidebar Guide */}
         <Box sx={span.oneThird}>
           <Box display="flex" flexDirection="column" gap={3}>
-            <DashboardCard title="WORKIZO Guarantee" subtitle="Why book service partners with us?">
+            <DashboardCard title="UNNATI Guarantee" subtitle="Why book service partners with us?">
               <List disablePadding>
                 <ListItem sx={{ px: 0, py: 1.5 }}>
                   <ListItemIcon sx={{ minWidth: 36 }}><ShieldIcon color="primary" /></ListItemIcon>

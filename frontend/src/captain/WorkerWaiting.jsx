@@ -80,7 +80,7 @@ const WorkerWaiting = () => {
             </Box>
             <Box display="flex" flexDirection="column" alignItems="flex-start">
               <Typography variant="h6" sx={{ fontFamily: "'Outfit', 'Plus Jakarta Sans', 'Inter', sans-serif", fontWeight: 900, color: '#ffffff', lineHeight: 1.1, fontSize: '1.25rem', letterSpacing: '.03rem' }}>
-                WORKIZO
+                UNNATI
               </Typography>
               <Typography variant="caption" sx={{ color: '#888888', fontWeight: 600, fontSize: '0.75rem', lineHeight: 1.1 }}>
                 Captain Portal

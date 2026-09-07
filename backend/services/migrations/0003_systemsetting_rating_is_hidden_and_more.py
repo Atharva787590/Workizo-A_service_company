@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
             name='SystemSetting',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('company_name', models.CharField(default='Workizo', max_length=100)),
+                ('company_name', models.CharField(default='Unnati', max_length=100)),
                 ('company_logo', models.ImageField(blank=True, null=True, upload_to='settings/')),
                 ('contact_details', models.TextField(blank=True, null=True)),
                 ('gst_percentage', models.DecimalField(decimal_places=2, default=18.0, max_digits=5)),
-                ('support_email', models.EmailField(default='support@workizo.com', max_length=254)),
+                ('support_email', models.EmailField(default='support@unnati.in', max_length=254)),
                 ('support_phone', models.CharField(default='+919876543210', max_length=15)),
                 ('terms_conditions', models.TextField(blank=True, null=True)),
                 ('privacy_policy', models.TextField(blank=True, null=True)),

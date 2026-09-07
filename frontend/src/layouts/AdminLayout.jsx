@@ -131,7 +131,7 @@ const AdminLayout = () => {
                     fontSize: '1.3rem'
                   }}
                 >
-                  WORKIZO
+                  UNNATI
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#1A73E8', letterSpacing: '.1rem', fontWeight: 600 }}>
                   ADMIN PORTAL
@@ -282,7 +282,7 @@ const AdminLayout = () => {
             </IconButton>
             <AdminPanelSettingsIcon sx={{ color: '#1A73E8', mr: 1, display: { xs: 'none', sm: 'block' } }} />
             <Typography variant="subtitle1" fontWeight="700" sx={{ letterSpacing: '0.02em', display: { xs: 'none', sm: 'block' } }}>
-              Workizo Administrative Panel
+              Unnati Administrative Panel
             </Typography>
           </Box>
 

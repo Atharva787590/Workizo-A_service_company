@@ -42,7 +42,7 @@ def compile_bill_pdf(bill):
     normal_style = styles['Normal']
     
     story = []
-    story.append(Paragraph("WORKIZO OFFICIAL INVOICE", title_style))
+    story.append(Paragraph("UNNATI OFFICIAL INVOICE", title_style))
     story.append(Spacer(1, 10))
     
     # Metadata
@@ -106,7 +106,7 @@ def compile_bill_pdf(bill):
     
     story.append(t)
     story.append(Spacer(1, 30))
-    story.append(Paragraph("Thank you for choosing WORKIZO. For queries, contact support@workizo.com", normal_style))
+    story.append(Paragraph("Thank you for choosing UNNATI. For queries, contact support@unnati.in", normal_style))
     
     doc.build(story)
     
@@ -335,7 +335,7 @@ def compile_receipt_pdf(payment):
     normal_style = styles['Normal']
     
     story = []
-    story.append(Paragraph("WORKIZO OFFICIAL RECEIPT", title_style))
+    story.append(Paragraph("UNNATI OFFICIAL RECEIPT", title_style))
     story.append(Spacer(1, 10))
     
     # Metadata
@@ -406,7 +406,7 @@ def compile_receipt_pdf(payment):
     
     story.append(t)
     story.append(Spacer(1, 30))
-    story.append(Paragraph("Thank you for choosing WORKIZO. For queries, contact support@workizo.com", normal_style))
+    story.append(Paragraph("Thank you for choosing UNNATI. For queries, contact support@unnati.in", normal_style))
     
     doc.build(story)
     buffer.seek(0)

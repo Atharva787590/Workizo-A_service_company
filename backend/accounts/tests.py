@@ -14,7 +14,7 @@ class AuthAPITests(APITestCase):
         
         # Admin account
         self.admin_user = User.objects.create_superuser(
-            email="admin@workizo.com",
+            email="admin@unnati.in",
             full_name="System Admin",
             phone="9876543210",
             password="adminpassword"
@@ -92,7 +92,7 @@ class AuthAPITests(APITestCase):
         
         # 5. Admin Log In & Verification
         self.client.credentials() # clear auth
-        admin_login_res = self.client.post(self.login_url, {"email": "admin@workizo.com", "password": "adminpassword"}, format='json')
+        admin_login_res = self.client.post(self.login_url, {"email": "admin@unnati.in", "password": "adminpassword"}, format='json')
         admin_token = admin_login_res.data['access']
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + admin_token)
         

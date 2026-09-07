@@ -1,422 +1,222 @@
-# 🚀 WORKIZO
+# 🚀 UNNATI — Verified Home Services, On Demand
 
-> **Connecting Skilled Professionals to Every Home.**
+> **Smart India Hackathon 2026 · Connecting every home with verified, skilled professionals.**
 
-WORKIZO is a modern full-stack home service marketplace that connects customers with verified professionals such as electricians, plumbers, carpenters, AC technicians, mechanics, and home cleaning experts through a real-time booking platform.
+**UNNATI** (meaning *progress / upliftment*) is a full-stack home-service platform that connects
+households with **verified service captains** — electricians, plumbers, carpenters, AC technicians,
+mechanics and home-cleaning experts — through a real-time booking engine.
 
-The platform provides a seamless booking experience with live status updates, secure authentication, professional dashboards, online and offline payments, email notifications, and a complete service lifecycle from booking to completion.
-
----
-
-# ✨ Features
-
-## 👤 Customer
-
-- Secure Registration & Login
-- Google Authentication (Optional)
-- Email Verification
-- Password Reset via SMTP
-- Auto Detect Current Location
-- Browse Service Categories
-- Instant Service Booking
-- Real-Time Booking Status
-- Live Captain Tracking
-- QR Verification
-- View Generated Invoice
-- Online Payment (Razorpay Test Mode)
-- Cash Payment Option
-- Download Receipt
-- Booking History
-- Profile Management
+From a broken switch to a full home deep-clean, UNNATI makes finding a *trustworthy* professional
+as easy as ordering food online: KYC-verified captains, transparent itemised bills, live booking
+tracking and secure payment — online or cash.
 
 ---
 
-## 👷 Captain
+## ✨ Problem Statement (SIH 2026 Angle)
 
-- Secure Registration
-- Professional Verification (KYC)
-- Aadhaar & PAN OCR Verification
-- Dashboard
-- Online / Offline Availability
-- Receive Live Booking Requests
-- Accept / Reject Requests
-- Manage Active Jobs
-- Upload Spare Part Images
-- Generate Itemized Bill
-- Cash Payment Confirmation
-- Earnings Overview
-- Profile Management
+Households cannot verify the background or skill of local service professionals, pricing is opaque,
+and skilled workers have no reliable channel to grow their business. UNNATI solves both sides of the
+market with **verification (KYC + document OCR)**, **real-time operations** and **transparent billing**.
 
 ---
 
-## 🛠 Admin
+## ✨ Features
 
-- Customer Management
-- Captain Management
-- Booking Management
-- Payment Monitoring
-- KYC Approval / Rejection
-- Dashboard Analytics
-- Revenue Overview
-- User Management
-- Service Category Management
+### 👤 Customer
+- Secure registration & login (JWT) · Google login option
+- Browse live service categories & prices
+- Book a service in seconds with auto-detected location
+- Live booking status: `Accepted → On the Way → Arrived → Work Started → Bill → Payment → Completed`
+- Real-time captain tracking & chat
+- Itemised invoice review (labour + spare parts)
+- Online payment (Razorpay test mode) or cash; receipt + email copy
+- Booking history, profile management, ratings
 
----
+### 👷 Captain
+- Register & complete KYC onboarding (Aadhaar / PAN photo upload)
+- Document verification support via OCR + admin review
+- Go Online / Offline to receive live booking requests over WebSockets
+- Accept / reject jobs, manage the full job lifecycle
+- Generate transparent bills with spare-part lines
+- Confirm cash payment / verify online payment
+- Wallet with earnings, transaction history & settlement requests
 
-# ⚡ Real-Time Features
-
-- WebSocket Integration
-- Live Booking Requests
-- Live Status Updates
-- Instant Dashboard Synchronization
-- Customer & Captain Notifications
-- Real-Time Payment Status
-- Real-Time Booking Tracking
-
----
-
-# 💳 Payment Integration
-
-- Razorpay Test Mode
-- Online Payment
-- Cash Payment
-- Secure Backend Verification
-- Payment Status Tracking
-- Receipt Generation
-- Email Receipt
+### 🛠 Admin
+- Dashboard analytics (revenue, bookings, users)
+- Approve / reject captain KYC
+- Manage customers, captains, bookings, payments, bills, ratings
+- Brand settings (company name, support email, GST %)
+- Export reports (CSV)
 
 ---
 
-# 📧 Email System
+## ⚡ Real-Time
+WebSocket (Django Channels) live booking requests, live status updates, captain dashboards and chat.
 
-SMTP Integration
+## 💳 Payments
+Razorpay test mode (online) + cash, backend-verified, receipts generated & emailed.
 
-Supports:
+## 📧 Email
+SMTP (Gmail app-password). If no SMTP is configured, emails print to the server console — handy for demos.
 
-- Email Verification
-- Password Reset
-- Booking Confirmation
-- Captain Assignment
-- Invoice Emails
-- Payment Confirmation
-- Booking Completion
+## 🤖 OCR
+Aadhaar / PAN extraction via OpenCV + EasyOCR (lazy-loaded) + regex validation.
 
 ---
 
-# 📄 Bill Generation
+## 📊 Tech Stack
 
-- Labour Charges
-- Spare Parts
-- Quantity
-- Unit Price
-- Automatic Total Calculation
-- Itemized Invoice
-- Professional Receipt
-
----
-
-# 🔐 Authentication
-
-- JWT Authentication
-- Protected Routes
-- Role-Based Access
-- Customer Portal
-- Captain Portal
-- Admin Portal
+| Layer     | Tech |
+|-----------|------|
+| Frontend  | React 19, React Router, MUI, Framer Motion, Axios, Recharts |
+| Backend   | Django 5, Django REST Framework, Django Channels, JWT |
+| Database  | SQLite (default, zero-config) **or** MySQL (set `USE_MYSQL=True`) |
+| Real-time | WebSockets (Daphne / Channels) |
+| Payments  | Razorpay (test mode) |
+| OCR       | OpenCV, EasyOCR, Regex |
+| Email     | Gmail SMTP (or console) |
 
 ---
 
-# 🤖 OCR Verification
+## 🚀 Quick Start (this repository)
 
-Automated document verification using:
+### Prerequisites
+- Python 3.11+
+- Node.js 20+
+- npm
 
-- OpenCV
-- EasyOCR
-- Regex
-- Django
-
-Supports:
-
-- Aadhaar Card
-- PAN Card
-
----
-
-# 📊 Tech Stack
-
-## Frontend
-
-- React
-- React Router
-- Bootstrap
-- Framer Motion
-- Axios
-
----
-
-## Backend
-
-- Django
-- Django REST Framework
-- Django Channels
-- WebSockets
-- JWT Authentication
-
----
-
-## Database
-
-- MySQL
-
----
-
-## Payments
-
-- Razorpay Test Mode
-
----
-
-## Email
-
-- Gmail SMTP
-
----
-
-## OCR
-
-- OpenCV
-- EasyOCR
-- Regex
-
----
-
-# 📦 Project Structure
-
-```
-Frontend (React)
-
-Customer Module
-
-Captain Module
-
-Admin Module
-
-Booking Module
-
-Payment Module
-
-Notification Module
-
-Authentication Module
-
-OCR Verification
-
-Backend (Django)
-
-REST APIs
-
-WebSocket Server
-
-JWT Authentication
-
-Booking Engine
-
-Payment Engine
-
-Email Service
-
-OCR Service
-
-MySQL Database
-```
-
----
-
-# 🔄 Booking Workflow
-
-```
-Customer Books Service
-        │
-        ▼
-Booking Created
-        │
-        ▼
-Captain Receives Request
-        │
-        ▼
-Captain Accepts
-        │
-        ▼
-Captain Starts Work
-        │
-        ▼
-Spare Parts Added
-        │
-        ▼
-Invoice Generated
-        │
-        ▼
-Customer Reviews Invoice
-        │
-        ▼
-Choose Payment
-
- ┌─────────────┐
- │             │
- ▼             ▼
-
-Online      Cash Payment
-
- │             │
- ▼             ▼
-
-Razorpay   Captain Confirms
-
- └──────┬──────┘
-        ▼
-
-Payment Completed
-        │
-        ▼
-Receipt Generated
-        │
-        ▼
-Email Sent
-        │
-        ▼
-Booking Completed
-```
-
----
-
-# 📸 Screenshots
-
-> Add screenshots of:
-
-- Landing Page
-- Customer Dashboard
-- Captain Dashboard
-- Admin Dashboard
-- Booking Flow
-- Invoice
-- Payment Page
-
----
-
-# 🚀 Installation
-
-## Clone Repository
+### 1 · Backend
 
 ```bash
-git clone https://github.com/vivek-ambariya/Workizo-A_service_company.git
+cd backend
+
+# virtual env + dependencies
+python3 -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# environment
+cp .env.example .env              # defaults are demo-ready (SQLite + console email)
+
+# database
+python manage.py migrate
+python manage.py seed_demo        # categories, brand settings + demo accounts
+
+# run API server (also serves WebSockets & admin)
+python manage.py runserver 0.0.0.0:8000
 ```
 
----
-
-## Frontend
+### 2 · Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev        # http://localhost:5174
 ```
+
+Open **http://localhost:5174** — the Vite dev server proxies `/api`, `/media` and `/ws` to Django on :8000,
+so no CORS or port juggling is needed.
 
 ---
 
-## Backend
+## 🔑 Demo Accounts (created by `seed_demo`)
 
-```bash
-cd backend
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+| Portal   | URL (after login)   | Email               | Password     |
+|----------|---------------------|---------------------|--------------|
+| Admin    | `/admin/dashboard`  | `admin@unnati.in`   | `Unnati@2026`|
+| Customer | `/customer/dashboard`| `customer@unnati.in`| `Unnati@2026`|
+| Captain  | `/captain/dashboard`| `captain@unnati.in` | `Unnati@2026`|
+
+> Captain demo account is **KYC-approved** so the full job flow works instantly.
+> You can also click **Sign up** on the Customer / Captain login screens to create new accounts —
+> with console email enabled, verification links appear in the Django server log.
+
+### App routes
+- Landing/hero: `/`
+- Customer: signup `/customer/register`, login `/customer/login`, dashboard `/customer/dashboard`, book `/customer/book`
+- Captain: signup `/captain/register`, login `/captain/login`, onboarding/waiting, dashboard `/captain/dashboard`
+- Admin: login `/admin/login`, dashboard `/admin/dashboard`
+- LandingPage (alt): `/home`
 
 ---
 
-## Environment Variables
+## 🗄 Database
 
-Create a `.env` file:
+- **Default: SQLite** — one file (`backend/db.sqlite3`), perfect for SIH demos & offline judging.
+- **MySQL (production-ready)** — in `backend/.env` set `USE_MYSQL=True` and fill `DB_NAME/DB_USER/DB_PASSWORD/DB_HOST/DB_PORT`.
 
 ```env
-SECRET_KEY=
-
-DEBUG=True
-
-DB_NAME=
-
-DB_USER=
-
-DB_PASSWORD=
-
-DB_HOST=
-
-DB_PORT=
-
-EMAIL_HOST=
-
-EMAIL_PORT=
-
-EMAIL_HOST_USER=
-
-EMAIL_HOST_PASSWORD=
-
-EMAIL_USE_TLS=True
-
-DEFAULT_FROM_EMAIL=
-
-RAZORPAY_KEY_ID=
-
-RAZORPAY_KEY_SECRET=
-
-JWT_SECRET=
+USE_MYSQL=True
+DB_NAME=unnati_db
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_HOST=127.0.0.1
+DB_PORT=3306
 ```
 
 ---
 
-# 🎯 Future Roadmap
+## 📧 Email & Payments Setup
 
-- Google Maps Live Tracking
-- Push Notifications
-- AI Chat Assistant
-- Voice Booking
-- Coupons & Offers
-- Referral Program
-- Customer Reviews & Ratings
-- Wallet System
-- Subscription Plans
-- Multi-language Support
-- AI Service Recommendation
+Emails: set `EMAIL_HOST_USER` + `EMAIL_HOST_PASSWORD` (Gmail app password) in `backend/.env`.
+Payments: replace the Razorpay test keys in `backend/.env` with your own `RAZORPAY_KEY_ID/SECRET`.
 
 ---
 
-## Startup Head
+## 🎯 Demo Flow (for judges)
 
-**Vivek Ambariya**
-
-LJ University
-
----
-
-# 📄 License
-
-This project is developed for educational purposes and startup prototyping.
+1. **Admin** → approve a captain's KYC → see revenue analytics.
+2. **Captain** → go **Online** → wait for live booking request.
+3. **Customer** (2nd browser) → book an Electrician → captain accepts → statuses stream live.
+4. **Captain** → starts work → adds spare parts → generates itemised bill.
+5. **Customer** → approves invoice → pays online (Razorpay test) or cash.
+6. Receipt generated → captain wallet credited → job completed → rating.
 
 ---
 
-# ⭐ Support
+## 🧑‍💻 Make It Yours (before presenting)
 
-If you like this project, don't forget to ⭐ star the repository!
+- Update **demo account passwords** & your own team/institute details in
+  `backend/services/management/commands/seed_demo.py` and re-run it.
+- Add your **team & college name** on the landing hero / mission section
+  (`frontend/src/SplineLanding.jsx`) and in this README.
+- Rename this GitHub repository from `Workizo-A_service_company` to something like `Unnati-SIH2026`.
+- Replace the placeholder **team email / support email** (`support@unnati.in`) in
+  `backend/services/models.py` + admin Settings screen with your own.
 
 ---
 
-## WORKIZO
+## 📁 Project Structure
 
-**Connecting Skilled Professionals to Every Home.**
+```
+backend/            Django REST + Channels API
+  accounts/         auth, JWT, admin APIs, email-verify pages
+  customers/        customer profiles
+  workers/          captain profiles, wallets, OCR service
+  services/         categories, ratings, SystemSetting, seed_demo command
+  bookings/         booking engine, live consumers (WebSockets), chat
+  billing/          itemised invoices (PDF), payments (Razorpay verify)
+  notifications/    email templates & service
+frontend/           React SPA (Vite)
+  src/SplineLanding.jsx    hero landing page
+  src/customer/  src/captain/  src/admin/   portals
+  src/layouts/  src/components/ src/context/  src/services/api.js
+```
 
 ---
 
-## 👥 Contributors
+## 🗺 Roadmap / Next Ideas
 
-- **Vivek Ambariya** ([@vivek-ambariya](https://github.com/vivek-ambariya))
+- Google-Maps-style live captain tracking
+- Push notifications & AI service recommendations
+- Coupons, subscriptions, wallet top-ups
+- Multi-language (Hindi + regional) support — fits the "Unnati" vision
 
+---
+
+## ⚖️ Acknowledgement
+
+Built for **Smart India Hackathon 2026** on an open educational base project (formerly *Workizo*),
+re-branded and re-engineered here as **UNNATI** with an independent database, demo data and
+same-origin real-time setup. All product branding shown in this repository belongs to the
+UNNATI team presenting this project.

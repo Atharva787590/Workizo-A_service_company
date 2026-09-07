@@ -65,7 +65,7 @@ class EmailSystemTests(TestCase):
         
         # Assert verification email is in outbox
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("Welcome to WORKIZO", mail.outbox[0].subject)
+        self.assertIn("Welcome to UNNATI", mail.outbox[0].subject)
         self.assertIn("newuser@example.com", mail.outbox[0].to)
 
     def test_email_verification_success(self):
@@ -118,7 +118,7 @@ class EmailSystemTests(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("Reset your WORKIZO Password", mail.outbox[0].subject)
+        self.assertIn("Reset your UNNATI Password", mail.outbox[0].subject)
         
     def test_password_reset_confirm_flow(self):
         # Generate reset token

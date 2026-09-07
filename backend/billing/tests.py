@@ -20,21 +20,21 @@ class PaymentWorkflowTestCase(TestCase):
         
         # Setup users
         self.customer = User.objects.create_user(
-            email="cust@workizo.com",
+            email="cust@unnati.in",
             full_name="Customer User",
             phone="9000000001",
             password="password123",
             role="customer"
         )
         self.captain = User.objects.create_user(
-            email="worker@workizo.com",
+            email="worker@unnati.in",
             full_name="Captain User",
             phone="9000000002",
             password="password123",
             role="worker"
         )
         self.other_captain = User.objects.create_user(
-            email="other_worker@workizo.com",
+            email="other_worker@unnati.in",
             full_name="Other Captain User",
             phone="9000000003",
             password="password123",

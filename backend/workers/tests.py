@@ -13,7 +13,7 @@ class WorkerProfileRegistrationTest(TestCase):
         self.client = APIClient()
         self.category = ServiceCategory.objects.create(name="Plumber")
         self.worker_user = User.objects.create_user(
-            email="worker@workizo.com",
+            email="worker@unnati.in",
             full_name="Worker Dave",
             phone="9000000002",
             password="password123",

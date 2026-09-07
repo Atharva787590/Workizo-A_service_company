@@ -18,8 +18,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Read .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env('DEBUG')
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-unnati-local-dev-key-change-in-production')
+DEBUG = env('DEBUG', default=True)
 
 ALLOWED_HOSTS = ['*']
 
@@ -88,19 +88,32 @@ CHANNEL_LAYERS = {
 }
 
 # Database Setup
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD', default=''),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
+# Default: SQLite (zero-configuration, works out of the box for demos / SIH run).
+# To use MySQL (as in production deployments), set USE_MYSQL=True in backend/.env
+# and provide the DB_* values below.
+USE_MYSQL = env.bool('USE_MYSQL', default=False)
+
+if USE_MYSQL:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': env('DB_NAME'),
+            'USER': env('DB_USER'),
+            'PASSWORD': env('DB_PASSWORD', default=''),
+            'HOST': env('DB_HOST'),
+            'PORT': env('DB_PORT'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            }
         }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -155,7 +168,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
@@ -173,13 +186,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID', default=None)
 
 # SMTP Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# If no SMTP user is configured, emails (verification / reset links) are printed
+# to the server console instead - perfect for local demos without an SMTP server.
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST = env('EMAIL_HOST', default='localhost')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
+EMAIL_BACKEND = ('django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST_USER
+                 else 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Unnati <no-reply@unnati.in>')
 
 # Token Expirations
 PASSWORD_RESET_TIMEOUT = 900  # 15 minutes in seconds

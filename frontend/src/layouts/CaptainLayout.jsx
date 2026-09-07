@@ -140,7 +140,7 @@ const CaptainLayout = () => {
                     fontSize: '1.3rem'
                   }}
                 >
-                  WORKIZO
+                  UNNATI
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#888888', letterSpacing: '.1rem', fontWeight: 600 }}>
                   CAPTAIN PANEL

@@ -943,7 +943,7 @@ const LandingPage = () => {
             <p className="lp-section-label">Book in Minutes. Get Help Instantly.</p>
             <h2 className="lp-section-title">How It Works</h2>
             <p className="lp-section-sub">
-              From booking to completion, WORKIZO keeps every step simple, transparent, and live.
+              From booking to completion, UNNATI keeps every step simple, transparent, and live.
             </p>
           </motion.div>
 
@@ -1053,7 +1053,7 @@ const LandingPage = () => {
             variants={scrollSectionVariants}
           >
             <p className="lp-section-label">Trust &amp; Quality</p>
-            <h2 className="lp-section-title">Workizo Quality &amp; Safety Assurance</h2>
+            <h2 className="lp-section-title">Unnati Quality &amp; Safety Assurance</h2>
             <p className="lp-section-sub">
               Just like India's top home platforms, we prioritize trust, background verification, and quality of work.
             </p>
@@ -1126,7 +1126,7 @@ const LandingPage = () => {
           >
             <div className="lp-cta-glow" />
             <div className="lp-cta-content">
-              <h2 className="lp-cta-title">Earn more as a Workizo Partner</h2>
+              <h2 className="lp-cta-title">Earn more as an Unnati Partner</h2>
               <p className="lp-cta-desc">
                 Are you a skilled electrician, plumber, carpenter, or technician? Register today, get paired with nearby customer requests, and grow your local service business.
               </p>

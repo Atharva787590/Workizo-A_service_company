@@ -138,7 +138,7 @@ function WorkerSettings() {
                   Terms & Conditions of Service
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph sx={{ mt: 0.5 }}>
-                  As a verified WORKIZO service Captain, you are an independent service partner. Agreeing to work bookings requires compliance with regional safety guidelines, providing timely check-ins via QR code verification, and honest invoice submissions. Cancellations made post-acceptance may reduce your acceptance and completion score metrics.
+                  As a verified UNNATI service Captain, you are an independent service partner. Agreeing to work bookings requires compliance with regional safety guidelines, providing timely check-ins via QR code verification, and honest invoice submissions. Cancellations made post-acceptance may reduce your acceptance and completion score metrics.
                 </Typography>
 
                 <Divider sx={{ my: 3 }} />
@@ -147,7 +147,7 @@ function WorkerSettings() {
                   Partner Privacy Policy
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  WORKIZO tracks location data exclusively when you toggle your status to ONLINE to search and present bookings matching your service category inside Ahmedabad region. Settlement bank documents, Aadhaar cards, and PAN documents uploaded during registration are stored securely and never shared with third-party networks.
+                  UNNATI tracks location data exclusively when you toggle your status to ONLINE to search and present bookings matching your service category inside Ahmedabad region. Settlement bank documents, Aadhaar cards, and PAN documents uploaded during registration are stored securely and never shared with third-party networks.
                 </Typography>
               </Box>
             </DashboardCard>
@@ -166,7 +166,7 @@ function WorkerSettings() {
                   Email Support:
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  captain-support@workizo.com
+                  support@unnati.in
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
                   Phone Assistance:

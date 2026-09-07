@@ -1,10 +1,11 @@
 import axios from 'axios';
 
-const defaultHost = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-const FALLBACK_API_ORIGIN = `http://${defaultHost}:8000`;
-const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '');
+// Same-origin by default: in development the Vite dev server proxies
+// /api, /media and /ws to the Django backend (see vite.config.js).
+// For a separate backend deployment, point VITE_API_ORIGIN to it, e.g. http://localhost:8000
+const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '') ?? '';
 
-export const API_ORIGIN = configuredApiOrigin || FALLBACK_API_ORIGIN;
+export const API_ORIGIN = configuredApiOrigin;
 export const API_BASE_URL = `${API_ORIGIN}/api/`;
 
 export const buildMediaUrl = (path) => {

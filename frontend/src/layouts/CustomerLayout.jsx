@@ -112,7 +112,7 @@ const CustomerLayout = () => {
                   fontSize: '1.3rem'
                 }}
               >
-                WORKIZO
+                UNNATI
               </Typography>
             </Box>
 
@@ -163,7 +163,7 @@ const CustomerLayout = () => {
                 </Button>
               )}
 
-              {/* Become a Captain button - styled in Workizo black outlined pill button */}
+              {/* Become a Captain button - styled in Unnati black outlined pill button */}
               {!isAuthenticated && (
                 <Button
                   variant="outlined"
@@ -325,7 +325,7 @@ const CustomerLayout = () => {
                     fontSize: '1.3rem'
                   }}
                 >
-                  WORKIZO
+                  UNNATI
                 </Typography>
               </Box>
               <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 3, lineHeight: 1.6 }}>
@@ -480,7 +480,7 @@ const CustomerLayout = () => {
                 <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
                   <EmailIcon sx={{ color: '#9CA3AF', fontSize: 20, mt: 0.2 }} />
                   <Typography variant="body2" sx={{ color: '#9CA3AF', wordBreak: 'break-all' }}>
-                    support@workizo.com
+                    support@unnati.in
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
@@ -507,7 +507,7 @@ const CustomerLayout = () => {
             }}
           >
             <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
-              © {new Date().getFullYear()} Workizo. All rights reserved.
+              © {new Date().getFullYear()} Unnati. All rights reserved.
             </Typography>
             <Typography variant="caption" sx={{ color: '#6B7280', textAlign: { xs: 'center', sm: 'right' } }}>
               Built with Django & React. Secure JWT Authentication. Role-Based Access Control.

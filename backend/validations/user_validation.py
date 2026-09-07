@@ -1,5 +1,5 @@
 """
-User authentication and access validation rules for Workizo accounts.
+User authentication and access validation rules for Unnati accounts.
 """
 
 import re

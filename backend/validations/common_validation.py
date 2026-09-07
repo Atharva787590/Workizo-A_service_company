@@ -1,5 +1,5 @@
 """
-Common validation utilities for generic data formats and types across Workizo.
+Common validation utilities for generic data formats and types across Unnati.
 """
 
 import re

@@ -214,7 +214,7 @@ function CustomerDashboard() {
 
   // ─── Location: init from localStorage or profile ─────────────────────────
   useEffect(() => {
-    const stored = localStorage.getItem('workizo_location');
+    const stored = localStorage.getItem('unnati_location');
     if (stored) {
       setLocationLabel(stored);
     } else if (user?.profile?.city) {
@@ -246,7 +246,7 @@ function CustomerDashboard() {
           const state = data.address?.state || '';
           const label = state ? `${city}, ${state}` : city;
           setLocationLabel(label);
-          localStorage.setItem('workizo_location', label);
+          localStorage.setItem('unnati_location', label);
         } catch {
           setLocationLabel('Location detected');
         } finally {
@@ -267,7 +267,7 @@ function CustomerDashboard() {
     if (!manualCity) return;
     const label = `${manualCity}, India`;
     setLocationLabel(label);
-    localStorage.setItem('workizo_location', label);
+    localStorage.setItem('unnati_location', label);
     setLocationDenied(false);
     setChangeOpen(false);
   };

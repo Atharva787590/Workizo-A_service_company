@@ -157,7 +157,7 @@ class AdminDashboardStatsView(APIView):
             completed_bookings = Booking.objects.filter(status='completed').count()
             cancelled_bookings = Booking.objects.filter(status='cancelled').count()
             
-            # Revenue across all workers in WORKIZO
+            # Revenue across all workers in UNNATI
             PAID_STATUSES = ['PAID', 'COMPLETED', 'success', 'Paid', 'Completed']
             
             # 1. Today's Revenue
@@ -778,7 +778,7 @@ class AdminReportsView(APIView):
         
         if export_csv:
             response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="workizo_bookings_report.csv"'
+            response['Content-Disposition'] = 'attachment; filename="unnati_bookings_report.csv"'
             writer = csv.writer(response)
             writer.writerow(['Booking ID', 'Tracking ID', 'Customer', 'Captain', 'Category', 'Status', 'Grand Total', 'Created At'])
 
@@ -882,14 +882,14 @@ class AdminSettingsView(APIView):
         settings_obj = SystemSetting.objects.first()
         if not settings_obj:
             # Fallback setting creation
-            settings_obj = SystemSetting.objects.create(company_name='Workizo')
+            settings_obj = SystemSetting.objects.create(company_name='Unnati')
         serializer = SystemSettingSerializer(settings_obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request):
         settings_obj = SystemSetting.objects.first()
         if not settings_obj:
-            settings_obj = SystemSetting.objects.create(company_name='Workizo')
+            settings_obj = SystemSetting.objects.create(company_name='Unnati')
             
         serializer = SystemSettingSerializer(settings_obj, data=request.data, partial=True)
         if serializer.is_valid():

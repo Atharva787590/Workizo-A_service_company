@@ -1,4 +1,4 @@
-# Workizo Workspace Rules
+# Unnati Workspace Rules
 
 ## Git Policy
 - **Do not push directly to the `main` branch.**

@@ -1,5 +1,5 @@
 """
-Customer profile and address validation rules for Workizo customers.
+Customer profile and address validation rules for Unnati customers.
 """
 
 from typing import Dict, Any

@@ -107,7 +107,7 @@ const WorkerLogin = ({ defaultSignUp = false }) => {
   const handleMockGoogleLogin = async () => {
     setLoading(true);
     try {
-      const email = prompt("Enter mock Google email:", "captaintest@workizo.com");
+      const email = prompt("Enter mock Google email:", "captaintest@unnati.in");
       if (!email) {
         setLoading(false);
         return;
@@ -199,7 +199,7 @@ const WorkerLogin = ({ defaultSignUp = false }) => {
                 overflow: 'hidden'
               }}
             >
-              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+              <Box component="img" src="/logo.png" alt="Unnati" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
               Captain Portal
@@ -354,7 +354,7 @@ const WorkerLogin = ({ defaultSignUp = false }) => {
                 overflow: 'hidden'
               }}
             >
-              <Box component="img" src="/logo.png" alt="Workizo" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
+              <Box component="img" src="/logo.png" alt="Unnati" sx={{ width: 38, height: 38, objectFit: 'contain' }} />
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#0F0F14', mb: 1 }}>
               Become a Captain
@@ -604,7 +604,7 @@ const WorkerLogin = ({ defaultSignUp = false }) => {
                 Hello, Friend!
               </Typography>
               <Typography variant="body1" sx={{ mb: 4, opacity: 0.9, lineHeight: 1.6, maxWidth: '280px' }}>
-                Join the Workizo fleet as a service partner and grow your business
+                Join the Unnati fleet as a service partner and grow your business
               </Typography>
               <Button
                 variant="outlined"

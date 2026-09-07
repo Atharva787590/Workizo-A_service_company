@@ -1,4 +1,4 @@
-/** WORKIZO Design System Tokens */
+/** UNNATI Design System Tokens */
 export const tokens = {
   maxWidth: 1600,
   pagePadding: 32,

@@ -27,11 +27,11 @@ class Rating(models.Model):
         return f"Rating: {self.rating} stars for Worker {self.worker.email} by {self.customer.email}"
 
 class SystemSetting(models.Model):
-    company_name = models.CharField(max_length=100, default='Workizo')
+    company_name = models.CharField(max_length=100, default='Unnati')
     company_logo = models.ImageField(upload_to='settings/', blank=True, null=True)
     contact_details = models.TextField(blank=True, null=True)
     gst_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=18.00)
-    support_email = models.EmailField(default='support@workizo.com')
+    support_email = models.EmailField(default='support@unnati.in')
     support_phone = models.CharField(max_length=15, default='+919876543210')
     terms_conditions = models.TextField(blank=True, null=True)
     privacy_policy = models.TextField(blank=True, null=True)

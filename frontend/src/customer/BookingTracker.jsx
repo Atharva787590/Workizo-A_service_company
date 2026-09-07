@@ -333,7 +333,7 @@ function BookingTracker() {
         key: key_id,
         amount: amount,
         currency: currency,
-        name: "WORKIZO Services",
+        name: "UNNATI Services",
         description: `Invoice Payment for Booking #${id}`,
         image: "https://cdn.razorpay.com/static/assets/logo/rzp.png",
         order_id: order_id,
@@ -595,7 +595,7 @@ function BookingTracker() {
           <Button
             variant="outlined"
             startIcon={<HeadsetMicIcon />}
-            onClick={() => toast.success('Connecting with Workizo Support...')}
+            onClick={() => toast.success('Connecting with Unnati Support...')}
             sx={{ borderColor: tokens.colors.primary, color: tokens.colors.primary, px: 3, py: 1.25, borderRadius: '8px', textTransform: 'none', fontWeight: 700, fontSize: '0.875rem' }}
           >
             Contact Support
@@ -802,7 +802,7 @@ function BookingTracker() {
                     {booking.status === 'waiting_approval' && "Captain is seeking estimate approval for spare parts. Please check details below to proceed."}
                     {booking.status === 'WAITING_FOR_CASH_CONFIRMATION' && "Please pay cash directly to the captain. The captain will confirm receipt to finish the job."}
                     {booking.status === 'ready_to_complete' && "Payment received successfully. The captain is performing final documentation checks to complete the job."}
-                    {booking.status === 'completed' && "Thank you for using WORKIZO! The billing invoice has been cleared and payment was successful."}
+                    {booking.status === 'completed' && "Thank you for using UNNATI! The billing invoice has been cleared and payment was successful."}
                     {booking.status === 'cancelled' && "This booking request was cancelled and terminated."}
                   </Typography>
 

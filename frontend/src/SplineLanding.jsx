@@ -12,8 +12,6 @@ import WorkIcon from '@mui/icons-material/Work';
 import SchoolIcon from '@mui/icons-material/School';
 import CodeIcon from '@mui/icons-material/Code';
 import handymanHero from './assets/handyman_hero.png';
-import vivekProfile from './assets/vivek_profile.jpg';
-import vedProfile from './assets/ved_profile.jpg';
 import slide1 from './assets/slide1.jpg';
 import slide2 from './assets/slide2.jpg';
 import slide3 from './assets/slide3.jpg';
@@ -366,7 +364,7 @@ const SplineLanding = () => {
                 },
               }}
             >
-              WORKIZO
+              UNNATI
             </Typography>
           </Box>
 
@@ -443,7 +441,7 @@ const SplineLanding = () => {
                   mb: 1.5,
                 }}
               >
-                WORKIZO
+                UNNATI
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
 
@@ -610,7 +608,7 @@ const SplineLanding = () => {
           {/* Video in natural 16:9 — fills the reverse-D container */}
           <Box
             component="video"
-            src="/videos/WORKIZO_Premium_Hero_Video_Obj.mp4"
+            src="/videos/UNNATI_Premium_Hero_Video_Obj.mp4"
             autoPlay
             loop
             muted
@@ -701,7 +699,7 @@ const SplineLanding = () => {
                 lineHeight: 1.6,
               }}
             >
-              From booking to completion, WORKIZO keeps every step simple, transparent, and live.
+              From booking to completion, UNNATI keeps every step simple, transparent, and live.
             </Typography>
           </Box>
 
@@ -1076,7 +1074,7 @@ const SplineLanding = () => {
                 textTransform: 'uppercase',
               }}
             >
-              Workizo Quality & Safety Assurance
+              Unnati Quality & Safety Assurance
             </Typography>
             <Typography
               variant="body1"
@@ -1177,11 +1175,12 @@ const SplineLanding = () => {
       {/* Elegant long empty space showing the Spline particles */}
       <Box sx={{ height: { xs: '20vh', md: '35vh' } }} />
 
-      {/* 5. Champions of the Startup Idea Section (Founding Team profiles) */}
+      {/* 5. Unnati Mission / Why Unnati Section */}
       <Box
         className="pinned-team-section"
         sx={{
-          height: '100vh',
+          height: { xs: 'auto', md: '100vh' },
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -1192,6 +1191,7 @@ const SplineLanding = () => {
           color: '#ffffff',
           boxSizing: 'border-box',
           overflow: 'hidden',
+          py: { xs: 10, md: 0 },
         }}
       >
         <Container maxWidth="lg">
@@ -1200,9 +1200,9 @@ const SplineLanding = () => {
             className="spline-team-header"
             sx={{
               textAlign: 'left',
-              mb: 8,
+              mb: 7,
               width: '100%',
-              maxWidth: '700px',
+              maxWidth: '860px',
             }}
           >
             <Typography
@@ -1218,7 +1218,7 @@ const SplineLanding = () => {
                 mb: 1.5,
               }}
             >
-              FOUNDING TEAM
+              OUR MISSION · SMART INDIA HACKATHON 2026
             </Typography>
             <Typography
               variant="h3"
@@ -1231,7 +1231,7 @@ const SplineLanding = () => {
                 textTransform: 'uppercase',
               }}
             >
-              Champions of the Startup Idea
+              Unnati — Progress For Every Home
             </Typography>
             <Typography
               variant="body1"
@@ -1242,462 +1242,119 @@ const SplineLanding = () => {
                 lineHeight: 1.6,
               }}
             >
-              The minds behind Workizo, dedicated to bridging local home services with modern web architecture.
+              Unnati connects every home with verified, skilled service captains — with transparent
+              pricing, live booking tracking and honest, itemised billing from start to finish.
             </Typography>
           </Box>
 
           <Grid container spacing={4} justifyContent="center" alignItems="stretch">
-            {/* Card 1: Ambariya Vivek */}
-            <Grid item xs={12} md={6} className="spline-team-card-left" sx={{ display: 'flex', justifyContent: 'center' }}>
+            {/* Card 1: The Problem */}
+            <Grid item xs={12} md={6} className="spline-team-card-left" sx={{ display: 'flex' }}>
               <Card
                 sx={{
-                  p: 4,
-                  width: { xs: '100%', sm: '440px' },
-                  mx: 'auto',
+                  flex: 1,
+                  p: { xs: 3.5, md: 4.5 },
                   borderRadius: '24px',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   bgcolor: 'rgba(0, 0, 0, 0.5)',
                   backdropFilter: 'blur(16px)',
-                  boxShadow: 'none',
-                  color: '#ffffff',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  height: '100%',
-                  position: 'relative',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    borderColor: 'rgba(255, 255, 255, 0.25)',
-                    boxShadow: '0 0 25px rgba(255, 255, 255, 0.1)',
-                  },
                 }}
               >
-                {/* Avatar with styled scope double-ring */}
-                <Box
+                <Typography
                   sx={{
-                    display: 'inline-block',
-                    p: '8px',
-                    border: '1px dashed rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    mb: 3.5,
-                    mt: 2,
-                    position: 'relative',
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 800,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase',
+                    fontSize: '0.72rem',
+                    mb: 1.5,
                   }}
                 >
-                  <Box
-                    sx={{
-                      p: '4px',
-                      border: '2px solid rgba(255, 255, 255, 0.4)',
-                      borderRadius: '50%',
-                    }}
-                  >
-                    <Avatar
-                      src={vivekProfile}
-                      alt="Ambariya Vivek"
-                      sx={{
-                        width: 96,
-                        height: 96,
-                        bgcolor: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: '#ffffff',
-                        fontFamily: "'NewBlack', sans-serif",
-                        fontSize: '2rem',
-                        fontWeight: 800,
-                      }}
-                    >
-                      AV
-                    </Avatar>
-                  </Box>
-                </Box>
-
-                {/* Name & Role */}
+                  01 · THE PROBLEM
+                </Typography>
                 <Typography
                   variant="h5"
                   sx={{
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 800,
+                    fontWeight: 600,
+                    mb: 2,
+                    fontFamily: "'NewBlack', 'Outfit', sans-serif",
+                    letterSpacing: '0.02em',
                     color: '#ffffff',
-                    mb: 4,
-                    fontSize: '1.4rem',
-                    letterSpacing: '0.03em',
-                    textTransform: 'uppercase',
                   }}
                 >
-                  Ambariya Vivek
+                  Finding a trustworthy professional is still a gamble.
                 </Typography>
-
-                {/* Parameters list (Department, Student, Specialization) */}
-                <Box
+                <Typography
+                  variant="body1"
                   sx={{
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2.5,
-                    textAlign: 'left',
-                    mb: 4,
-                    flexGrow: 1,
+                    color: 'rgba(255, 255, 255, 0.62)',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.98rem',
+                    lineHeight: 1.75,
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
-                    <Box>
-                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        BRANCH
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Computer Engineering
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <SchoolIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
-                    <Box>
-                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        STUDENT
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        LJ University
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <CodeIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
-                    <Box>
-                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        SPECIALIZATION
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        MERN Stack, Razorpay, SMTP, GSAP, Spline, MySQL, Machine Learning
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* ID Bar */}
-                <Box
-                  sx={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                    pt: 2.5,
-                    mb: 3,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: '0.75rem',
-                      color: 'rgba(255, 255, 255, 0.4)',
-                      fontWeight: 800,
-                      fontFamily: "'NewBlack', sans-serif",
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    ID: WKZ-001
-                  </Typography>
-                </Box>
-
-                {/* Social Quick Access Square Buttons */}
-                <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
-                  <IconButton
-                    component="a"
-                    href="https://linkedin.com/in/vivek-ambariya"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        color: '#ffffff',
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                        bgcolor: 'rgba(255, 255, 255, 0.08)',
-                        transform: 'scale(1.08)',
-                      },
-                    }}
-                  >
-                    <LinkedInIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                  <IconButton
-                    component="a"
-                    href="https://github.com/vivek-ambariya"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        color: '#ffffff',
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                        bgcolor: 'rgba(255, 255, 255, 0.08)',
-                        transform: 'scale(1.08)',
-                      },
-                    }}
-                  >
-                    <GitHubIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                  <IconButton
-                    component="a"
-                    href="mailto:vivekambaria@gmail.com"
-                    sx={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        color: '#ffffff',
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                        bgcolor: 'rgba(255, 255, 255, 0.08)',
-                        transform: 'scale(1.08)',
-                      },
-                    }}
-                  >
-                    <GoogleIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </Box>
+                  Every day, families struggle to find a dependable electrician, plumber, carpenter or
+                  technician. There is no way to verify skill or background, pricing is never transparent,
+                  and genuine professionals have no reliable channel to reach the customers who need them.
+                </Typography>
               </Card>
             </Grid>
 
-            {/* Card 2: Ved Goyani */}
-            <Grid item xs={12} md={6} className="spline-team-card-right" sx={{ display: 'flex', justifyContent: 'center' }}>
+            {/* Card 2: The Unnati Way */}
+            <Grid item xs={12} md={6} className="spline-team-card-right" sx={{ display: 'flex' }}>
               <Card
                 sx={{
-                  p: 4,
-                  width: { xs: '100%', sm: '440px' },
-                  mx: 'auto',
+                  flex: 1,
+                  p: { xs: 3.5, md: 4.5 },
                   borderRadius: '24px',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   bgcolor: 'rgba(0, 0, 0, 0.5)',
                   backdropFilter: 'blur(16px)',
-                  boxShadow: 'none',
-                  color: '#ffffff',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  height: '100%',
-                  position: 'relative',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    borderColor: 'rgba(255, 255, 255, 0.25)',
-                    boxShadow: '0 0 25px rgba(255, 255, 255, 0.1)',
-                  },
                 }}
               >
-                {/* Avatar with styled scope double-ring */}
-                <Box
+                <Typography
                   sx={{
-                    display: 'inline-block',
-                    p: '8px',
-                    border: '1px dashed rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    mb: 3.5,
-                    mt: 2,
-                    position: 'relative',
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontWeight: 800,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase',
+                    fontSize: '0.72rem',
+                    mb: 1.5,
                   }}
                 >
-                  <Box
-                    sx={{
-                      p: '4px',
-                      border: '2px solid rgba(255, 255, 255, 0.4)',
-                      borderRadius: '50%',
-                    }}
-                  >
-                    <Avatar
-                      src={vedProfile}
-                      alt="Ved Goyani"
-                      sx={{
-                        width: 96,
-                        height: 96,
-                        bgcolor: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: '#ffffff',
-                        fontFamily: "'NewBlack', sans-serif",
-                        fontSize: '2rem',
-                        fontWeight: 800,
-                      }}
-                    >
-                      VG
-                    </Avatar>
-                  </Box>
-                </Box>
-
-                {/* Name & Role */}
+                  02 · THE UNNATI WAY
+                </Typography>
                 <Typography
                   variant="h5"
                   sx={{
-                    fontFamily: "'NewBlack', sans-serif",
-                    fontWeight: 800,
+                    fontWeight: 600,
+                    mb: 2,
+                    fontFamily: "'NewBlack', 'Outfit', sans-serif",
+                    letterSpacing: '0.02em',
                     color: '#ffffff',
-                    mb: 4,
-                    fontSize: '1.4rem',
-                    letterSpacing: '0.03em',
-                    textTransform: 'uppercase',
                   }}
                 >
-                  Ved Goyani
+                  Verified captains. Transparent service. End-to-end digital.
                 </Typography>
-
-                {/* Parameters list (Department, Student, Specialization) */}
-                <Box
+                <Typography
+                  variant="body1"
                   sx={{
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2.5,
-                    textAlign: 'left',
-                    mb: 4,
-                    flexGrow: 1,
+                    color: 'rgba(255, 255, 255, 0.62)',
+                    fontFamily: "'NewBlack', sans-serif",
+                    fontSize: '0.98rem',
+                    lineHeight: 1.75,
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <WorkIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
-                    <Box>
-                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        BRANCH
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Computer Engineering
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <SchoolIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
-                    <Box>
-                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        STUDENT
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        LJ University
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <CodeIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, mt: 0.3 }} />
-                    <Box>
-                      <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 800, fontFamily: "'NewBlack', sans-serif", letterSpacing: '0.05em' }}>
-                        SPECIALIZATION
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.85rem', color: '#ffffff', fontFamily: "'NewBlack', sans-serif" }}>
-                        Python Core, React, MongoDB, PostgreSQL, Bootstrap
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* ID Bar */}
-                <Box
-                  sx={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                    pt: 2.5,
-                    mb: 3,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: '0.75rem',
-                      color: 'rgba(255, 255, 255, 0.4)',
-                      fontWeight: 800,
-                      fontFamily: "'NewBlack', sans-serif",
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    ID: WKZ-002
-                  </Typography>
-                </Box>
-
-                {/* Social Quick Access Square Buttons */}
-                <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
-                  <IconButton
-                    component="a"
-                    href="https://www.linkedin.com/in/ved-goyani-ce?utm_source=share_via&utm_content=profile&utm_medium=member_android"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        color: '#ffffff',
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                        bgcolor: 'rgba(255, 255, 255, 0.08)',
-                        transform: 'scale(1.08)',
-                      },
-                    }}
-                  >
-                    <LinkedInIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                  <IconButton
-                    component="a"
-                    href="https://github.com/VedGoyaniTech"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        color: '#ffffff',
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                        bgcolor: 'rgba(255, 255, 255, 0.08)',
-                        transform: 'scale(1.08)',
-                      },
-                    }}
-                  >
-                    <GitHubIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                  <IconButton
-                    component="a"
-                    href="mailto:goyanived001@gmail.com"
-                    sx={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      bgcolor: 'rgba(255, 255, 255, 0.02)',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        color: '#ffffff',
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                        bgcolor: 'rgba(255, 255, 255, 0.08)',
-                        transform: 'scale(1.08)',
-                      },
-                    }}
-                  >
-                    <GoogleIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </Box>
+                  Every captain on Unnati is KYC-verified with document OCR checks. Bookings stream in
+                  real time with live status updates, and bills break down labour and spare parts
+                  transparently — settle online with Razorpay or by cash, with a receipt for every job.
+                </Typography>
               </Card>
             </Grid>
           </Grid>
@@ -2004,7 +1661,7 @@ const SplineLanding = () => {
                 textTransform: 'uppercase',
               }}
             >
-              [ ENTER WORKIZO ECOSYSTEM ]
+              [ ENTER UNNATI ECOSYSTEM ]
             </Typography>
 
             <Typography
@@ -2031,7 +1688,7 @@ const SplineLanding = () => {
                 mb: 1,
               }}
             >
-              Step inside Workizo to browse verified service captains, track live bookings, and manage your home with absolute peace of mind.
+              Step inside Unnati to browse verified service captains, track live bookings, and manage your home with absolute peace of mind.
             </Typography>
 
             <Box
@@ -2117,7 +1774,7 @@ const SplineLanding = () => {
             letterSpacing: '0.08em',
           }}
         >
-          © {new Date().getFullYear()} WORKIZO PLATFORM INC. ALL RIGHTS RESERVED.
+          © {new Date().getFullYear()} UNNATI · BUILT WITH ❤️ FOR SMART INDIA HACKATHON 2026
         </Typography>
       </Box>
 

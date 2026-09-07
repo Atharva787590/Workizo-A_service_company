@@ -304,7 +304,7 @@ def render_html_response(title, message, is_success=True, action_url=None, actio
         </style>
     </head>
     <body>
-        <div class="logo">WORKIZO</div>
+        <div class="logo">UNNATI</div>
         <div class="card">
             <h1>{title}</h1>
             <p>{message}</p>
@@ -352,10 +352,10 @@ class VerifyEmailView(APIView):
             
             html = render_html_response(
                 "Email Verified", 
-                "Your email has been successfully verified! You can now log in to the WORKIZO application.", 
+                "Your email has been successfully verified! You can now log in to the UNNATI application.", 
                 is_success=True,
                 action_url=frontend_url,
-                action_text="Log In to WORKIZO"
+                action_text="Log In to UNNATI"
             )
             return HttpResponse(html, content_type='text/html')
 
@@ -416,7 +416,7 @@ class ResetPasswordConfirmView(APIView):
             </style>
         </head>
         <body>
-            <div class="logo">WORKIZO</div>
+            <div class="logo">UNNATI</div>
             <div class="card">
                 <h1>{title}</h1>
                 <p>{message}</p>
@@ -445,7 +445,7 @@ class ResetPasswordConfirmView(APIView):
             user = None
 
         if user is not None and default_token_generator.check_token(user, token):
-            html = self._render_form("Reset Password", "Please choose a strong new password for your WORKIZO customer account.")
+            html = self._render_form("Reset Password", "Please choose a strong new password for your UNNATI customer account.")
             return HttpResponse(html, content_type='text/html')
         else:
             html = render_html_response("Invalid or Expired Link", "The password reset link is invalid or has expired. Please request another one.", is_success=False)
@@ -489,7 +489,7 @@ class ResetPasswordConfirmView(APIView):
 
         html = render_html_response(
             "Password Reset Successful", 
-            "Your password has been successfully updated! You can now log in to the WORKIZO application with your new password.", 
+            "Your password has been successfully updated! You can now log in to the UNNATI application with your new password.", 
             is_success=True,
             action_url=frontend_url,
             action_text="Go to Login"
